@@ -15,12 +15,11 @@ def setup():
 
 def teardown():
     shutil.rmtree(testExampleRootPath)
-     
+
 def test_create():
     main.create(testExampleRootPath)
     
-    assert os.path.isdir(testExampleRootPath)
-    assert os.path.isdir(testExampleCatalogPath)
-    assert os.path.isdir(testExampleTemplatesPath)
-    assert os.path.isdir(testExampleHooksPath)
-    assert os.path.isfile(testExampleDatabaseFile)
+    assert os.path.isdir(testExampleCatalogPath), "Catalog folder not created"
+    assert os.path.isdir(testExampleTemplatesPath), "Templates folder not created"
+    assert os.path.isdir(testExampleHooksPath), "Hooks folder not created"
+    assert os.path.isfile(testExampleDatabaseFile), "Database file not created"
