@@ -8,9 +8,8 @@ import constants
 class TestCatalog(object):
     
     def __init__(self):
-        self.test_catalog_name = 'Test_Catalog'
-        self.test_path = os.path.join(os.getcwd(), 'tests')
-        self.test_catalog_path = os.path.join(self.test_path, self.test_catalog_name)
+        self.test_path = os.path.join(os.getcwd(), constants.TESTS_FOLDER_NAME)
+        self.test_catalog_path = os.path.join(self.test_path, constants.TEST_CATALOG_NAME)
         self.test_content_path = os.path.join(self.test_catalog_path, constants.CONTENT_FOLDER_NAME)
         self.test_templates_path = os.path.join(self.test_catalog_path, constants.TEMPLATES_FOLDER_NAME)
         self.test_hooks_path = os.path.join(self.test_catalog_path, constants.HOOKS_FOLDER_NAME)

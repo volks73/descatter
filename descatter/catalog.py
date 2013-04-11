@@ -51,7 +51,7 @@ class Catalog(object):
                 media_type_path = os.path.join(path, media_type_name)
                 os.mkdir(media_type_path)
             
-            for media_subtype_name, media_type_name in constants.CONTENT_TYPES.items():
+            for media_subtype_name, media_type_name in constants.DEFAULT_CONTENT_TYPES.items():
                 media_subtype_path = os.path.join(path, media_type_name)
                 media_subtype_path = os.path.join(media_subtype_path, media_subtype_name)
                 os.mkdir(media_subtype_path)
