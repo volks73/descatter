@@ -1,5 +1,6 @@
 import argparse
 import os
+import sqlite3    
 
 parser = argparse.ArgumentParser(description='An application for cataloging, organizing, and tagging files', prog='descatter')
 subparsers = parser.add_subparsers(dest="sub_command", help="sub-command help")
