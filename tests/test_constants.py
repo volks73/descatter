@@ -2,6 +2,12 @@ from nose.tools import *
 
 import constants
 
+def test_application_name():
+    assert(constants.APPLICATION_NAME == 'descatter', "APPLICATION_NAME not equal to 'descatter'")
+
+def test_data_folder_name():
+    assert(constants.DATA_FOLDER_NAME == 'data', "DATA_FOLDER_NAME not equal to 'data'")
+
 def test_sqlite_extension():
     assert(constants.SQLITE_EXTENSION == '.sqlite', "SQLITE_EXTENSION not equal to '.sqlite'")
 
@@ -25,15 +31,21 @@ def test_file_extensions_table_name():
 
 def test_file_assocations_table_name():
     assert(constants.FILE_ASSOCIATIONS_TABLE_NAME == 'file_associations', "FILE_ASSOCIATIONS_TABLE_NAME not equal to 'file_associations'")
+    
+def test_default_catalog_db_name():
+    assert(constants.DEFAULT_CATALOG_DB_NAME == 'default_catalog_db.sqlite', "DEFAULT_CATALOG_DB_NAME not equal to 'default_catalog_db.sqlite'")
 
 def test_test_catalog_name():
     assert(constants.TEST_CATALOG_NAME == 'Test_Catalog', "TEST_CATALOG_NAME not equal to 'Test_Catalog'")
 
 def test_test_folder_name():
-    assert(constants.TESTS_FOLDER_NAME == 'tests', "TESTS_FOLDER_NAME not equal to 'test'")
+    assert(constants.TESTS_FOLDER_NAME == 'tests', "TESTS_FOLDER_NAME not equal to 'tests'")
 
 def test_create_subcommand_name():
     assert(constants.CREATE_SUBCOMMAND_NAME == 'create', "CREATE_SUBCOMMAND_NAME not equal to 'create'")
+    
+def test_subcommand_names():
+    assert(constants.SUBCOMMAND_NAMES[0] == constants.CREATE_SUBCOMMAND_NAME, "CREATE_SUBCOMMAND_NAME not 0 element in CREATE_SUBCOMMAND_NAME")
 
 def test_content_folder_name():
     assert(constants.CONTENT_FOLDER_NAME == 'content', "CONTENT_FOLDER_NAME not equal to 'content'")
