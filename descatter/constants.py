@@ -18,9 +18,12 @@ TEST_CATALOG_NAME = 'Test_Catalog'
 TESTS_FOLDER_NAME = 'tests'
 
 # Command line constants
-CREATE_SUBCOMMAND_NAME = 'create'
+CATALOG_ARGUMENT_SHORT_NAME = '-c'
+CATALOG_ARGUMENT_LONG_NAME = '--catalog'
+ESTABLISH_ARGUMENT_SHORT_NAME = '-e'
+ESTABLISH_ARGUMENT_LONG_NAME = '--establish'
 
-SUBCOMMAND_NAMES = [CREATE_SUBCOMMAND_NAME]
+HOOK_NAMES = ['establish']
 
 # Catalog folder structure constants
 CONTENT_FOLDER_NAME = 'content'
