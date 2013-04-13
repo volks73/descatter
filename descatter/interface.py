@@ -32,8 +32,34 @@ class CommandLine(object):
             print(args)
     
     def establish_catalog(self, path):
-        self.catalog = catalog.Catalog(path)
-        self.catalog.establish()
+        if not os.path.isdir(path):
+            raise OSError("Path to establish the catalog is not a directory")
+        
+        proceed = False
+        response = None
+        
+        if os.listdir(path):
+            while not response:
+                print("The folder for establishing a catalog is not empty")
+                response = input("Would you like to proceed? (Y/Yes or N/No): ")
+            
+                if response == 'Y' or response == 'Yes':      
+                    proceed = True
+                elif response == 'N' or response == 'No':
+                    proceed = False
+                else:
+                    print("Response not recognized, try again")
+                    response = None
+        else:
+            proceed = True
+        
+        if proceed:
+            self.catalog = catalog.Catalog(path)
+            self.catalog.establish()
+            
+            print("Catalog established at '%s'" % path)
+        else:
+            print("Failed to establish catalog at '%s'" % path)
         
     def destroy_catalog(self, path):
         pass

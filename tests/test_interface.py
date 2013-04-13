@@ -1,5 +1,5 @@
 from nose.tools import *
-s
+
 import os
 import shutil
 import interface

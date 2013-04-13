@@ -23,8 +23,6 @@ CATALOG_ARGUMENT_LONG_NAME = '--catalog'
 ESTABLISH_ARGUMENT_SHORT_NAME = '-e'
 ESTABLISH_ARGUMENT_LONG_NAME = '--establish'
 
-HOOK_NAMES = ['establish']
-
 # Catalog folder structure constants
 CONTENT_FOLDER_NAME = 'content'
 TEMPLATES_FOLDER_NAME = 'templates'
@@ -35,6 +33,8 @@ CATALOG_FOLDER_NAMES = [CONTENT_FOLDER_NAME,
                         TEMPLATES_FOLDER_NAME, 
                         HOOKS_FOLDER_NAME,
                         LOG_FOLDER_NAME]
+
+HOOK_NAMES = ['establish']
 
 BEFORE_TRIGGER_NAME = 'before'
 AFTER_TRIGGER_NAME = 'after'

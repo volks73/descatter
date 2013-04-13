@@ -27,37 +27,43 @@ class Catalog(object):
         for folder_name in constants.CATALOG_FOLDER_NAMES:
             folder_path = os.path.join(self.path, folder_name)
             os.mkdir(folder_path)
-    
-            if folder_name == constants.CONTENT_FOLDER_NAME:
-                self.create_content_type_folders(folder_path)
-        
-            if folder_name == constants.HOOKS_FOLDER_NAME:
-                for sub_command_name in constants.HOOK_NAMES:     
-                    sub_command_path = os.path.join(folder_path, sub_command_name)
-                    os.mkdir(sub_command_path)
             
-                    for trigger_name in constants.TRIGGER_NAMES: 
-                        os.mkdir(os.path.join(sub_command_path, trigger_name))
+        self.create_content_type_folders()
+        self.create_hook_folders()
                         
     def create_content_type_folders(self):
+        content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
+        
         for media_type_name in constants.MEDIA_TYPE_NAMES:
-            media_type_path = os.path.join(self.path, media_type_name)
+            media_type_path = os.path.join(content_folder_path, media_type_name)
             os.mkdir(media_type_path)
             
         for media_subtype_name, media_type_name in constants.DEFAULT_CONTENT_TYPES.items():
-            media_subtype_path = os.path.join(self.path, media_type_name)
+            # TODO: Add folder creation for vnd subtypes
+            # TODO: Add folder creation for prs subtypes
+            # TODO: Replace '.' in subtypes with underscores
+            # TODO: Add santization of subtypes with special characters, i.e. '+'
+            media_subtype_path = os.path.join(content_folder_path, media_type_name)
             media_subtype_path = os.path.join(media_subtype_path, media_subtype_name)
             os.mkdir(media_subtype_path)
                 
             number_folder_path = os.path.join(media_subtype_path, '1')
             os.mkdir(number_folder_path)
 
-    def establish(self):        
-        # TODO: Add check for empty folder
-        # TODO: Add warning to user if folder is not empty
+    def create_hook_folders(self):
+        hooks_folder_path = os.path.join(self.path, constants.HOOKS_FOLDER_NAME)
+        
+        for hook_folder_name in constants.HOOK_NAMES:
+            hook_path = os.path.join(hooks_folder_path, hook_folder_name)
+            os.mkdir(hook_path)
+            
+            for trigger_name in constants.TRIGGER_NAMES:
+                trigger_path = os.path.join(hook_path, trigger_name)
+                os.mkdir(trigger_path)
 
-        self.create_folder_structure(self.path)
-        self.create_database(self.path)
+    def establish(self):
+        self.create_folder_structure()
+        self.create_database()
         
 class Database(object):
     
