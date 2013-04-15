@@ -6,60 +6,127 @@ import catalog
 class CommandLine(object):
     
     def __init__(self):
-        self.catalog = None
-        self.parser = argparse.ArgumentParser(description='An application for cataloging, organizing, and tagging files', 
-                                              prog='descatter')
+        self.cwc = catalog.Catalog(os.getcwd()) # Current Working Catalog
+        self.cwf = None                         # Current Working File
         
-        self.parser.add_argument(constants.CATALOG_ARGUMENT_SHORT_NAME, 
+        self.parser = argparse.ArgumentParser(description='A cross-platform desktop application for cataloging, organizing, and tagging files', 
+                                              prog=constants.APPLICATION_NAME)
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.CATALOG_ARGUMENT_SHORT_NAME, 
+                                 constants.COMMAND_LONG_PREFIX + 
                                  constants.CATALOG_ARGUMENT_LONG_NAME, 
-                                 nargs='?', 
-                                 default=os.getcwd(), 
-                                 help="specify the catalog")
+                                 nargs='?',  
+                                 help="Specify the current working catalog")
         
-        self.parser.add_argument(constants.ESTABLISH_ARGUMENT_SHORT_NAME, 
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.ESTABLISH_ARGUMENT_SHORT_NAME, 
+                                 constants.COMMAND_LONG_PREFIX + 
                                  constants.ESTABLISH_ARGUMENT_LONG_NAME, 
-                                 help="establish or create a catalog",
+                                 help="Establish or create a catalog",
                                  action='store_true')
         
-    def parse(self, test_args=None):
-        args = self.parser.parse_args(test_args)
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.CWC_ARGUMENT_SHORT_NAME,
+                                help="Display the current working catalog",
+                                action='store_true')
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.CWF_ARGUMENT_SHORT_NAME,
+                                help="Display the current working file",
+                                action='store_true')
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.FILE_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX + 
+                                 constants.FILE_ARGUMENT_LONG_NAME,
+                                 nargs='?',
+                                 help="Specify the current working file")
+
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.CHECKIN_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX + 
+                                 constants.CHECKIN_ARGUMENT_LONG_NAME,
+                                 nargs='?',
+                                 help="Check in the specified file or current working file into the specified catalog or current working catalog")
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
+                                 constants.INTERACTIVE_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.INTERACTIVE_ARGUMENT_LONG_NAME,
+                                 action='store_true',
+                                 help="Start interactive mode to execute a series of commands within the descatter application")
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.EXIT_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.EXIT_ARGUMENT_LONG_NAME,
+                                 action='store_true',
+                                 help="Exit interactive mode")
+        
+    def parse(self, param_args=None):
+        args = vars(self.parser.parse_args(param_args))
     
-        if args.establish:
-            self.establish_catalog(args.catalog)
-        elif args.checkin:
-            self.checkin_file(args.file_path)
-        else:
-            print(args)
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.cwc = catalog.Catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
+            print("Current working catalog set to: '%s'" % self.cwc.name)
+            
+        if args[constants.CWC_ARGUMENT_SHORT_NAME]:
+            print("Catalog: '%s'" % self.cwc.name)
+            
+        if args[constants.CWF_ARGUMENT_SHORT_NAME]:
+            print("File: '%s'" % self.cwf)
+            
+        if args[constants.ESTABLISH_ARGUMENT_LONG_NAME]:
+            self.establish_catalog()
+        
+        if args[constants.FILE_ARGUMENT_LONG_NAME]:
+            self.cwf = args[constants.FILE_ARGUMENT_LONG_NAME]
+            print("Current working file set to: '%s'" % self.cwf)
+            
+        if args[constants.CHECKIN_ARGUMENT_LONG_NAME]:
+            self.checkin_file(self.cwf)
+            
+        if args[constants.INTERACTIVE_ARGUMENT_LONG_NAME]:
+            self.run_interactive_mode()
+            
+        if args[constants.EXIT_ARGUMENT_LONG_NAME]:
+            exit(0)
     
-    def establish_catalog(self, path):
-        if not os.path.isdir(path):
-            raise OSError("Path to establish the catalog is not a directory")
-        
-        proceed = False
-        response = None
-        
-        if os.listdir(path):
-            while not response:
-                print("The folder for establishing a catalog is not empty")
-                response = input("Would you like to proceed? (Y/Yes or N/No): ")
+    def run_interactive_mode(self):
+        # TODO: Add better interactive mode
+        while True:
+            response = input(constants.INTERACTIVE_MODE_PROMPT)
+            self.parse(response.split())
             
-                if response == 'Y' or response == 'Yes':      
-                    proceed = True
-                elif response == 'N' or response == 'No':
-                    proceed = False
-                else:
-                    print("Response not recognized, try again")
-                    response = None
-        else:
-            proceed = True
-        
-        if proceed:
-            self.catalog = catalog.Catalog(path)
-            self.catalog.establish()
+    def establish_catalog(self):
+        if os.path.isdir(self.cwc.path):
+            proceed = False
+            response = None                    
             
-            print("Catalog established at '%s'" % path)
+            if os.listdir(self.cwc.path):
+                while not response:
+                    print("The folder for establishing the catalog is not empty")
+                    response = input("Would you like to proceed? (Y/Yes or N/No): ")
+                    
+                    if response == 'Y' or response == 'Yes':      
+                        proceed = True
+                    elif response == 'N' or response == 'No':
+                        proceed = False
+                    else:
+                        print("Response not recognized, try again")
+                        response = None
+            else:
+                proceed = True
+                
+            if proceed:
+                self.cwc.establish()
+                    
+                print("The catalog established at '%s'" % self.cwc.path)
+            else:
+                print("Failed to establish the catalog at '%s'" % self.cwc.path)
         else:
-            print("Failed to establish catalog at '%s'" % path)
+            print("The path to establish the catalog is not a folder. Path: '%s'" % self.cwc.path)
         
     def destroy_catalog(self, path):
         pass

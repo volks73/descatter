@@ -6,17 +6,13 @@ import constants
 class Catalog(object):
     
     def __init__(self, path):
-        if os.path.isdir(path):
-            self.db = Database()
-            self.path = path
-            self.name = None
+        self.db = Database()
+        self.path = path
+        self.name = None
             
-            while not self.name:
-                self.name = os.path.basename(path)
-                path = os.path.dirname(path)    
-            
-        else:
-            raise OSError("The path for a catalog is not a folder")  
+        while not self.name:
+            self.name = os.path.basename(path)
+            path = os.path.dirname(path)      
     
     def create_database(self):
         self.db.copy_default(self.path, self.name)
@@ -81,3 +77,8 @@ class Database(object):
         shutil.copyfile(default_catalog_db_path, db_file_path)
         
         # TODO: Add population of tables with default data
+
+class File(object):
+    
+    def __init__(self):
+        pass
