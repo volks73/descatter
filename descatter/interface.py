@@ -9,8 +9,7 @@ class CommandLine(object):
     def __init__(self):
         self.catalog = None
         self.file = None
-        
-                
+         
         self.parser = argparse.ArgumentParser(description='A cross-platform desktop application for cataloging, organizing, and tagging files', 
                                               prog=constants.APPLICATION_NAME)
         
