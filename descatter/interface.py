@@ -10,7 +10,7 @@ class CommandLine(object):
         self.catalog = None
         self.file = None
          
-        self.parser = argparse.ArgumentParser(description='A cross-platform desktop application for cataloging, organizing, and tagging files', 
+        self.parser = argparse.ArgumentParser(description=constants.APPLICATION_DESCRIPTION, 
                                               prog=constants.APPLICATION_NAME)
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
@@ -19,20 +19,18 @@ class CommandLine(object):
                                  constants.CATALOG_ARGUMENT_LONG_NAME, 
                                  nargs='?',
                                  default=os.getcwd(),  
-                                 help="Specify the current working catalog")
+                                 help=constants.CATALOG_ARGUMENT_HELP)
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
                                  constants.FILE_ARGUMENT_SHORT_NAME,
                                  constants.COMMAND_LONG_PREFIX + 
                                  constants.FILE_ARGUMENT_LONG_NAME,
                                  nargs='?',
-                                 help="Specify the current working file")
+                                 help=constants.FILE_ARGUMENT_HELP)
         
-        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
-                                 constants.ESTABLISH_ARGUMENT_SHORT_NAME, 
-                                 constants.COMMAND_LONG_PREFIX + 
-                                 constants.ESTABLISH_ARGUMENT_LONG_NAME, 
-                                 help="Establish or create a catalog",
+        self.parser.add_argument(constants.COMMAND_LONG_PREFIX + 
+                                 constants.CREATE_ARGUMENT_LONG_NAME, 
+                                 help=constants.CREATE_ARGUMENT_HELP,
                                  action='store_true')
 
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
@@ -40,14 +38,14 @@ class CommandLine(object):
                                  constants.COMMAND_LONG_PREFIX + 
                                  constants.CHECKIN_ARGUMENT_LONG_NAME,
                                  nargs='?',
-                                 help="Check in the specified file into the specified catalog")
+                                 help=constants.CHECKIN_ARGUMENT_HELP)
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
                                  constants.INTERACTIVE_ARGUMENT_SHORT_NAME,
                                  constants.COMMAND_LONG_PREFIX +
                                  constants.INTERACTIVE_ARGUMENT_LONG_NAME,
                                  action='store_true',
-                                 help="Start a console or interactive mode to execute a series of commands within the descatter application")
+                                 help=constants.INTERACTIVE_ARGUMENT_HELP)
         
     def parse(self, param_args=None):
         args = vars(self.parser.parse_args(param_args))
@@ -55,8 +53,8 @@ class CommandLine(object):
         self.catalog = catalog.Catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
         print("Current working catalog set to: '%s'" % self.catalog.name)
             
-        if args[constants.ESTABLISH_ARGUMENT_LONG_NAME]:
-            self.establish_catalog()
+        if args[constants.CREATE_ARGUMENT_LONG_NAME]:
+            self.create_catalog()
         
         if args[constants.FILE_ARGUMENT_LONG_NAME]:
             self.file = args[constants.FILE_ARGUMENT_LONG_NAME]
@@ -65,14 +63,14 @@ class CommandLine(object):
         if args[constants.INTERACTIVE_ARGUMENT_LONG_NAME]:
             Console(self.catalog).cmdloop()
             
-    def establish_catalog(self):
+    def create_catalog(self):
         if os.path.isdir(self.cwc.path):
             proceed = False
             response = None                    
             
             if os.listdir(self.cwc.path):
                 while not response:
-                    print("The folder for establishing the catalog is not empty")
+                    print("The folder for creating the catalog is not empty")
                     response = input("Would you like to proceed? (Y/Yes or N/No): ")
                     
                     if response == 'Y' or response == 'Yes':      
@@ -86,13 +84,13 @@ class CommandLine(object):
                 proceed = True
                 
             if proceed:
-                self.cwc.establish()
+                self.cwc.create()
                     
-                print("The catalog established at '%s'" % self.cwc.path)
+                print("The '%s' catalog created at '%s'" % (self.cwc.namt, self.cwc.path))
             else:
-                print("Failed to establish the catalog at '%s'" % self.cwc.path)
+                print("Failed to create the catalog at '%s'" % self.cwc.path)
         else:
-            print("The path to establish the catalog is not a folder. Path: '%s'" % self.cwc.path)
+            print("The path to create the catalog is not a folder. Path: '%s'" % self.cwc.path)
 
 class Console(cmd.Cmd):
     
@@ -119,6 +117,9 @@ class Console(cmd.Cmd):
     
     def do_catalog(self, catalog_path):
         """Sets the current working catalog"""
+        if not catalog_path:
+            catalog_path = os.getcwd()
+            
         self.cwc = catalog.Catalog(catalog_path)
         print("The current working catalog set to: '%s'" % self.cwc.name)
     
@@ -127,13 +128,28 @@ class Console(cmd.Cmd):
         self.cwf = file_path
         print("The current working file set to: '%s'" % self.cwf)
     
-    def do_establish(self, catalog_path):
-        """Establishes or creates a new catalog at the current working catalog"""
+    def do_create(self, catalog_path):
+        """Creates a new catalog at the current working catalog"""
         if catalog_path:
             self.cwc = catalog.Catalog(catalog_path)
         
-        self.cwc.establish()
+        self.cwc.create()
         print("The '%s' catalog established at: %s" % (self.cwc.name, self.cwc.path))
+    
+    def do_destroy(self, catalog_path):
+        """Destroy or delete a catalog. This will delete all of the files as well"""
+        if catalog_path:
+            self.cwc = catalog.Catalog(catalog_path)
+        
+        print("All files will be lost and this cannot be undone!")
+        response = input("Are you sure you want to destroy '%s' catalog? (Y/Yes or N/No): " % self.cwc.name)
+        
+        if response == 'Y' or response == 'Yes':
+            self.cwc.destroy()
+            print("The catalog has been destroyed!")
+            self.cwc = None
+        else:
+            print("Good choice!")
     
     def do_exit(self, line):
         """Exits the console or interactive mode"""

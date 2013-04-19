@@ -1,16 +1,25 @@
 # Application Structure
 APPLICATION_NAME = 'descatter'
+APPLICATION_DESCRIPTION = "A cross-platform desktop application for cataloging, organizing, and tagging files"
 DATA_FOLDER_NAME = 'data'
 
 # Database constants
 SQLITE_EXTENSION = '.sqlite'
 TAGS_TABLE_NAME = 'tags'
+DATE_ADDED_COLUMN_NAME = 'date_added'
 TAG_HIERARCHY_TABLE_NAME = 'tag_hierarchy'
 FILES_TABLE_NAME = 'files'
 FILES_TAGS_TABLE_NAME = 'files_tags'
 CONTENT_TYPES_TABLE_NAME = 'content_types'
-FILE_EXTENSIONS_TABLE_NAME = 'files_extensions'
+CONTENT_TYPES_ID_COLUMN_NAME = 'content_types_id'
+MEDIA_TYPE_NAME_COLUMN_NAME = 'media_type_name'
+MEDIA_SUBTYPE_NAME_COLUMN_NAME = 'media_subtype_name'
+FILE_EXTENSIONS_TABLE_NAME = 'file_extensions'
+FILE_EXTENSIONS_ID_COLUMN_NAME = 'file_extensions_id'
+EXTENSION_COLUMN_NAME = 'extension'
+DESCRIPTION_COLUMN_NAME = 'description'
 FILE_ASSOCIATIONS_TABLE_NAME = 'file_associations'
+FILE_ASSOCIATIONS_ID_COLUMN_NAME = 'file_associations_id'
 DEFAULT_CATALOG_DB_NAME = 'default_catalog_db' + SQLITE_EXTENSION
 
 # Tests constants
@@ -22,14 +31,18 @@ COMMAND_SHORT_PREFIX = '-'
 COMMAND_LONG_PREFIX = '--'
 CATALOG_ARGUMENT_SHORT_NAME = 'c'
 CATALOG_ARGUMENT_LONG_NAME = 'catalog'
-ESTABLISH_ARGUMENT_SHORT_NAME = 'e'
-ESTABLISH_ARGUMENT_LONG_NAME = 'establish'
+CATALOG_ARGUMENT_HELP = "Specify the catalog"
+CREATE_ARGUMENT_LONG_NAME = 'create'
+CREATE_ARGUMENT_HELP = "Creates a catalog"
 FILE_ARGUMENT_SHORT_NAME = 'f'
 FILE_ARGUMENT_LONG_NAME = 'file'
+FILE_ARGUMENT_HELP = "Specify the file"
 CHECKIN_ARGUMENT_SHORT_NAME = 'in'
 CHECKIN_ARGUMENT_LONG_NAME = 'checkin'
+CHECKIN_ARGUMENT_HELP = "Check in the specified file into the specified catalog"
 INTERACTIVE_ARGUMENT_SHORT_NAME = 'i'
 INTERACTIVE_ARGUMENT_LONG_NAME = 'interactive'
+INTERACTIVE_ARGUMENT_HELP = "Start a console or interactive mode to execute a series of commands within the descatter application"
 
 # Catalog folder structure constants
 CONTENT_FOLDER_NAME = 'content'
@@ -42,8 +55,7 @@ CATALOG_FOLDER_NAMES = [CONTENT_FOLDER_NAME,
                         HOOKS_FOLDER_NAME,
                         LOG_FOLDER_NAME]
 
-HOOK_NAMES = [ESTABLISH_ARGUMENT_LONG_NAME,
-              CHECKIN_ARGUMENT_LONG_NAME]
+HOOK_NAMES = [CHECKIN_ARGUMENT_LONG_NAME]
 
 BEFORE_TRIGGER_NAME = 'before'
 AFTER_TRIGGER_NAME = 'after'
@@ -71,32 +83,49 @@ MEDIA_TYPE_NAMES =[APPLICATION_MEDIA_TYPE_NAME,
 
 # TODO: add complete list of Media Types according to the IANA register
 # Defaults
-DEFAULT_CONTENT_TYPES = {'msword' : APPLICATION_MEDIA_TYPE_NAME,
-                         'vnd.ms-excel' : APPLICATION_MEDIA_TYPE_NAME,
-                         'vnd.ms-powerpoint' : APPLICATION_MEDIA_TYPE_NAME,
-                         'csv' : TEXT_MEDIA_TYPE_NAME,
-                         'xml' : TEXT_MEDIA_TYPE_NAME,
-                         'plain' : TEXT_MEDIA_TYPE_NAME,
-                         'html' : TEXT_MEDIA_TYPE_NAME,
-                         'jpeg' : IMAGE_MEDIA_TYPE_NAME,
-                         'tiff' : IMAGE_MEDIA_TYPE_NAME,
-                         'png' : IMAGE_MEDIA_TYPE_NAME}
+DEFAULT_CONTENT_TYPES = [(APPLICATION_MEDIA_TYPE_NAME, 'msword'),
+                         (APPLICATION_MEDIA_TYPE_NAME, 'vnd.ms-excel'),
+                         (APPLICATION_MEDIA_TYPE_NAME, 'vnd.ms-powerpoint'),
+                         (TEXT_MEDIA_TYPE_NAME, 'csv'),
+                         (TEXT_MEDIA_TYPE_NAME, 'xml'),
+                         (TEXT_MEDIA_TYPE_NAME, 'plain'),
+                         (TEXT_MEDIA_TYPE_NAME, 'html'),
+                         (IMAGE_MEDIA_TYPE_NAME, 'jpeg'),
+                         (IMAGE_MEDIA_TYPE_NAME, 'tiff'),
+                         (IMAGE_MEDIA_TYPE_NAME, 'png')]
+
+DEFAULT_FILE_EXTENSIONS = [('doc', "A Microsoft Word document"),
+                           ('docx', "A Microsoft Word document"),
+                           ('xls', "A Microsoft Excel spreadsheet"),
+                           ('xlsx', "A Microsoft Excel spreadsheet"),
+                           ('ppt', "A Microsoft PowerPoint Presentation"),
+                           ('pptx', "A Microsoft PowerPoint Presentation"),
+                           ('csv', "A comma-separated values file"),
+                           ('xml', "An eXtensible Markup Language file"),
+                           ('txt', "A plain text file"),
+                           ('html', "A HyperText Markup Language file"),
+                           ('htm', "A HyperText Markup Language file"),
+                           ('jpg', "A Join Photographic Experts Group image file"),
+                           ('jpeg', "A Join Photographic Experts Group image file"),
+                           ('tif', "A Tagged Image File Format image file"),
+                           ('tiff', "A Tagged Image File Format image file"),
+                           ('png', "A Portable Network Graphic image file")] 
                              
 # Files are associated with a content type by their extension to their appropriate Media Subtype.
 # The period has been removed
-DEFAULT_FILE_ASSOCIATES = {'doc' : 'msword',
-                           'docx' : 'msword',
-                           'xls' : 'vnd.ms-excel',
-                           'xlsx' : 'vnd.ms-excel',
-                           'ppt' : 'vnd.ms-powerpoint',
-                           'pptx' : 'vnd.ms-powerpoint',
-                           'csv' : 'csv',
-                           'xml' : 'xml',
-                           'txt' : 'plain',
-                           'html' : 'html',
-                           'htm' : 'html',
-                           'jpg' : 'jpeg',
-                           'jpeg' : 'jpeg',
-                           'tif' : 'tiff',
-                           'tiff' : 'tiff',
-                           'png' : 'pin'}
+DEFAULT_FILE_ASSOCIATIONS = {'doc' : 'application/msword',
+                           'docx' : 'application/msword',
+                           'xls' : 'application/vnd.ms-excel',
+                           'xlsx' : 'application/vnd.ms-excel',
+                           'ppt' : 'application/vnd.ms-powerpoint',
+                           'pptx' : 'application/vnd.ms-powerpoint',
+                           'csv' : 'text/csv',
+                           'xml' : 'text/xml',
+                           'txt' : 'text/plain',
+                           'html' : 'text/html',
+                           'htm' : 'text/html',
+                           'jpg' : 'image/jpeg',
+                           'jpeg' : 'image/jpeg',
+                           'tif' : 'image/tiff',
+                           'tiff' : 'image/tiff',
+                           'png' : 'image/png'}

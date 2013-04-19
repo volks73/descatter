@@ -15,10 +15,8 @@ class Catalog(object):
             path = os.path.dirname(path)      
     
     def create_database(self):
-        self.db.copy_default(self.path, self.name)
-        
-        # TODO: Add SQL table creation
-    
+        self.db.create(self.path, self.name)
+             
     def create_folder_structure(self):        
         for folder_name in constants.CATALOG_FOLDER_NAMES:
             folder_path = os.path.join(self.path, folder_name)
@@ -33,12 +31,8 @@ class Catalog(object):
         for media_type_name in constants.MEDIA_TYPE_NAMES:
             media_type_path = os.path.join(content_folder_path, media_type_name)
             os.mkdir(media_type_path)
-            
-        for media_subtype_name, media_type_name in constants.DEFAULT_CONTENT_TYPES.items():
-            # TODO: Add folder creation for vnd subtypes
-            # TODO: Add folder creation for prs subtypes
-            # TODO: Replace '.' in subtypes with underscores
-            # TODO: Add santization of subtypes with special characters, i.e. '+'
+          
+        for media_type_name, media_subtype_name in constants.DEFAULT_CONTENT_TYPES:
             media_subtype_path = os.path.join(content_folder_path, media_type_name)
             media_subtype_path = os.path.join(media_subtype_path, media_subtype_name)
             os.mkdir(media_subtype_path)
@@ -57,27 +51,66 @@ class Catalog(object):
                 trigger_path = os.path.join(hook_path, trigger_name)
                 os.mkdir(trigger_path)
 
-    def establish(self):
+    def create(self):
         self.create_folder_structure()
         self.create_database()
+    
+    def destroy(self):
+        content_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
+        templates_path = os.path.join(self.path, constants.TEMPLATES_FOLDER_NAME)
+        hooks_path = os.path.join(self.path, constants.HOOKS_FOLDER_NAME)
+        log_path = os.path.join(self.path, constants.LOG_FOLDER_NAME)
+        database_file = os.path.join(self.path, self.name + constants.SQLITE_EXTENSION)
+        
+        shutil.rmtree(content_path)
+        shutil.rmtree(templates_path)
+        shutil.rmtree(hooks_path)     
+        shutil.rmtree(log_path)
+        
+        os.remove(database_file)
         
 class Database(object):
     
     def __init__(self):
+        self.path = None
+        self.name = None
         self.connection = None
     
     def copy_default(self, path, catalog_name):
         data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
         data_path = os.path.join(data_path, constants.DATA_FOLDER_NAME)
         default_catalog_db_path = os.path.join(data_path, constants.DEFAULT_CATALOG_DB_NAME)
-                
-        db_file_name = catalog_name + constants.SQLITE_EXTENSION
-        db_file_path = os.path.join(path, db_file_name)
         
-        shutil.copyfile(default_catalog_db_path, db_file_path)
+        self.name = catalog_name        
+        db_file_name = self.name + constants.SQLITE_EXTENSION
+        self.path = os.path.join(path, db_file_name)
         
-        # TODO: Add population of tables with default data
-
+        shutil.copyfile(default_catalog_db_path, self.path)
+        
+    def create(self, path, catalog_name):
+        self.copy_default(path, catalog_name)
+        self.connection = sqlite3.connect(self.path)
+        
+        insert_tuple = (constants.FILE_EXTENSIONS_TABLE_NAME, 
+                        constants.EXTENSION_COLUMN_NAME, 
+                        constants.DESCRIPTION_COLUMN_NAME)
+        
+        sql = "INSERT INTO %s ('%s', '%s') VALUES (?, ?)" % insert_tuple
+        
+        self.connection.executemany(sql, constants.DEFAULT_FILE_EXTENSIONS)
+        self.connection.commit()
+        
+        insert_tuple = (constants.CONTENT_TYPES_TABLE_NAME, 
+                        constants.MEDIA_TYPE_NAME_COLUMN_NAME, 
+                        constants.MEDIA_SUBTYPE_NAME_COLUMN_NAME)
+        
+        sql = "INSERT INTO %s ('%s', '%s') VALUES (?, ?)" % insert_tuple
+        
+        self.connection.executemany(sql, constants.DEFAULT_CONTENT_TYPES)
+        self.connection.commit()
+        
+        # TODO: Add population of default file associations
+     
 class File(object):
     
     def __init__(self):

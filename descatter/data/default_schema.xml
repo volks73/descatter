@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<contentStructure>
+	<contentFolders>
+		<folder name="application">
+			<folder name="msword">
+				<extensions>
+					<extension>doc</extension>
+					<extension>docx</extension>
+				</extensions>
+			</folder>
+			<folder name="vnd.ms-excel">
+				<extensions>
+					<extension>xls</extension>
+					<extension>xlsx</extension>
+				</extensions>
+			</folder>
+			<folder name="vnd.ms-powerpoint">
+				<extensions>
+					<extension>ppt</extension>
+					<extension>pptx</extension>
+				</extensions>
+			</folder>
+		</folder>
+		<folder name="audio">
+			<folder name="mp3">
+				<extensions>
+					<extension>mp3</extension>
+				</extensions>
+			</folder>
+			<folder name="aac">
+				<extensions>
+					<extension>aac</extension>
+				</extensions>
+			</folder>	
+		</folder>
+		<folder name="image">
+			<folder name="gif">
+				<extensions>
+					<extension>gif</extension>
+				</extensions>
+			</folder>
+			<folder name="jpeg">
+				<extensions>
+					<extension>jpg</extension>
+					<extension>jpeg</extension>
+				</extensions>
+			</folder>
+			<folder name="png">
+				<extensions>
+					<extension>png</extension>
+				</extensions>
+			</folder>
+			<folder name="tiff">
+				<extensions>
+					<extension>tif</extension>
+					<extension>tiff</extension>
+				</extensions>
+			</folder>
+		</folder>
+		<folder name="message">
+		</folder>
+		<folder name="model">
+		</folder>
+		<folder name="multipart">
+		</folder>
+		<folder name="text">
+			<folder name="css">
+				<extensions>
+					<extension>css</extension>
+				</extensions>
+			</folder>
+			<folder name="csv">
+				<extensions>
+					<extension>csv</extension>
+				</extensions>
+			</folder>
+			<folder name="plain">
+				<extensions>
+					<extension>txt</extension>
+				</extensions>
+			</folder>
+			<folder name="html">
+				<extensions>
+					<extension>html</extension>
+					<extension>htm</extension>
+				</extensions>
+			</folder>
+			<folder name="xml">
+				<extensions>
+					<extension>xml</extension>
+				</extensions>
+			</folder>
+		</folder>
+		<folder name="video">
+		</folder>
+	</contentFolders>
+</contentStructure>
