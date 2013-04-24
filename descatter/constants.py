@@ -55,17 +55,21 @@ SCHEMA_ARGUMENT_LONG_NAME = 'schema'
 SCHEMA_ARGUMENT_HELP = "Define the initial content folder structure and file associations"
 
 # XML constants
-FOLDER_TAG_NAME = 'folder'
+CONTENT_SCHEMA_NAMESPACE = APPLICATION_NAME + '/2013/content_schema'
+CONTENT_FOLDER_TAG_NAME = 'contentFolder'
+FOLDER_TAG_NAME = '{' + CONTENT_SCHEMA_NAMESPACE + '}' + 'folder'
+XMLNS_ATTRIBUTE_NAME = 'xmlns'
 NAME_ATTRIBUTE_NAME = 'name'
 ID_ATTRIBUTE_NAME = 'id'
-EXTENSIONS_TAG_NAME = 'extensions'
-EXTENSION_TAG_NAME = 'extension'
+EXTENSIONS_TAG_NAME = '{' + CONTENT_SCHEMA_NAMESPACE + '}' + 'extensions'
+EXTENSION_TAG_NAME = '{' + CONTENT_SCHEMA_NAMESPACE + '}' + 'extension'
 
 # Catalog folder structure constants
 CONTENT_FOLDER_NAME = 'content'
 TEMPLATES_FOLDER_NAME = 'templates'
 HOOKS_FOLDER_NAME = 'hooks'
 LOG_FOLDER_NAME = 'log'
+CONTENT_SCHEMA_FILE_NAME = 'content_schema.xml'
 
 CATALOG_FOLDER_NAMES = [CONTENT_FOLDER_NAME, 
                         TEMPLATES_FOLDER_NAME, 
@@ -79,39 +83,3 @@ AFTER_TRIGGER_NAME = 'after'
 
 TRIGGER_NAMES = [BEFORE_TRIGGER_NAME,
                  AFTER_TRIGGER_NAME]
-
-DEFAULT_FILE_EXTENSIONS = [('doc', "A Microsoft Word document"),
-                           ('docx', "A Microsoft Word document"),
-                           ('xls', "A Microsoft Excel spreadsheet"),
-                           ('xlsx', "A Microsoft Excel spreadsheet"),
-                           ('ppt', "A Microsoft PowerPoint Presentation"),
-                           ('pptx', "A Microsoft PowerPoint Presentation"),
-                           ('csv', "A comma-separated values file"),
-                           ('xml', "An eXtensible Markup Language file"),
-                           ('txt', "A plain text file"),
-                           ('html', "A HyperText Markup Language file"),
-                           ('htm', "A HyperText Markup Language file"),
-                           ('jpg', "A Join Photographic Experts Group image file"),
-                           ('jpeg', "A Join Photographic Experts Group image file"),
-                           ('tif', "A Tagged Image File Format image file"),
-                           ('tiff', "A Tagged Image File Format image file"),
-                           ('png', "A Portable Network Graphic image file")] 
-                             
-# Files are associated with a content type by their extension to their appropriate Media Subtype.
-# The period has been removed
-DEFAULT_FILE_ASSOCIATIONS = {'doc' : 'application/msword',
-                           'docx' : 'application/msword',
-                           'xls' : 'application/vnd.ms-excel',
-                           'xlsx' : 'application/vnd.ms-excel',
-                           'ppt' : 'application/vnd.ms-powerpoint',
-                           'pptx' : 'application/vnd.ms-powerpoint',
-                           'csv' : 'text/csv',
-                           'xml' : 'text/xml',
-                           'txt' : 'text/plain',
-                           'html' : 'text/html',
-                           'htm' : 'text/html',
-                           'jpg' : 'image/jpeg',
-                           'jpeg' : 'image/jpeg',
-                           'tif' : 'image/tiff',
-                           'tiff' : 'image/tiff',
-                           'png' : 'image/png'}

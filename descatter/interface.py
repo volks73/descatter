@@ -123,10 +123,13 @@ class Console(cmd.Cmd):
                 
         args = vars(self.parser.parse_args(line.split()))
         
-        if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
-            print("Current working catalog: '%s'" % self.cwc.path)
+        if self.cwc:
+            if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+                print("Current working catalog: '%s'" % self.cwc.path)
+            else:
+                print("Current working catalog: '%s'" % self.cwc.name)
         else:
-            print("Current working catalog: '%s'" % self.cwc.name)
+            print("No current working catalog has been set")
         
     def do_cwf(self, line):
         """Display the current working file"""
@@ -178,11 +181,15 @@ class Console(cmd.Cmd):
         if response == 'Y' or response == 'Yes':
             self.cwc.destroy()
             print("The catalog has been destroyed!")
-            self.cwc = None
         else:
             print("Good choice!")
     
     def do_exit(self, line):
+        """Exits the console or interactive mode"""
+        
+        return True
+    
+    def do_quit(self, line):
         """Exits the console or interactive mode"""
         
         return True

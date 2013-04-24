@@ -11,11 +11,13 @@ class Catalog(object):
         self.path = path
         self.name = None
         self.file_associations = {}
-            
+                    
         while not self.name:
             self.name = os.path.basename(path)
-            path = os.path.dirname(path)      
-    
+            path = os.path.dirname(path)
+            
+        self.content_schema_path = os.path.join(self.path, constants.CONTENT_SCHEMA_FILE_NAME)
+                  
     def create_database(self):
         self.db.create(self.path, self.name)
              
@@ -42,23 +44,30 @@ class Catalog(object):
         self.create_database()
         
         if schema_path:
-            self.create_file_associations(schema_path)
-            # TODO: Add associations to catalog database
+            shutil.copyfile(schema_path, self.content_schema_path)
+        else:
+            root = ET.Element(constants.CONTENT_FOLDER_TAG_NAME, 
+                              {constants.XMLNS_ATTRIBUTE_NAME : constants.CONTENT_SCHEMA_NAMESPACE})
+            tree = ET.ElementTree(root)
+            tree.write(self.content_schema_path, encoding="UTF-8", xml_declaration=True)
+            
+        self.load_file_associations()
     
-    def create_file_associations(self, schema_path):
-        tree = ET.parse(schema_path)
+    def load_file_associations(self):
+        tree = ET.parse(self.content_schema_path)
         root = tree.getroot()
             
-        self.create_destination_path(root)
+        self.create_file_associations(root)
     
-    def create_destination_path(self, parent, file_destination=''):
+    def create_file_associations(self, parent, file_destination=None):
         for child in parent:
             if child.tag == constants.FOLDER_TAG_NAME:
-                self.create_destination_path(child, file_destination + os.pathsep + child.get(constants.NAME_ATTRIBUTE_NAME))
+                child_destination = os.path.join(file_destination, child.get(constants.NAME_ATTRIBUTE_NAME))
+                self.create_file_associations(child, child_destination)
         
         if parent.tag == constants.FOLDER_TAG_NAME:
             for extension in parent.findall(constants.EXTENSIONS_TAG_NAME + '/' + constants.EXTENSION_TAG_NAME):
-                self.file_associations[extension.get(constants.ID_ATTRIBUTE_NAME)] = (file_destination, extension.text)
+                self.file_associations[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
     
     def destroy(self):
         content_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
@@ -70,6 +79,8 @@ class Catalog(object):
         shutil.rmtree(templates_path)
         shutil.rmtree(hooks_path)     
         shutil.rmtree(log_path)
+        
+        os.remove(self.content_schema_path)
         
         self.db.destroy()
                         
@@ -98,22 +109,3 @@ class Database(object):
     def create(self, path, catalog_name):
         self.copy_default(path, catalog_name)
         self.connection = sqlite3.connect(self.path)
-        
-#         insert_tuple = (constants.FILE_EXTENSIONS_TABLE_NAME, 
-#                         constants.EXTENSION_COLUMN_NAME, 
-#                         constants.DESCRIPTION_COLUMN_NAME)
-#         
-#         sql = "INSERT INTO %s ('%s', '%s') VALUES (?, ?)" % insert_tuple
-#         
-#         self.connection.executemany(sql, constants.DEFAULT_FILE_EXTENSIONS)
-#         self.connection.commit()
-#         
-#         insert_tuple = (constants.CONTENT_TYPES_TABLE_NAME, 
-#                         constants.MEDIA_TYPE_NAME_COLUMN_NAME, 
-#                         constants.MEDIA_SUBTYPE_NAME_COLUMN_NAME)
-#         
-#         sql = "INSERT INTO %s ('%s', '%s') VALUES (?, ?)" % insert_tuple
-#         
-#         self.connection.commit()
-        
-        # TODO: Add population of default file associations
