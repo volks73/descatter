@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<contentStructure>
+	<folder name="application">
+		<folder name="msword">
+			<extensions>
+				<extension id="doc">A Microsoft Word 2005 or later document</extension>
+				<extension id="docx">A Microsoft Word 2007 or newer document</extension>
+			</extensions>
+		</folder>
+		<folder name="vnd.ms-excel">
+			<extensions>
+				<extension id="xls">A Microsoft Excel 2005 or later spreadsheet</extension>
+				<extension id="xlsx">A Microsoft Excel 2005 or newer spreadsheet</extension>
+			</extensions>
+		</folder>
+		<folder name="vnd.ms-powerpoint">
+			<extensions>
+				<extension id="ppt">A Microsoft PowerPoint 2005 or later presentation</extension>
+				<extension id="pptx">A Microsoft PowerPoint 2005 or newer presentation</extension>
+			</extensions>
+		</folder>
+	</folder>
+	<folder name="audio">
+		<folder name="mp3">
+			<extensions>
+				<extension id="mp3">A MPEG-3 compressed audio file</extension>
+			</extensions>
+		</folder>	
+	</folder>
+	<folder name="image">
+		<folder name="jpeg">
+			<extensions>
+				<extension id="jpg">A Join Photographic Experts Group image file</extension>
+				<extension id="jpeg">A Join Photographic Experts Group image file</extension>
+			</extensions>
+		</folder>
+		<folder name="png">
+			<extensions>
+				<extension id="png">A Protable Network Graphic image file</extension>
+			</extensions>
+		</folder>
+		<folder name="tiff">
+			<extensions>
+				<extension id="tif">A Tagged Image File Format image file</extension>
+				<extension id="tiff">A Tagged Image File Format image file</extension>
+			</extensions>
+		</folder>
+	</folder>
+	<folder name="text">
+		<folder name="css">
+			<extensions>
+				<extension id="css">A Cascading Style Sheet file</extension>
+			</extensions>
+		</folder>
+		<folder name="csv">
+			<extensions>
+				<extension id="csv">A comma-separated values file</extension>
+			</extensions>
+		</folder>
+		<folder name="plain">
+			<extensions>
+				<extension id="txt">A plain text file</extension>
+			</extensions>
+		</folder>
+		<folder name="html">
+			<extensions>
+				<extension id="html">A HyperText Markup Language file</extension>
+				<extension id="htm">A HyperText Markup Language file</extension>
+			</extensions>
+		</folder>
+		<folder name="xml">
+			<extensions>
+				<extension id="xml">An eXtensible Markup Language file</extension>
+			</extensions>
+		</folder>
+	</folder>
+	<folder name="video">
+		<folder name="avi">
+			<extensions>
+				<extension id="avi">Audio Video Interleave video file</extension>
+			</extensions>
+		</folder>
+	</folder>
+</contentStructure>

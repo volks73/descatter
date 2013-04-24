@@ -86,37 +86,66 @@ class CommandLine(object):
             if proceed:
                 self.cwc.create()
                     
-                print("The '%s' catalog created at '%s'" % (self.cwc.namt, self.cwc.path))
+                print("The '%s' catalog created at '%s'" % (self.cwc.name, self.cwc.path))
             else:
                 print("Failed to create the catalog at '%s'" % self.cwc.path)
         else:
-            print("The path to create the catalog is not a folder. Path: '%s'" % self.cwc.path)
+            print("The path: '%s' is not a folder." % self.cwc.path)
 
 class Console(cmd.Cmd):
     
-    prompt = constants.APPLICATION_NAME + ': '
+    prompt = constants.CONSOLE_PROMPT
     
     def __init__(self, cwc, cwf=None):
         self.cwc = cwc # Current Working Catalog
         self.cwf = cwf # Current Working File
+        
+        self.parser = argparse.ArgumentParser(description=constants.CONSOLE_DESCRIPTION)
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.ABSOLUTE_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.ABSOLUTE_ARGUMENT_LONG_NAME,
+                                 help=constants.ABSOLUTE_ARGUMENT_HELP,
+                                 action='store_true')
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
+                                 constants.SCHEMA_ARGUMENT_SHORT_NAME, 
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.SCHEMA_ARGUMENT_LONG_NAME,
+                                 nargs='?',
+                                 help=constants.SCHEMA_ARGUMENT_HELP)
+        
         super(Console, self).__init__()
     
     def do_cwc(self, line):
         """Display the current working catalog"""
-        # TODO: Add optional -a argument to display absolute path of cwc
-        print("Current working catalog: '%s'" % self.cwc.name)
+                
+        args = vars(self.parser.parse_args(line.split()))
+        
+        if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+            print("Current working catalog: '%s'" % self.cwc.path)
+        else:
+            print("Current working catalog: '%s'" % self.cwc.name)
         
     def do_cwf(self, line):
         """Display the current working file"""
-        # TODO: Add optional -a argument to display absolute path of cwf
-        print("Current working file: '%s'" % self.cwf)
+        
+        args = vars(self.parser.parse_args(line.split()))
+        
+        if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+            print("Current working file: '%s'" % self.cwf) # TODO: Add file path attribute
+        else:
+            print("Current working file: '%s'" % self.cwf)
     
     def do_cwd(self, line):
         """Display the current working directory"""
+        
         print("Current working director: %s" % os.getcwd())
     
     def do_catalog(self, catalog_path):
         """Sets the current working catalog"""
+        
         if not catalog_path:
             catalog_path = os.getcwd()
             
@@ -125,19 +154,21 @@ class Console(cmd.Cmd):
     
     def do_file(self, file_path):
         """Sets the current working file"""
+        
         self.cwf = file_path
         print("The current working file set to: '%s'" % self.cwf)
     
-    def do_create(self, catalog_path):
+    def do_create(self, line):
         """Creates a new catalog at the current working catalog"""
-        if catalog_path:
-            self.cwc = catalog.Catalog(catalog_path)
         
-        self.cwc.create()
+        args = vars(self.parser.parse_args(line.split()))    
+        
+        self.cwc.create(args[constants.SCHEMA_ARGUMENT_LONG_NAME])
         print("The '%s' catalog established at: %s" % (self.cwc.name, self.cwc.path))
     
     def do_destroy(self, catalog_path):
         """Destroy or delete a catalog. This will delete all of the files as well"""
+        
         if catalog_path:
             self.cwc = catalog.Catalog(catalog_path)
         
@@ -153,4 +184,5 @@ class Console(cmd.Cmd):
     
     def do_exit(self, line):
         """Exits the console or interactive mode"""
+        
         return True

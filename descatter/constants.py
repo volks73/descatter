@@ -44,6 +44,23 @@ INTERACTIVE_ARGUMENT_SHORT_NAME = 'i'
 INTERACTIVE_ARGUMENT_LONG_NAME = 'interactive'
 INTERACTIVE_ARGUMENT_HELP = "Start a console or interactive mode to execute a series of commands within the descatter application"
 
+# Console constants
+CONSOLE_PROMPT = APPLICATION_NAME + ': '
+CONSOLE_DESCRIPTION = APPLICATION_NAME + " Interactive Console"
+ABSOLUTE_ARGUMENT_SHORT_NAME = 'a'
+ABSOLUTE_ARGUMENT_LONG_NAME = 'absolute'
+ABSOLUTE_ARGUMENT_HELP = "Display the absolute path instead of the relative path"
+SCHEMA_ARGUMENT_SHORT_NAME = 's'
+SCHEMA_ARGUMENT_LONG_NAME = 'schema'
+SCHEMA_ARGUMENT_HELP = "Define the initial content folder structure and file associations"
+
+# XML constants
+FOLDER_TAG_NAME = 'folder'
+NAME_ATTRIBUTE_NAME = 'name'
+ID_ATTRIBUTE_NAME = 'id'
+EXTENSIONS_TAG_NAME = 'extensions'
+EXTENSION_TAG_NAME = 'extension'
+
 # Catalog folder structure constants
 CONTENT_FOLDER_NAME = 'content'
 TEMPLATES_FOLDER_NAME = 'templates'
@@ -62,37 +79,6 @@ AFTER_TRIGGER_NAME = 'after'
 
 TRIGGER_NAMES = [BEFORE_TRIGGER_NAME,
                  AFTER_TRIGGER_NAME]
-
-APPLICATION_MEDIA_TYPE_NAME = 'application'
-AUDIO_MEDIA_TYPE_NAME = 'audio'
-IMAGE_MEDIA_TYPE_NAME = 'image'
-MESSAGE_MEDIA_TYPE_NAME = 'message'
-MODEL_MEDIA_TYPE_NAME = 'model'
-MULTIPART_MEDIA_TYPE_NAME = 'multipart'
-TEXT_MEDIA_TYPE_NAME = 'text'
-VIDEO_MEDIA_TYPE_NAME = 'video'
-
-MEDIA_TYPE_NAMES =[APPLICATION_MEDIA_TYPE_NAME,
-                   AUDIO_MEDIA_TYPE_NAME,
-                   IMAGE_MEDIA_TYPE_NAME,
-                   MESSAGE_MEDIA_TYPE_NAME,
-                   MODEL_MEDIA_TYPE_NAME,
-                   MULTIPART_MEDIA_TYPE_NAME,
-                   TEXT_MEDIA_TYPE_NAME,
-                   VIDEO_MEDIA_TYPE_NAME]
-
-# TODO: add complete list of Media Types according to the IANA register
-# Defaults
-DEFAULT_CONTENT_TYPES = [(APPLICATION_MEDIA_TYPE_NAME, 'msword'),
-                         (APPLICATION_MEDIA_TYPE_NAME, 'vnd.ms-excel'),
-                         (APPLICATION_MEDIA_TYPE_NAME, 'vnd.ms-powerpoint'),
-                         (TEXT_MEDIA_TYPE_NAME, 'csv'),
-                         (TEXT_MEDIA_TYPE_NAME, 'xml'),
-                         (TEXT_MEDIA_TYPE_NAME, 'plain'),
-                         (TEXT_MEDIA_TYPE_NAME, 'html'),
-                         (IMAGE_MEDIA_TYPE_NAME, 'jpeg'),
-                         (IMAGE_MEDIA_TYPE_NAME, 'tiff'),
-                         (IMAGE_MEDIA_TYPE_NAME, 'png')]
 
 DEFAULT_FILE_EXTENSIONS = [('doc', "A Microsoft Word document"),
                            ('docx', "A Microsoft Word document"),

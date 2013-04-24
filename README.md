@@ -1,8 +1,5 @@
 # Descatter File Organizer #
 
-Author: Christopher R. Field
-Copyright 2013
-
 Descratter is a cross-platform desktop application for organizing, cataloging, and
 tagging files. Descatter attempts to reduce the amount of 'managing' a user does
 with files and folders but maintain a consistent organization for quickly 
