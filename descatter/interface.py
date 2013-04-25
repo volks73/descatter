@@ -116,12 +116,28 @@ class Console(cmd.Cmd):
                                  nargs='?',
                                  help=constants.SCHEMA_ARGUMENT_HELP)
         
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.CATALOG_ARGUMENT_SHORT_NAME, 
+                                 constants.COMMAND_LONG_PREFIX + 
+                                 constants.CATALOG_ARGUMENT_LONG_NAME, 
+                                 nargs='?',  
+                                 help=constants.CATALOG_ARGUMENT_HELP)
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.FILE_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX + 
+                                 constants.FILE_ARGUMENT_LONG_NAME,
+                                 nargs='?',
+                                 help=constants.FILE_ARGUMENT_HELP)
+                                 
         super(Console, self).__init__()
     
     def do_cwc(self, line):
         """Display the current working catalog"""
                 
         args = vars(self.parser.parse_args(line.split()))
+        
+        # TODO: Add argument to show schema
         
         if self.cwc:
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
@@ -136,21 +152,24 @@ class Console(cmd.Cmd):
         
         args = vars(self.parser.parse_args(line.split()))
         
-        if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
-            print("Current working file: '%s'" % self.cwf) # TODO: Add file path attribute
+        if self.cwf:        
+            if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+                print("Current working file: '%s'" % self.cwf[constants.FILE_PATH_KEY])
+            else:
+                print("Current working file: '%s'" % self.cwf[constants.FILE_NAME_KEY])
         else:
-            print("Current working file: '%s'" % self.cwf)
+            print("No current working file has been set")
     
     def do_cwd(self, line):
         """Display the current working directory"""
         
-        print("Current working director: %s" % os.getcwd())
+        print("Current working directory: %s" % os.getcwd())
     
     def do_catalog(self, catalog_path):
         """Sets the current working catalog"""
         
-        if not catalog_path:
-            catalog_path = os.getcwd()
+        if not os.path.isabs(catalog_path):
+            catalog_path = os.path.join(os.getcwd(), catalog_path)
             
         self.cwc = catalog.Catalog(catalog_path)
         print("The current working catalog set to: '%s'" % self.cwc.name)
@@ -158,8 +177,15 @@ class Console(cmd.Cmd):
     def do_file(self, file_path):
         """Sets the current working file"""
         
-        self.cwf = file_path
-        print("The current working file set to: '%s'" % self.cwf)
+        if not os.path.isabs(file_path):
+            file_path = os.path.join(os.getcwd(), file_path)
+        
+            file_name = os.path.basename(file_path)
+                
+            self.cwf = { constants.FILE_NAME_KEY : file_name, constants.FILE_PATH_KEY : file_path }
+            print("The current working file set to: '%s'" % self.cwf[constants.FILE_NAME_KEY])
+        else:
+            print("No current working file was set")
     
     def do_create(self, line):
         """Creates a new catalog at the current working catalog"""
@@ -183,6 +209,19 @@ class Console(cmd.Cmd):
             print("The catalog has been destroyed!")
         else:
             print("Good choice!")
+    
+    def do_checkin(self, line):
+        """Checks in the current working file into the current working catalog"""
+    
+        args = vars(self.parser.parse_args(line.split()))
+    
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+            
+        if args[constants.FILE_ARGUMENT_LONG_NAME]:
+            self.do_file(args[constants.FILE_ARGUMENT_LONG_NAME])
+        
+        self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])       
     
     def do_exit(self, line):
         """Exits the console or interactive mode"""
