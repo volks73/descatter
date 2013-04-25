@@ -36,7 +36,7 @@
 		</folder>
 		<folder name="png">
 			<extensions>
-				<extension id="png">A Protable Network Graphic image file</extension>
+				<extension id="png">A Portable Network Graphic image file</extension>
 			</extensions>
 		</folder>
 		<folder name="tiff">
