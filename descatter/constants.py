@@ -22,7 +22,8 @@ EXTENSION_COLUMN_NAME = 'extension'
 DESCRIPTION_COLUMN_NAME = 'description'
 FILE_ASSOCIATIONS_TABLE_NAME = 'file_associations'
 FILE_ASSOCIATIONS_ID_COLUMN_NAME = 'file_associations_id'
-DEFAULT_CATALOG_DB_NAME = 'default_catalog_db' + SQLITE_EXTENSION
+TAGS_DB_NAME = 'tags' + SQLITE_EXTENSION
+DEFAULT_TAGS_DB_NAME = 'default_' + TAGS_DB_NAME
 
 # Tests constants
 TEST_CATALOG_NAME = 'Test_Catalog'
@@ -45,6 +46,12 @@ CHECKIN_ARGUMENT_HELP = "Check in the specified file into the specified catalog"
 INTERACTIVE_ARGUMENT_SHORT_NAME = 'i'
 INTERACTIVE_ARGUMENT_LONG_NAME = 'interactive'
 INTERACTIVE_ARGUMENT_HELP = "Start a console or interactive mode to execute a series of commands within the descatter application"
+MAPPINGS_ARGUMENT_SHORT_NAME = 'm'
+MAPPINGS_ARGUMENT_LONG_NAME = 'mappings'
+MAPPINGS_ARGUMENT_HELP = "List the file mappings for the content folder"
+EXTENSION_ARGUMENT_SHORT_NAME = 'e'
+EXTENSION_ARGUMENT_LONG_NAME = 'extension'
+EXTENSION_ARGUMENT_HELP = "List the file mapping for the specified file extension only"
 
 # Console constants
 CONSOLE_PROMPT = APPLICATION_NAME + ': '
@@ -55,6 +62,9 @@ ABSOLUTE_ARGUMENT_HELP = "Display the absolute path instead of the relative path
 SCHEMA_ARGUMENT_SHORT_NAME = 's'
 SCHEMA_ARGUMENT_LONG_NAME = 'schema'
 SCHEMA_ARGUMENT_HELP = "Define the initial content folder structure and file associations"
+FILE_EXTENSION_HEADER_NAME = 'Extension'
+CONTENT_FOLDER_HEADER_NAME = 'Content Folder'
+CONTENT_FOLDER_HEADER_ALIGNMENT = 'l'
 
 # XML constants
 CONTENT_SCHEMA_NAMESPACE = APPLICATION_NAME + '/2013/content_schema'

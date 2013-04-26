@@ -1,3 +1,5 @@
+from prettytable import PrettyTable
+
 import argparse
 import cmd
 import os 
@@ -46,6 +48,8 @@ class CommandLine(object):
                                  constants.INTERACTIVE_ARGUMENT_LONG_NAME,
                                  action='store_true',
                                  help=constants.INTERACTIVE_ARGUMENT_HELP)
+        
+        # TODO: Add all commands from the console as command line arguments
         
     def parse(self, param_args=None):
         args = vars(self.parser.parse_args(param_args))
@@ -129,6 +133,20 @@ class Console(cmd.Cmd):
                                  constants.FILE_ARGUMENT_LONG_NAME,
                                  nargs='?',
                                  help=constants.FILE_ARGUMENT_HELP)
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
+                                 constants.MAPPINGS_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.MAPPINGS_ARGUMENT_LONG_NAME,
+                                 help=constants.MAPPINGS_ARGUMENT_HELP,
+                                 action='store_true')
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
+                                 constants.EXTENSION_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX + 
+                                 constants.EXTENSION_ARGUMENT_LONG_NAME,
+                                 nargs='?',
+                                 help=constants.EXTENSION_ARGUMENT_HELP)
                                  
         super(Console, self).__init__()
     
@@ -136,8 +154,6 @@ class Console(cmd.Cmd):
         """Display the current working catalog"""
                 
         args = vars(self.parser.parse_args(line.split()))
-        
-        # TODO: Add argument to show schema
         
         if self.cwc:
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
@@ -221,7 +237,43 @@ class Console(cmd.Cmd):
         if args[constants.FILE_ARGUMENT_LONG_NAME]:
             self.do_file(args[constants.FILE_ARGUMENT_LONG_NAME])
         
-        self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])       
+        self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
+    
+    def do_list(self, line):
+        """Lists various properties and values for the specified catalog"""
+        
+        args = vars(self.parser.parse_args(line.split()))
+        
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+        
+        if args[constants.MAPPINGS_ARGUMENT_LONG_NAME]:
+            
+            file_mappings = self.cwc.get_file_mappings()
+            
+            mappings_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
+            mappings_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT
+            
+            if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
+                ext = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
+                
+                if ext in file_mappings:
+                    row = [ext, file_mappings[ext]]
+                    mappings_table.add_row(row)
+                    print(mappings_table)
+                else:
+                    print("No mapping exists for '%s' file extension" % ext)
+            else:
+                for file_extension in sorted(file_mappings):
+                    row = [file_extension, file_mappings[file_extension]]
+                    mappings_table.add_row(row)
+                
+                print(mappings_table)
+        # TODO: Add listing tags
+        # TODO: Add listing files
+        # TODO: Add listing templates
+        else:
+            print("Nothing to list")
     
     def do_exit(self, line):
         """Exits the console or interactive mode"""

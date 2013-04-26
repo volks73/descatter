@@ -18,9 +18,9 @@ class Catalog(object):
             
         self.content_schema_path = os.path.join(self.path, constants.CONTENT_SCHEMA_FILE_NAME)
                   
-    def create_database(self):
+    def create_tags_database(self):
         
-        self.db.create(self.path, self.name)
+        self.db.create(self.path)
              
     def create_folder_structure(self):        
         
@@ -48,7 +48,7 @@ class Catalog(object):
     def create(self, schema_path=None):
         
         self.create_folder_structure()
-        self.create_database()
+        self.create_tags_database()
         
         if schema_path:
             shutil.copyfile(schema_path, self.content_schema_path)
@@ -60,28 +60,28 @@ class Catalog(object):
         
         # TODO: Add copy of README file to root folder explaining the folder is catalog and should not be messed with
     
-    def load_file_associations(self):
+    def get_file_mappings(self):
         
         tree = ET.parse(self.content_schema_path)
         root = tree.getroot()
             
-        return self.get_file_associations(root)
+        return self._load_file_mappings(root)
     
-    def get_file_associations(self, parent, file_destination=None):
+    def _load_file_mappings(self, parent, file_destination=None):
         
-        file_associations = {}
+        file_mappings = {}
         
         for child in parent:
             if child.tag == constants.FOLDER_TAG_NAME:
                 child_destination = os.path.join(file_destination, child.get(constants.NAME_ATTRIBUTE_NAME))
 
-                file_associations.update(self.get_file_associations(child, child_destination))
+                file_mappings.update(self._load_file_mappings(child, child_destination))
         
         if parent.tag == constants.FOLDER_TAG_NAME:
             for extension in parent.findall(constants.EXTENSIONS_TAG_NAME + '/' + constants.EXTENSION_TAG_NAME):
-                file_associations[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
+                file_mappings[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
         
-        return file_associations
+        return file_mappings
     
     def destroy(self):
 
@@ -101,12 +101,12 @@ class Catalog(object):
         
     def checkin(self, file_path):
 
-        file_associations = self.load_file_associations()
+        file_mappings = self.get_file_mappings()
         file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
-        destination_path = file_associations[file_extension]
+        destination_path = file_mappings[file_extension]
         
         # TODO: Add destination path creation if does not exist
-        # TODO: Move file to destination path
+        # TODO: Copy file to destination path
                         
 class Database(object):
     
@@ -116,15 +116,13 @@ class Database(object):
         self.name = None
         self.connection = None
     
-    def copy_default(self, path, catalog_name):
+    def copy_default(self, path):
         
         data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
         data_path = os.path.join(data_path, constants.DATA_FOLDER_NAME)
-        default_catalog_db_path = os.path.join(data_path, constants.DEFAULT_CATALOG_DB_NAME)
-        
-        self.name = catalog_name        
-        db_file_name = self.name + constants.SQLITE_EXTENSION
-        self.path = os.path.join(path, db_file_name)
+        default_catalog_db_path = os.path.join(data_path, constants.DEFAULT_TAGS_DB_NAME)
+                
+        self.path = os.path.join(path, constants.TAGS_DB_NAME)
         
         shutil.copyfile(default_catalog_db_path, self.path)
     
@@ -133,7 +131,7 @@ class Database(object):
         self.connection.close()
         os.remove(self.path)
         
-    def create(self, path, catalog_name):
+    def create(self, path):
         
-        self.copy_default(path, catalog_name)
+        self.copy_default(path)
         self.connection = sqlite3.connect(self.path)
