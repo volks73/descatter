@@ -1,6 +1,7 @@
+from lxml import etree as ET
+
 import os
 import sqlite3
-import xml.etree.ElementTree as ET
 import shutil
 import constants
 
@@ -15,8 +16,8 @@ class Catalog(object):
         while not self.name:
             self.name = os.path.basename(path)
             path = os.path.dirname(path)
-            
-        self.content_schema_path = os.path.join(self.path, constants.CONTENT_SCHEMA_FILE_NAME)
+        
+        self.content_map = ContentMap(os.path.join(self.path, constants.CONTENT_SCHEMA_FILE_NAME))   
                   
     def create_tags_database(self):
         
@@ -45,7 +46,7 @@ class Catalog(object):
                 trigger_path = os.path.join(hook_path, trigger_name)
                 os.mkdir(trigger_path)
 
-    def create(self, schema_path=None):
+    def create(self, schema_path = None):
         
         # TODO: check schema path exists prior to creating structure
         
@@ -53,12 +54,9 @@ class Catalog(object):
         self.create_tags_database()
         
         if schema_path:
-            shutil.copyfile(schema_path, self.content_schema_path)
+            shutil.copyfile(schema_path, self.content_map.schema_path)
         else:
-            root = ET.Element(constants.CONTENT_FOLDER_TAG_NAME, 
-                              {constants.XMLNS_ATTRIBUTE_NAME : constants.CONTENT_SCHEMA_NAMESPACE})
-            tree = ET.ElementTree(root)
-            tree.write(self.content_schema_path, encoding="UTF-8", xml_declaration=True)
+            self.content_map.write_schema()
         
         data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
         data_path = os.path.join(data_path, constants.DATA_FOLDER_NAME)
@@ -66,29 +64,6 @@ class Catalog(object):
         dst_readme_file_path = os.path.join(self.path, constants.CATALOG_README_FILE_NAME)
         
         shutil.copyfile(src_readme_file_path, dst_readme_file_path)
-    
-    def get_file_mappings(self):
-        
-        tree = ET.parse(self.content_schema_path)
-        root = tree.getroot()
-            
-        return self._load_file_mappings(root)
-    
-    def _load_file_mappings(self, parent, file_destination=None):
-        
-        file_mappings = {}
-        
-        for child in parent:
-            if child.tag == constants.FOLDER_TAG_NAME:
-                child_destination = os.path.join(file_destination, child.get(constants.NAME_ATTRIBUTE_NAME))
-
-                file_mappings.update(self._load_file_mappings(child, child_destination))
-        
-        if parent.tag == constants.FOLDER_TAG_NAME:
-            for extension in parent.findall(constants.EXTENSIONS_TAG_NAME + '/' + constants.EXTENSION_TAG_NAME):
-                file_mappings[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
-        
-        return file_mappings
     
     def destroy(self):
 
@@ -104,19 +79,19 @@ class Catalog(object):
         shutil.rmtree(log_path)
         
         os.remove(readme_path)
-        os.remove(self.content_schema_path)
         
+        self.content_map.destroy()
         self.db.destroy()
         
     def checkin(self, file_path):
 
         file_name = os.path.basename(file_path)
-        file_mappings = self.get_file_mappings()
         file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
+        destination = self.content_map.get_destination(file_extension)
         
-        if file_extension in file_mappings:
+        if destination:
             content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
-            dst_folder_path = os.path.join(content_folder_path, file_mappings[file_extension])
+            dst_folder_path = os.path.join(content_folder_path, destination)
             
             if not os.path.isdir(dst_folder_path):
                 os.makedirs(dst_folder_path)
@@ -127,48 +102,117 @@ class Catalog(object):
             shutil.copyfile(file_path, dst_file_path)    
         else:
             raise KeyError("Mapping does not exist")
+
+class ContentMap(object):
+    
+    def __init__(self, schema_path):
+        self.schema_path = schema_path
+        self.map = {}
+    
+    def _load(self, parent, file_destination=None):
+        for child in parent:
+            if child.tag == constants.FOLDER_TAG_NAME:
+                child_destination = os.path.join(file_destination, child.get(constants.NAME_ATTRIBUTE_NAME))
+
+                self._load(child, child_destination)
         
-    def add_mapping(self, file_path, destination, description):
+        if parent.tag == constants.FOLDER_TAG_NAME:
+            for extension in parent.findall(constants.EXTENSIONS_TAG_NAME + '/' + constants.EXTENSION_TAG_NAME):
+                self.map[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
         
-        file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
+    def write_schema(self, schema_path=None):
+                
+        root = self.create_schema()
+        tree = ET.ElementTree(root)
         
-        tree = ET.parse(self.content_schema_path)
+        if not schema_path:
+            schema_path = self.schema_path
+        
+        tree.write(schema_path, pretty_print=True)
+    
+    def create_schema(self):
+        
         ET.register_namespace("", constants.CONTENT_SCHEMA_NAMESPACE)
-        parent = tree.getroot()
+        root = ET.Element(constants.CONTENT_FOLDER_TAG_NAME)
         
-        folder_names = []
-        head, tail = os.path.split(destination)
-        folder_names.append(tail)
-
-        while head:
-            head, tail = os.path.split(head)
-            if tail:
-                folder_names.append(tail)
-        
-        for folder_name in reversed(folder_names):
-            xpath = constants.FOLDER_TAG_NAME + "[@" + constants.NAME_ATTRIBUTE_NAME + "='%s']" % folder_name
-            folder_element = parent.find(xpath)
+        for file_extension, destination in self.map.items():
             
-            if not folder_element:
-                folder_element = ET.SubElement(parent, 
-                                               constants.CONTENT_FOLDER_TAG_NAME, 
-                                               {constants.NAME_ATTRIBUTE_NAME : folder_name})
-
-            parent = folder_element
+            parent = root
+            folder_names = []
+            head, tail = os.path.split(destination)
+            folder_names.append(tail)
+            
+            while head:
+                head, tail = os.path.split(head)
+                if tail:
+                    folder_names.append(tail)
+            
+            for folder_name in reversed(folder_names):
+                xpath = constants.FOLDER_TAG_NAME + "[@" + constants.NAME_ATTRIBUTE_NAME + "='%s']" % folder_name
+                folder_element = parent.find(xpath)         
         
-        extensions_element = parent.find(constants.EXTENSIONS_TAG_NAME)
+                if not folder_element:
+                    folder_element = ET.SubElement(parent,
+                                                   constants.FOLDER_TAG_NAME,
+                                                   {constants.NAME_ATTRIBUTE_NAME : folder_name})
+                
+                parent = folder_element
         
-        if not extensions_element:
-            extensions_element = ET.SubElement(parent, constants.EXTENSIONS_TAG_NAME)
+            extensions_element = parent.find(constants.EXTENSIONS_TAG_NAME)
+            
+            if not extensions_element:
+                extensions_element = ET.SubElement(parent, constants.EXTENSIONS_TAG_NAME)
         
-        extension_element = ET.SubElement(extensions_element, 
-                                          constants.EXTENSION_TAG_NAME,
-                                          {constants.ID_ATTRIBUTE_NAME : file_extension})
-        extension_element.text = description   
+            ET.SubElement(extensions_element, 
+                          constants.EXTENSION_TAG_NAME,
+                          {constants.ID_ATTRIBUTE_NAME : file_extension})
+    
+        return root
         
-        tree.write(self.content_schema_path, encoding="UTF-8", xml_declaration=True)
-
-# TODO: Add remove mapping
+    def load(self):
+        self.map = {}
+        
+        tree = ET.parse(self.schema_path)
+        ET.register_namespace("", constants.CONTENT_SCHEMA_NAMESPACE)
+        
+        self._load(tree.getroot())
+                            
+    def add(self, file_extension, destination):
+        
+        print("file_extension: '%s'" % file_extension)
+        if not self.map:
+            self.load()
+        
+        self.map[file_extension] = destination
+        
+        self.write_schema()
+    
+    def remove(self, file_extension):
+        
+        if not self.map:
+            self.load()
+        
+        if file_extension in self.map:    
+            self.map.pop(file_extension, None)
+        else:
+            print("File extension not mapped. Nothing to remove.")
+        
+        self.write_schema()
+    
+    def get_destination(self, file_extension):
+        
+        if not self.map:
+            self.load()
+        
+        if file_extension in self.map:
+            return self.map[file_extension]
+        else:
+            return None    
+    
+    def destroy(self):
+        
+        self.map = {}
+        os.remove(self.schema_path)
                         
 class Database(object):
     

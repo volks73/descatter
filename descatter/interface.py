@@ -53,48 +53,9 @@ class CommandLine(object):
         
     def parse(self, param_args=None):
         args = vars(self.parser.parse_args(param_args))
-    
-        self.catalog = catalog.Catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
-        print("Current working catalog set to: '%s'" % self.catalog.name)
-            
-        if args[constants.CREATE_ARGUMENT_LONG_NAME]:
-            self.create_catalog()
-        
-        if args[constants.FILE_ARGUMENT_LONG_NAME]:
-            self.file = args[constants.FILE_ARGUMENT_LONG_NAME]
-            print("Current working file set to: '%s'" % self.file)
                       
         if args[constants.INTERACTIVE_ARGUMENT_LONG_NAME]:
             Console(self.catalog).cmdloop()
-            
-    def create_catalog(self):
-        if os.path.isdir(self.cwc.path):
-            proceed = False
-            response = None                    
-            
-            if os.listdir(self.cwc.path):
-                while not response:
-                    print("The folder for creating the catalog is not empty")
-                    response = input("Would you like to proceed? (Y/Yes or N/No): ")
-                    
-                    if response == 'Y' or response == 'Yes':      
-                        proceed = True
-                    elif response == 'N' or response == 'No':
-                        proceed = False
-                    else:
-                        print("Response not recognized, try again")
-                        response = None
-            else:
-                proceed = True
-                
-            if proceed:
-                self.cwc.create()
-                    
-                print("The '%s' catalog created at '%s'" % (self.cwc.name, self.cwc.path))
-            else:
-                print("Failed to create the catalog at '%s'" % self.cwc.path)
-        else:
-            print("The path: '%s' is not a folder." % self.cwc.path)
 
 class Console(cmd.Cmd):
     
@@ -193,12 +154,16 @@ class Console(cmd.Cmd):
     def do_file(self, file_path):
         """Sets the current working file"""
         
+        # TODO: Add check if the file_path is to a file
+        
         if not os.path.isabs(file_path):
             file_path = os.path.join(os.getcwd(), file_path)
-        
             file_name = os.path.basename(file_path)
+            file_ext = os.path.splitext(file_path)[1][1:].strip().lower()
                 
-            self.cwf = { constants.FILE_NAME_KEY : file_name, constants.FILE_PATH_KEY : file_path }
+            self.cwf = {constants.FILE_NAME_KEY : file_name,
+                        constants.FILE_EXT_KEY : file_ext,
+                        constants.FILE_PATH_KEY : file_path}
             print("The current working file set to: '%s'" % self.cwf[constants.FILE_NAME_KEY])
         else:
             print("No current working file was set")
@@ -247,23 +212,21 @@ class Console(cmd.Cmd):
                 self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
                 print("'%s' checked in to catalog" % self.cwf[constants.FILE_NAME_KEY])
             except LookupError:
-                print("The file extension is unknown for the '%s' catalog" % self.cwc.name)
-                print("Would you like to add the file extension to the '%s' catalog?" % self.cwc.name)
-                response = input("Y/Yes or N/No): ")
+                file_extension = self.cwf[constants.FILE_EXT_KEY]
+                print("The '%s' file extension is unknown for the '%s' catalog." % (file_extension, self.cwc.name))
+                print("Would you like to add the '%s' file extension to the '%s' catalog?" % (file_extension, self.cwc.name))
+                response = input("(Y/Yes or N/No): ")
                 
                 if response == 'Y' or response == 'Yes':
                     
-                    print("Please specify a folder path relative to the content folder for the file extension:")
-                    destination = input("file extension: ")
+                    print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
+                    destination = input("(content folder path): ")
                     
                     while os.path.isabs(response):
                         print("The folder path must be relative to the content folder. Please try again.")
-                        response = input("file extension: ")
-                    
-                    print("Please specify a short description of the file extension:")
-                    description = input("description: ")
-                        
-                    self.cwc.add_mapping(self.cwf[constants.FILE_PATH_KEY], destination, description)
+                        response = input("(content folder path): ")
+                       
+                    self.cwc.content_map.add(file_extension, destination)
                     continue
                 else:
                     print("The file was not checked in")
@@ -288,27 +251,25 @@ class Console(cmd.Cmd):
             self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
         if args[constants.MAPPINGS_ARGUMENT_LONG_NAME]:
-            
-            file_mappings = self.cwc.get_file_mappings()
-            
             mappings_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
             mappings_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT
             parent_path = None
+            file_map = self.cwc.content_map.map
             
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
                 parent_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
             
             if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
                 file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
-                
-                if file_extension in file_mappings:
-                    row = [file_extension, os.path.join(parent_path, file_mappings[file_extension])]
+            
+                if file_extension in self.cwc.content_map.map:
+                    row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
                     mappings_table.add_row(row)
                 else:
                     print("No mapping exists for '%s' file extension" % file_extension)
             else:
-                for file_extension in sorted(file_mappings):
-                    row = [file_extension, os.path.join(parent_path, file_mappings[file_extension])]
+                for file_extension in sorted(file_map):
+                    row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
                     mappings_table.add_row(row)        
                 
             print(mappings_table)

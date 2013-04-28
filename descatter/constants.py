@@ -4,6 +4,7 @@ APPLICATION_DESCRIPTION = "A cross-platform desktop application for cataloging, 
 DATA_FOLDER_NAME = 'data'
 FILE_NAME_KEY = 'name'
 FILE_PATH_KEY = 'path'
+FILE_EXT_KEY = 'ext'
 
 # Database constants
 SQLITE_EXTENSION = '.sqlite'
