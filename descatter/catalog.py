@@ -47,6 +47,8 @@ class Catalog(object):
 
     def create(self, schema_path=None):
         
+        # TODO: check schema path exists prior to creating structure
+        
         self.create_folder_structure()
         self.create_tags_database()
         
@@ -58,7 +60,12 @@ class Catalog(object):
             tree = ET.ElementTree(root)
             tree.write(self.content_schema_path, encoding="UTF-8", xml_declaration=True)
         
-        # TODO: Add copy of README file to root folder explaining the folder is catalog and should not be messed with
+        data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
+        data_path = os.path.join(data_path, constants.DATA_FOLDER_NAME)
+        src_readme_file_path = os.path.join(data_path, constants.DEFAULT_README_FILE_NAME)
+        dst_readme_file_path = os.path.join(self.path, constants.CATALOG_README_FILE_NAME)
+        
+        shutil.copyfile(src_readme_file_path, dst_readme_file_path)
     
     def get_file_mappings(self):
         
@@ -89,24 +96,79 @@ class Catalog(object):
         templates_path = os.path.join(self.path, constants.TEMPLATES_FOLDER_NAME)
         hooks_path = os.path.join(self.path, constants.HOOKS_FOLDER_NAME)
         log_path = os.path.join(self.path, constants.LOG_FOLDER_NAME)
+        readme_path = os.path.join(self.path, constants.CATALOG_README_FILE_NAME)
         
         shutil.rmtree(content_path)
         shutil.rmtree(templates_path)
         shutil.rmtree(hooks_path)     
         shutil.rmtree(log_path)
         
+        os.remove(readme_path)
         os.remove(self.content_schema_path)
         
         self.db.destroy()
         
     def checkin(self, file_path):
 
+        file_name = os.path.basename(file_path)
         file_mappings = self.get_file_mappings()
         file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
-        destination_path = file_mappings[file_extension]
         
-        # TODO: Add destination path creation if does not exist
-        # TODO: Copy file to destination path
+        if file_extension in file_mappings:
+            content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
+            dst_folder_path = os.path.join(content_folder_path, file_mappings[file_extension])
+            
+            if not os.path.isdir(dst_folder_path):
+                os.makedirs(dst_folder_path)
+        
+            # TODO: Use tmp file module to create unique file name instead of using original name
+            dst_file_path = os.path.join(dst_folder_path, file_name)
+            
+            shutil.copyfile(file_path, dst_file_path)    
+        else:
+            raise KeyError("Mapping does not exist")
+        
+    def add_mapping(self, file_path, destination, description):
+        
+        file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
+        
+        tree = ET.parse(self.content_schema_path)
+        ET.register_namespace("", constants.CONTENT_SCHEMA_NAMESPACE)
+        parent = tree.getroot()
+        
+        folder_names = []
+        head, tail = os.path.split(destination)
+        folder_names.append(tail)
+
+        while head:
+            head, tail = os.path.split(head)
+            if tail:
+                folder_names.append(tail)
+        
+        for folder_name in reversed(folder_names):
+            xpath = constants.FOLDER_TAG_NAME + "[@" + constants.NAME_ATTRIBUTE_NAME + "='%s']" % folder_name
+            folder_element = parent.find(xpath)
+            
+            if not folder_element:
+                folder_element = ET.SubElement(parent, 
+                                               constants.CONTENT_FOLDER_TAG_NAME, 
+                                               {constants.NAME_ATTRIBUTE_NAME : folder_name})
+
+            parent = folder_element
+        
+        extensions_element = parent.find(constants.EXTENSIONS_TAG_NAME)
+        
+        if not extensions_element:
+            extensions_element = ET.SubElement(parent, constants.EXTENSIONS_TAG_NAME)
+        
+        extension_element = ET.SubElement(extensions_element, 
+                                          constants.EXTENSION_TAG_NAME,
+                                          {constants.ID_ATTRIBUTE_NAME : file_extension})
+        extension_element.text = description   
+        
+        tree.write(self.content_schema_path, encoding="UTF-8", xml_declaration=True)
+
+# TODO: Add remove mapping
                         
 class Database(object):
     
@@ -128,7 +190,9 @@ class Database(object):
     
     def destroy(self):
         
-        self.connection.close()
+        if self.connection:
+            self.connection.close()
+        
         os.remove(self.path)
         
     def create(self, path):

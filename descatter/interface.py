@@ -209,7 +209,7 @@ class Console(cmd.Cmd):
         args = vars(self.parser.parse_args(line.split()))    
         
         self.cwc.create(args[constants.SCHEMA_ARGUMENT_LONG_NAME])
-        print("The '%s' catalog established at: %s" % (self.cwc.name, self.cwc.path))
+        print("The '%s' catalog created at: %s" % (self.cwc.name, self.cwc.path))
     
     def do_destroy(self, catalog_path):
         """Destroy or delete a catalog. This will delete all of the files as well"""
@@ -218,7 +218,8 @@ class Console(cmd.Cmd):
             self.cwc = catalog.Catalog(catalog_path)
         
         print("All files will be lost and this cannot be undone!")
-        response = input("Are you sure you want to destroy '%s' catalog? (Y/Yes or N/No): " % self.cwc.name)
+        print("Are you sure you want to destroy '%s' catalog?" % self.cwc.name)
+        response = input("(Y/Yes or N/No): ")
         
         if response == 'Y' or response == 'Yes':
             self.cwc.destroy()
@@ -236,8 +237,47 @@ class Console(cmd.Cmd):
             
         if args[constants.FILE_ARGUMENT_LONG_NAME]:
             self.do_file(args[constants.FILE_ARGUMENT_LONG_NAME])
-        
-        self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
+        elif not self.cwf:
+            print("Nothing to check in. Please specific a file with the '-f' argument or set a current working file with the 'file' command.")
+       
+        # TODO: Add -a argument to show the absolute check in file path after checking in
+       
+        while True:
+            try: 
+                self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
+                print("'%s' checked in to catalog" % self.cwf[constants.FILE_NAME_KEY])
+            except LookupError:
+                print("The file extension is unknown for the '%s' catalog" % self.cwc.name)
+                print("Would you like to add the file extension to the '%s' catalog?" % self.cwc.name)
+                response = input("Y/Yes or N/No): ")
+                
+                if response == 'Y' or response == 'Yes':
+                    
+                    print("Please specify a folder path relative to the content folder for the file extension:")
+                    destination = input("file extension: ")
+                    
+                    while os.path.isabs(response):
+                        print("The folder path must be relative to the content folder. Please try again.")
+                        response = input("file extension: ")
+                    
+                    print("Please specify a short description of the file extension:")
+                    description = input("description: ")
+                        
+                    self.cwc.add_mapping(self.cwf[constants.FILE_PATH_KEY], destination, description)
+                    continue
+                else:
+                    print("The file was not checked in")
+            break 
+    
+    # TODO: Add -t argument for checkin, which does a test checkin and shows the path the file would be checked in to
+    
+    def do_map(self, line):
+        """Adds a file map to the specified catalog"""
+        # TODO: Add adding a file map to the catalog
+        # TODO: Add -e, --extension argument to specified an extension to add, change, or remove
+        # TODO: Add -r, --remove argument to remove a mapping from the catalog
+        # TODO: Add -l, --list to list mappings, same as 'list -m' command and option
+        pass
     
     def do_list(self, line):
         """Lists various properties and values for the specified catalog"""
@@ -253,22 +293,26 @@ class Console(cmd.Cmd):
             
             mappings_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
             mappings_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT
+            parent_path = None
+            
+            if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+                parent_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
             
             if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
-                ext = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
+                file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
                 
-                if ext in file_mappings:
-                    row = [ext, file_mappings[ext]]
+                if file_extension in file_mappings:
+                    row = [file_extension, os.path.join(parent_path, file_mappings[file_extension])]
                     mappings_table.add_row(row)
-                    print(mappings_table)
                 else:
-                    print("No mapping exists for '%s' file extension" % ext)
+                    print("No mapping exists for '%s' file extension" % file_extension)
             else:
                 for file_extension in sorted(file_mappings):
-                    row = [file_extension, file_mappings[file_extension]]
-                    mappings_table.add_row(row)
+                    row = [file_extension, os.path.join(parent_path, file_mappings[file_extension])]
+                    mappings_table.add_row(row)        
                 
-                print(mappings_table)
+            print(mappings_table)
+            
         # TODO: Add listing tags
         # TODO: Add listing files
         # TODO: Add listing templates
