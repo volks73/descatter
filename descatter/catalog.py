@@ -1,7 +1,6 @@
-from lxml import etree as ET
+from lxml import etree
 
 import os
-import sqlite3
 import shutil
 import constants
 
@@ -9,20 +8,16 @@ class Catalog(object):
     
     def __init__(self, path):
         
-        self.db = Database()
+        self.db = TagsDatabase(path)
         self.path = path
         self.name = None
+        
+        self.content_map = ContentMap(path)
                     
         while not self.name:
             self.name = os.path.basename(path)
             path = os.path.dirname(path)
-        
-        self.content_map = ContentMap(os.path.join(self.path, constants.CONTENT_SCHEMA_FILE_NAME))   
-                  
-    def create_tags_database(self):
-        
-        self.db.create(self.path)
-             
+                               
     def create_folder_structure(self):        
         
         if not os.path.isdir(self.path):
@@ -46,17 +41,16 @@ class Catalog(object):
                 trigger_path = os.path.join(hook_path, trigger_name)
                 os.mkdir(trigger_path)
 
-    def create(self, schema_path = None):
-        
-        # TODO: check schema path exists prior to creating structure
+    def create(self, schema_path=None):
         
         self.create_folder_structure()
-        self.create_tags_database()
+        self.db.create()
         
-        if schema_path:
-            shutil.copyfile(schema_path, self.content_map.schema_path)
+        if schema_path is None:
+            self.content_map.write_schema()            
         else:
-            self.content_map.write_schema()
+            # TODO: check schema path exists prior to creating structure
+            shutil.copyfile(schema_path, self.content_map.schema_path)
         
         data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
         data_path = os.path.join(data_path, constants.DATA_FOLDER_NAME)
@@ -105,15 +99,16 @@ class Catalog(object):
 
 class ContentMap(object):
     
-    def __init__(self, schema_path):
-        self.schema_path = schema_path
-        self.map = {}
+    def __init__(self, catalog_path):
+                
+        self.schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
+        self.map = None
     
     def _load(self, parent, file_destination=None):
+        
         for child in parent:
             if child.tag == constants.FOLDER_TAG_NAME:
                 child_destination = os.path.join(file_destination, child.get(constants.NAME_ATTRIBUTE_NAME))
-
                 self._load(child, child_destination)
         
         if parent.tag == constants.FOLDER_TAG_NAME:
@@ -123,64 +118,62 @@ class ContentMap(object):
     def write_schema(self, schema_path=None):
                 
         root = self.create_schema()
-        tree = ET.ElementTree(root)
+        tree = etree.ElementTree(root)
         
-        if not schema_path:
+        if schema_path is None:
             schema_path = self.schema_path
         
-        tree.write(schema_path, pretty_print=True)
+        tree.write(schema_path, pretty_print=True, xml_declaration=True, encoding=constants.XML_ENCODING)
     
     def create_schema(self):
         
-        ET.register_namespace("", constants.CONTENT_SCHEMA_NAMESPACE)
-        root = ET.Element(constants.CONTENT_FOLDER_TAG_NAME)
+        root = etree.Element(constants.CONTENT_FOLDER_TAG_NAME, nsmap=constants.NAMESPACE_MAP)
         
-        for file_extension, destination in self.map.items():
-            
-            parent = root
-            folder_names = []
-            head, tail = os.path.split(destination)
-            folder_names.append(tail)
-            
-            while head:
-                head, tail = os.path.split(head)
-                if tail:
-                    folder_names.append(tail)
-            
-            for folder_name in reversed(folder_names):
-                xpath = constants.FOLDER_TAG_NAME + "[@" + constants.NAME_ATTRIBUTE_NAME + "='%s']" % folder_name
-                folder_element = parent.find(xpath)         
-        
-                if not folder_element:
-                    folder_element = ET.SubElement(parent,
-                                                   constants.FOLDER_TAG_NAME,
-                                                   {constants.NAME_ATTRIBUTE_NAME : folder_name})
+        if self.map is not None:
+            for file_extension, destination in self.map.items():      
+                parent = root
+                folder_names = []
+                head, tail = os.path.split(destination)
+                folder_names.append(tail)
                 
-                parent = folder_element
-        
-            extensions_element = parent.find(constants.EXTENSIONS_TAG_NAME)
+                while head:
+                    head, tail = os.path.split(head)
+                    if tail:
+                        folder_names.append(tail)
+                
+                for folder_name in reversed(folder_names):
+                    xpath = constants.FOLDER_TAG_NAME + "[@" + constants.NAME_ATTRIBUTE_NAME + "='%s']" % folder_name
+                    folder_element = parent.find(xpath)         
             
-            if not extensions_element:
-                extensions_element = ET.SubElement(parent, constants.EXTENSIONS_TAG_NAME)
+                    if folder_element is None:
+                        folder_element = etree.SubElement(parent,
+                                                          constants.FOLDER_TAG_NAME,
+                                                          {constants.NAME_ATTRIBUTE_NAME : folder_name})
+                    
+                    parent = folder_element
+            
+                extensions_element = parent.find(constants.EXTENSIONS_TAG_NAME)
+                
+                if extensions_element is None:
+                    extensions_element = etree.SubElement(parent, constants.EXTENSIONS_TAG_NAME)
+            
+                etree.SubElement(extensions_element, 
+                                 constants.EXTENSION_TAG_NAME,
+                                 {constants.ID_ATTRIBUTE_NAME : file_extension})
         
-            ET.SubElement(extensions_element, 
-                          constants.EXTENSION_TAG_NAME,
-                          {constants.ID_ATTRIBUTE_NAME : file_extension})
-    
         return root
         
     def load(self):
+        
         self.map = {}
         
-        tree = ET.parse(self.schema_path)
-        ET.register_namespace("", constants.CONTENT_SCHEMA_NAMESPACE)
+        tree = etree.parse(self.schema_path)
         
         self._load(tree.getroot())
                             
     def add(self, file_extension, destination):
         
-        print("file_extension: '%s'" % file_extension)
-        if not self.map:
+        if self.map is None:
             self.load()
         
         self.map[file_extension] = destination
@@ -189,7 +182,7 @@ class ContentMap(object):
     
     def remove(self, file_extension):
         
-        if not self.map:
+        if self.map is None:
             self.load()
         
         if file_extension in self.map:    
@@ -201,7 +194,7 @@ class ContentMap(object):
     
     def get_destination(self, file_extension):
         
-        if not self.map:
+        if self.map is None:
             self.load()
         
         if file_extension in self.map:
@@ -214,32 +207,35 @@ class ContentMap(object):
         self.map = {}
         os.remove(self.schema_path)
                         
-class Database(object):
+class TagsDatabase(object):
     
-    def __init__(self):
+    def __init__(self, catalog_path):
         
-        self.path = None
+        self.path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
         self.name = None
         self.connection = None
     
-    def copy_default(self, path):
+    def copy_default(self, dst_path=None):
+        
+        if dst_path is None:
+            dst_path = self.path
         
         data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
         data_path = os.path.join(data_path, constants.DATA_FOLDER_NAME)
         default_catalog_db_path = os.path.join(data_path, constants.DEFAULT_TAGS_DB_NAME)
-                
-        self.path = os.path.join(path, constants.TAGS_DB_NAME)
         
-        shutil.copyfile(default_catalog_db_path, self.path)
+        shutil.copyfile(default_catalog_db_path, dst_path)
     
     def destroy(self):
         
-        if self.connection:
+        if self.connection is not None:
             self.connection.close()
         
         os.remove(self.path)
         
-    def create(self, path):
+    def create(self, dst_path=None):
         
-        self.copy_default(path)
-        self.connection = sqlite3.connect(self.path)
+        if dst_path is None:
+            dst_path = self.path
+        
+        self.copy_default(dst_path)

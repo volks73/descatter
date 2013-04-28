@@ -9,6 +9,7 @@ import catalog
 class CommandLine(object):
     
     def __init__(self):
+        
         self.catalog = None
         self.file = None
          
@@ -52,6 +53,7 @@ class CommandLine(object):
         # TODO: Add all commands from the console as command line arguments
         
     def parse(self, param_args=None):
+        
         args = vars(self.parser.parse_args(param_args))
                       
         if args[constants.INTERACTIVE_ARGUMENT_LONG_NAME]:
@@ -62,6 +64,7 @@ class Console(cmd.Cmd):
     prompt = constants.CONSOLE_PROMPT
     
     def __init__(self, cwc, cwf=None):
+        
         self.cwc = cwc # Current Working Catalog
         self.cwf = cwf # Current Working File
         
@@ -116,7 +119,7 @@ class Console(cmd.Cmd):
                 
         args = vars(self.parser.parse_args(line.split()))
         
-        if self.cwc:
+        if self.cwc is not None:
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
                 print("Current working catalog: '%s'" % self.cwc.path)
             else:
@@ -129,7 +132,7 @@ class Console(cmd.Cmd):
         
         args = vars(self.parser.parse_args(line.split()))
         
-        if self.cwf:        
+        if self.cwf is not None:        
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
                 print("Current working file: '%s'" % self.cwf[constants.FILE_PATH_KEY])
             else:
