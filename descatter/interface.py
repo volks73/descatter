@@ -16,33 +16,6 @@ class CommandLine(object):
         self.parser = argparse.ArgumentParser(description=constants.APPLICATION_DESCRIPTION, 
                                               prog=constants.APPLICATION_NAME)
         
-        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
-                                 constants.CATALOG_ARGUMENT_SHORT_NAME, 
-                                 constants.COMMAND_LONG_PREFIX + 
-                                 constants.CATALOG_ARGUMENT_LONG_NAME, 
-                                 nargs='?',
-                                 default=os.getcwd(),  
-                                 help=constants.CATALOG_ARGUMENT_HELP)
-        
-        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
-                                 constants.FILE_ARGUMENT_SHORT_NAME,
-                                 constants.COMMAND_LONG_PREFIX + 
-                                 constants.FILE_ARGUMENT_LONG_NAME,
-                                 nargs='?',
-                                 help=constants.FILE_ARGUMENT_HELP)
-        
-        self.parser.add_argument(constants.COMMAND_LONG_PREFIX + 
-                                 constants.CREATE_ARGUMENT_LONG_NAME, 
-                                 help=constants.CREATE_ARGUMENT_HELP,
-                                 action='store_true')
-
-        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
-                                 constants.CHECKIN_ARGUMENT_SHORT_NAME,
-                                 constants.COMMAND_LONG_PREFIX + 
-                                 constants.CHECKIN_ARGUMENT_LONG_NAME,
-                                 nargs='?',
-                                 help=constants.CHECKIN_ARGUMENT_HELP)
-        
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
                                  constants.INTERACTIVE_ARGUMENT_SHORT_NAME,
                                  constants.COMMAND_LONG_PREFIX +
@@ -88,7 +61,7 @@ class Console(cmd.Cmd):
                                  constants.CATALOG_ARGUMENT_SHORT_NAME, 
                                  constants.COMMAND_LONG_PREFIX + 
                                  constants.CATALOG_ARGUMENT_LONG_NAME, 
-                                 nargs='?',  
+                                 default=os.getcwd(),  
                                  help=constants.CATALOG_ARGUMENT_HELP)
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
@@ -149,51 +122,51 @@ class Console(cmd.Cmd):
         """Sets the current working catalog"""
         
         if not os.path.isabs(catalog_path):
-            catalog_path = os.path.join(os.getcwd(), catalog_path)
-            
-        self.cwc = catalog.Catalog(catalog_path)
-        print("The current working catalog set to: '%s'" % self.cwc.name)
+            catalog_path = os.path.join(os.getcwd(), catalog_path)    
+        
+        if catalog.is_catalog(catalog_path):
+            self.cwc = catalog.Catalog(catalog_path)
+            print("The current working catalog set to: '%s'" % self.cwc.name)
     
     def do_file(self, file_path):
         """Sets the current working file"""
         
-        # TODO: Add check if the file_path is to a file
-        
-        if not os.path.isabs(file_path):
+        if os.path.isfile(file_path):       
             file_path = os.path.join(os.getcwd(), file_path)
             file_name = os.path.basename(file_path)
             file_ext = os.path.splitext(file_path)[1][1:].strip().lower()
-                
+                    
             self.cwf = {constants.FILE_NAME_KEY : file_name,
                         constants.FILE_EXT_KEY : file_ext,
                         constants.FILE_PATH_KEY : file_path}
             print("The current working file set to: '%s'" % self.cwf[constants.FILE_NAME_KEY])
         else:
-            print("No current working file was set")
+            print("Path is not a file!")
     
     def do_create(self, line):
-        """Creates a new catalog at the current working catalog"""
+        """Creates a new catalog"""
         
         args = vars(self.parser.parse_args(line.split()))    
         
-        self.cwc.create(args[constants.SCHEMA_ARGUMENT_LONG_NAME])
+        self.cwc = catalog.create(args[constants.CATALOG_ARGUMENT_LONG_NAME], args[constants.SCHEMA_ARGUMENT_LONG_NAME])
         print("The '%s' catalog created at: %s" % (self.cwc.name, self.cwc.path))
     
-    def do_destroy(self, catalog_path):
+    def do_destroy(self, line):
         """Destroy or delete a catalog. This will delete all of the files as well"""
         
-        if catalog_path:
-            self.cwc = catalog.Catalog(catalog_path)
+        args = vars(self.parser.parse_args(line.split()))
+        catalog_path = args[constants.CATALOG_ARGUMENT_LONG_NAME]
         
-        print("All files will be lost and this cannot be undone!")
-        print("Are you sure you want to destroy '%s' catalog?" % self.cwc.name)
-        response = input("(Y/Yes or N/No): ")
+        if catalog.is_catalog(catalog_path):        
+            print("All files will be lost and this cannot be undone!")
+            print("Are you sure you want to destroy '%s' catalog?" % self.cwc.name)
+            response = input("(Y/Yes or N/No): ")
         
-        if response == 'Y' or response == 'Yes':
-            self.cwc.destroy()
-            print("The catalog has been destroyed!")
-        else:
-            print("Good choice!")
+            if response == 'Y' or response == 'Yes':
+                catalog.destroy(catalog_path)
+                print("The catalog has been destroyed!")
+            else:
+                print("Good choice!")
     
     def do_checkin(self, line):
         """Checks in the current working file into the current working catalog"""
@@ -208,12 +181,17 @@ class Console(cmd.Cmd):
         elif not self.cwf:
             print("Nothing to check in. Please specific a file with the '-f' argument or set a current working file with the 'file' command.")
        
-        # TODO: Add -a argument to show the absolute check in file path after checking in
-       
         while True:
             try: 
-                self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
-                print("'%s' checked in to catalog" % self.cwf[constants.FILE_NAME_KEY])
+                destination = self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
+                
+                if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+                    checkin_absolute_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
+                    checkin_absolute_path = os.path.join(checkin_absolute_path, destination)
+                    print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_PATH_KEY], self.cwc.path, checkin_absolute_path))   
+                else:
+                    print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_NAME_KEY], self.cwc.name, destination))
+                    
             except LookupError:
                 file_extension = self.cwf[constants.FILE_EXT_KEY]
                 print("The '%s' file extension is unknown for the '%s' catalog." % (file_extension, self.cwc.name))
@@ -239,11 +217,29 @@ class Console(cmd.Cmd):
     
     def do_map(self, line):
         """Adds a file map to the specified catalog"""
-        # TODO: Add adding a file map to the catalog
+        
+        file_extension = None
+        
+        args = vars(self.parser.parse_args(line.split()))
+        
+        if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
+            file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
+            
+            destination = None
+            if args[constants.DESTINATION_ARGUMENT_LONG_NAME]:
+                destination = args[constants.DESTINATION_ARGUMENT_LONG_NAME]
+            else:
+                print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
+                destination = input("(content folder path): ")
+            
+            if destination is not None:
+                self.cwc.content_map.add(file_extension, destination)
+            else:
+                print("Could not add map for file extension")
+            
         # TODO: Add -e, --extension argument to specified an extension to add, change, or remove
         # TODO: Add -r, --remove argument to remove a mapping from the catalog
         # TODO: Add -l, --list to list mappings, same as 'list -m' command and option
-        pass
     
     def do_list(self, line):
         """Lists various properties and values for the specified catalog"""
@@ -269,7 +265,7 @@ class Console(cmd.Cmd):
                     row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
                     mappings_table.add_row(row)
                 else:
-                    print("No mapping exists for '%s' file extension" % file_extension)
+                    print("No mapping exists for the '%s' file extension" % file_extension)
             else:
                 for file_extension in sorted(file_map):
                     row = [file_extension, os.path.join(parent_path, file_map[file_extension])]

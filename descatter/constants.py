@@ -48,11 +48,14 @@ INTERACTIVE_ARGUMENT_SHORT_NAME = 'i'
 INTERACTIVE_ARGUMENT_LONG_NAME = 'interactive'
 INTERACTIVE_ARGUMENT_HELP = "Start a console or interactive mode to execute a series of commands within the descatter application"
 MAPPINGS_ARGUMENT_SHORT_NAME = 'm'
-MAPPINGS_ARGUMENT_LONG_NAME = 'mappings'
-MAPPINGS_ARGUMENT_HELP = "List the file mappings for the content folder"
+MAPPINGS_ARGUMENT_LONG_NAME = 'map'
+MAPPINGS_ARGUMENT_HELP = "List the map for the content folder"
 EXTENSION_ARGUMENT_SHORT_NAME = 'e'
 EXTENSION_ARGUMENT_LONG_NAME = 'extension'
-EXTENSION_ARGUMENT_HELP = "List the file mapping for the specified file extension only"
+EXTENSION_ARGUMENT_HELP = "List the mapping for only the specified file extension"
+DESTINATION_ARGUMENT_SHORT_NAME = 'd'
+DESTINATION_ARGUMENT_LONG_NAME = 'destination'
+DESTINATION_ARGUMENT_HELP = "Specifies the destination for a file extension relative to the content folder of the specified catalog"
 
 # Console constants
 CONSOLE_PROMPT = APPLICATION_NAME + ': '
@@ -69,6 +72,7 @@ CONTENT_FOLDER_HEADER_ALIGNMENT = 'l'
 
 # XML constants
 CONTENT_SCHEMA_FILE_NAME = 'content_schema.xml'
+DEFAULT_CONTENT_SCHEMA_FILE_NAME = 'default_' + CONTENT_SCHEMA_FILE_NAME
 CONTENT_SCHEMA_NAMESPACE = APPLICATION_NAME + '/2013/content_schema'
 CONTENT_SCHEMA = '{%s}' % CONTENT_SCHEMA_NAMESPACE
 NAMESPACE_MAP = {None : CONTENT_SCHEMA_NAMESPACE}
