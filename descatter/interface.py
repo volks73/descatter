@@ -36,7 +36,7 @@ class Console(cmd.Cmd):
     
     prompt = constants.CONSOLE_PROMPT
     
-    def __init__(self, cwc, cwf=None):
+    def __init__(self, cwc=None, cwf=None):
         
         self.cwc = cwc # Current Working Catalog
         self.cwf = cwf # Current Working File
@@ -72,10 +72,10 @@ class Console(cmd.Cmd):
                                  help=constants.FILE_ARGUMENT_HELP)
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
-                                 constants.MAPPINGS_ARGUMENT_SHORT_NAME,
+                                 constants.MAP_ARGUMENT_SHORT_NAME,
                                  constants.COMMAND_LONG_PREFIX +
-                                 constants.MAPPINGS_ARGUMENT_LONG_NAME,
-                                 help=constants.MAPPINGS_ARGUMENT_HELP,
+                                 constants.MAP_ARGUMENT_LONG_NAME,
+                                 help=constants.MAP_ARGUMENT_HELP,
                                  action='store_true')
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
@@ -84,34 +84,49 @@ class Console(cmd.Cmd):
                                  constants.EXTENSION_ARGUMENT_LONG_NAME,
                                  nargs='?',
                                  help=constants.EXTENSION_ARGUMENT_HELP)
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
+                                 constants.DESTINATION_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.DESTINATION_ARGUMENT_LONG_NAME,
+                                 nargs='?',
+                                 help=constants.DESTINATION_ARGUMENT_HELP)
                                  
         super(Console, self).__init__()
+    
+    def print_specify_catalog(self):
+        
+        print("No catalog specified. Please specify a catalog with the '" + constants.COMMAND_SHORT_PREFIX + constants.CATALOG_ARGUMENT_SHORT_NAME + "' argument or set a current working catalog with the '" + constants.CATALOG_ARGUMENT_LONG_NAME + "' command")
+    
+    def print_specify_file(self):
+        
+        print("Please specific a file with the '" + constants.COMMAND_SHORT_PREFIX + constants.FILE_ARGUMENT_SHORT_NAME + "' argument or set a current working file with the '" + constants.FILE_ARGUMENT_LONG_NAME + "' command.")
     
     def do_cwc(self, line):
         """Display the current working catalog"""
                 
         args = vars(self.parser.parse_args(line.split()))
         
-        if self.cwc is not None:
+        if self.cwc is None:
+            print("No current working catalog has been set")
+        else:
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
                 print("Current working catalog: '%s'" % self.cwc.path)
             else:
                 print("Current working catalog: '%s'" % self.cwc.name)
-        else:
-            print("No current working catalog has been set")
         
     def do_cwf(self, line):
         """Display the current working file"""
         
         args = vars(self.parser.parse_args(line.split()))
         
-        if self.cwf is not None:        
+        if self.cwf is None:
+            print("No current working file has been set")
+        else:        
             if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
                 print("Current working file: '%s'" % self.cwf[constants.FILE_PATH_KEY])
             else:
-                print("Current working file: '%s'" % self.cwf[constants.FILE_NAME_KEY])
-        else:
-            print("No current working file has been set")
+                print("Current working file: '%s'" % self.cwf[constants.FILE_NAME_KEY])          
     
     def do_cwd(self, line):
         """Display the current working directory"""
@@ -127,6 +142,9 @@ class Console(cmd.Cmd):
         if catalog.is_catalog(catalog_path):
             self.cwc = catalog.Catalog(catalog_path)
             print("The current working catalog set to: '%s'" % self.cwc.name)
+        else:
+            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
+            self.cwc = None
     
     def do_file(self, file_path):
         """Sets the current working file"""
@@ -144,13 +162,47 @@ class Console(cmd.Cmd):
             print("Path is not a file!")
     
     def do_create(self, line):
-        """Creates a new catalog"""
+        """Creates catalogs, file maps, templates, and tags"""
         
-        args = vars(self.parser.parse_args(line.split()))    
+        args = vars(self.parser.parse_args(line.split()))
+        
+        if args[constants.MAP_ARGUMENT_LONG_NAME]:
+            self.create_map(args)    
+        elif args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.create_catalog(args)
+        else:
+            print("Nothing to create")
+                    
+    def create_catalog(self, args):
         
         self.cwc = catalog.create(args[constants.CATALOG_ARGUMENT_LONG_NAME], args[constants.SCHEMA_ARGUMENT_LONG_NAME])
         print("The '%s' catalog created at: %s" % (self.cwc.name, self.cwc.path))
-    
+        print("The current working catalog set to: '%s'" % self.cwc.name)
+
+    def create_map(self, args):
+        
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+            
+        if self.cwc is None:
+            self.print_specify_catalog()
+        else:        
+            file_extension = None
+            if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
+                file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
+            else:
+                print("Please specify a file extension without the leading period.")
+                file_extension = input("(file extension): ")
+                
+            destination = None
+            if args[constants.DESTINATION_ARGUMENT_LONG_NAME]:
+                destination = args[constants.DESTINATION_ARGUMENT_LONG_NAME]
+            else:
+                print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
+                destination = input("(content folder path): ")
+                
+            self.cwc.content_map.add(file_extension, destination)
+
     def do_destroy(self, line):
         """Destroy or delete a catalog. This will delete all of the files as well"""
         
@@ -167,6 +219,8 @@ class Console(cmd.Cmd):
                 print("The catalog has been destroyed!")
             else:
                 print("Good choice!")
+        else:
+            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
     
     def do_checkin(self, line):
         """Checks in the current working file into the current working catalog"""
@@ -178,106 +232,84 @@ class Console(cmd.Cmd):
             
         if args[constants.FILE_ARGUMENT_LONG_NAME]:
             self.do_file(args[constants.FILE_ARGUMENT_LONG_NAME])
-        elif not self.cwf:
-            print("Nothing to check in. Please specific a file with the '-f' argument or set a current working file with the 'file' command.")
-       
-        while True:
-            try: 
-                destination = self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
-                
-                if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
-                    checkin_absolute_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
-                    checkin_absolute_path = os.path.join(checkin_absolute_path, destination)
-                    print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_PATH_KEY], self.cwc.path, checkin_absolute_path))   
-                else:
-                    print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_NAME_KEY], self.cwc.name, destination))
-                    
-            except LookupError:
-                file_extension = self.cwf[constants.FILE_EXT_KEY]
-                print("The '%s' file extension is unknown for the '%s' catalog." % (file_extension, self.cwc.name))
-                print("Would you like to add the '%s' file extension to the '%s' catalog?" % (file_extension, self.cwc.name))
-                response = input("(Y/Yes or N/No): ")
-                
-                if response == 'Y' or response == 'Yes':
-                    
-                    print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
-                    destination = input("(content folder path): ")
-                    
-                    while os.path.isabs(response):
-                        print("The folder path must be relative to the content folder. Please try again.")
-                        response = input("(content folder path): ")
-                       
-                    self.cwc.content_map.add(file_extension, destination)
-                    continue
-                else:
-                    print("The file was not checked in")
-            break 
-    
-    # TODO: Add -t argument for checkin, which does a test checkin and shows the path the file would be checked in to
-    
-    def do_map(self, line):
-        """Adds a file map to the specified catalog"""
         
-        file_extension = None
-        
-        args = vars(self.parser.parse_args(line.split()))
-        
-        if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
-            file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
-            
-            destination = None
-            if args[constants.DESTINATION_ARGUMENT_LONG_NAME]:
-                destination = args[constants.DESTINATION_ARGUMENT_LONG_NAME]
-            else:
-                print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
-                destination = input("(content folder path): ")
-            
-            if destination is not None:
-                self.cwc.content_map.add(file_extension, destination)
-            else:
-                print("Could not add map for file extension")
-            
-        # TODO: Add -e, --extension argument to specified an extension to add, change, or remove
-        # TODO: Add -r, --remove argument to remove a mapping from the catalog
-        # TODO: Add -l, --list to list mappings, same as 'list -m' command and option
+        if self.cwc is None:
+            self.print_specify_catalog()
+        elif self.cwf is None:
+            self.print_specity_file()
+        else:
+            while True:
+                try: 
+                    destination = self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
+                    
+                    if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+                        checkin_absolute_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
+                        checkin_absolute_path = os.path.join(checkin_absolute_path, destination)
+                        print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_PATH_KEY], self.cwc.path, checkin_absolute_path))   
+                    else:
+                        print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_NAME_KEY], self.cwc.name, destination))
+                        
+                except LookupError:
+                    file_extension = self.cwf[constants.FILE_EXT_KEY]
+                    print("The '%s' file extension is unknown for the '%s' catalog." % (file_extension, self.cwc.name))
+                    print("Would you like to add the '%s' file extension to the '%s' catalog?" % (file_extension, self.cwc.name))
+                    response = input("(Y/Yes or N/No): ")
+                    
+                    if response == 'Y' or response == 'Yes':
+                        
+                        print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
+                        destination = input("(content folder path): ")
+                        
+                        while os.path.isabs(response):
+                            print("The folder path must be relative to the content folder. Please try again.")
+                            response = input("(content folder path): ")
+                           
+                        self.cwc.content_map.add(file_extension, destination)
+                        continue
+                    else:
+                        print("The file was not checked in")
+                break
     
-    def do_list(self, line):
-        """Lists various properties and values for the specified catalog"""
+    def do_show(self, line):
+        """Shows various properties and values for the specified catalog"""
         
         args = vars(self.parser.parse_args(line.split()))
         
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
             self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
-        if args[constants.MAPPINGS_ARGUMENT_LONG_NAME]:
-            mappings_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
-            mappings_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT
-            parent_path = None
-            file_map = self.cwc.content_map.map
-            
-            if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
-                parent_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
-            
-            if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
-                file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
-            
-                if file_extension in self.cwc.content_map.map:
-                    row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
-                    mappings_table.add_row(row)
-                else:
-                    print("No mapping exists for the '%s' file extension" % file_extension)
-            else:
-                for file_extension in sorted(file_map):
-                    row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
-                    mappings_table.add_row(row)        
-                
-            print(mappings_table)
-            
-        # TODO: Add listing tags
-        # TODO: Add listing files
-        # TODO: Add listing templates
+        if self.cwc is None:
+            self.print_specify_catalog()
         else:
-            print("Nothing to list")
+            if args[constants.MAP_ARGUMENT_LONG_NAME]:
+                self.show_map(args)
+            else:
+                print("Nothing to show")
+    
+    def show_map(self, args):
+        
+        map_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
+        map_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT
+        parent_path = None
+        file_map = self.cwc.content_map.map
+                
+        if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
+            parent_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
+                
+        if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
+            file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
+                
+            if file_extension in file_map:
+                row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
+                map_table.add_row(row)
+            else:
+                print("No map exists for the '%s' file extension" % file_extension)
+        else:
+            for file_extension in sorted(file_map):
+                row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
+                map_table.add_row(row)        
+                    
+        print(map_table)
     
     def do_exit(self, line):
         """Exits the console or interactive mode"""

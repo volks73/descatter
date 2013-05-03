@@ -81,12 +81,20 @@ def is_catalog(catalog_path):
     if catalog_path is None:
         return False
     else: 
-        # TODO: Add check for appropriate folder structure and existences of database, schema, and README file
-        is_catalog = True
+        folder_structure_exists = True
+        for folder_name in constants.CATALOG_FOLDER_NAMES:
+            folder_path = os.path.join(catalog_path, folder_name)
+            
+            folder_structure_exists = folder_structure_exists and os.path.isdir(folder_path)
         
+        content_schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
+        content_schema_file_exists = os.path.isfile(content_schema_path)
         
+        tags_db_path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
+        # TODO: Add check if tags db has the appropriate schema and tables
+        tags_db_exists = os.path.isfile(tags_db_path)
         
-        return is_catalog
+        return folder_structure_exists and content_schema_file_exists and tags_db_exists
 
 class Catalog(object):
     
