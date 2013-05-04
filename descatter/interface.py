@@ -61,7 +61,7 @@ class Console(cmd.Cmd):
                                  constants.CATALOG_ARGUMENT_SHORT_NAME, 
                                  constants.COMMAND_LONG_PREFIX + 
                                  constants.CATALOG_ARGUMENT_LONG_NAME, 
-                                 default=os.getcwd(),  
+                                 nargs='?',  
                                  help=constants.CATALOG_ARGUMENT_HELP)
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX + 
@@ -103,7 +103,7 @@ class Console(cmd.Cmd):
         print("Please specific a file with the '" + constants.COMMAND_SHORT_PREFIX + constants.FILE_ARGUMENT_SHORT_NAME + "' argument or set a current working file with the '" + constants.FILE_ARGUMENT_LONG_NAME + "' command.")
     
     def do_cwc(self, line):
-        """Display the current working catalog"""
+        """ Display the current working catalog """
                 
         args = vars(self.parser.parse_args(line.split()))
         
@@ -162,7 +162,7 @@ class Console(cmd.Cmd):
             print("Path is not a file!")
     
     def do_create(self, line):
-        """Creates catalogs, file maps, templates, and tags"""
+        """Sub-command to create file extension maps, templates, and tags"""
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -172,14 +172,9 @@ class Console(cmd.Cmd):
             self.create_catalog(args)
         else:
             print("Nothing to create")
-                    
-    def create_catalog(self, args):
-        
-        self.cwc = catalog.create(args[constants.CATALOG_ARGUMENT_LONG_NAME], args[constants.SCHEMA_ARGUMENT_LONG_NAME])
-        print("The '%s' catalog created at: %s" % (self.cwc.name, self.cwc.path))
-        print("The current working catalog set to: '%s'" % self.cwc.name)
 
     def create_map(self, args):
+        """ Creates a file extension map for the specified catalog """
         
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
             self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
@@ -188,39 +183,100 @@ class Console(cmd.Cmd):
             self.print_specify_catalog()
         else:        
             file_extension = None
+            
             if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
                 file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
             else:
                 print("Please specify a file extension without the leading period.")
                 file_extension = input("(file extension): ")
+            
+            # TODO: Add removal of leading period from file_extension if added
                 
             destination = None
+            
             if args[constants.DESTINATION_ARGUMENT_LONG_NAME]:
                 destination = args[constants.DESTINATION_ARGUMENT_LONG_NAME]
             else:
                 print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
                 destination = input("(content folder path): ")
+            
+            # TODO: Sanitize input, make sure the correct path separator is used.
                 
             self.cwc.content_map.add(file_extension, destination)
+            
+            catalog_destination = self.cwc.content_map.get_destination(file_extension)
+            print("The '%s' file extension mapped to the '%s' content folder" % (file_extension, catalog_destination))
 
-    def do_destroy(self, line):
-        """Destroy or delete a catalog. This will delete all of the files as well"""
+    def do_remove(self, line):
+        """ Removes a file extension mapping from a catalog """
         
         args = vars(self.parser.parse_args(line.split()))
-        catalog_path = args[constants.CATALOG_ARGUMENT_LONG_NAME]
         
-        if catalog.is_catalog(catalog_path):        
-            print("All files will be lost and this cannot be undone!")
-            print("Are you sure you want to destroy '%s' catalog?" % self.cwc.name)
-            response = input("(Y/Yes or N/No): ")
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
-            if response == 'Y' or response == 'Yes':
-                catalog.destroy(catalog_path)
-                print("The catalog has been destroyed!")
-            else:
-                print("Good choice!")
+        if self.cwc is None:
+            self.print_specify_catalog()
+        elif args[constants.MAP_ARGUMENT_LONG_NAME]:
+            self.remove_map(args)
         else:
-            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
+            print("Nothing to remove!")    
+        
+    def remove_map(self, args):
+        
+        file_extension = None
+            
+        if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
+            file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
+        else:
+            print("Please specify a file extension without the leading period")
+            file_extension = input("(file extension): ")
+            
+        # TODO: Sanitize file_extension, i.e. remove leading period if added.
+            
+        try:
+            self.cwc.content_map.remove(file_extension)
+            print("The '%s' file extension map removed from the '%s' catalog" % (file_extension, self.cwc.name))
+        except KeyError:
+            print("The '%s' file extension not mapped in the '%s' catalog" % (file_extension, self.cwc.name))
+
+    def do_establish(self, line):
+        """ Establishes a new catalog at the specified path """
+        
+        split_line = line.split()
+        catalog_path = split_line[0]
+        args = vars(self.parser.parse_args(split_line[1:]))
+        
+        if not os.path.isabs(catalog_path):
+            catalog_path = os.path.join(os.getcwd(), catalog_path)    
+         
+        self.cwc = catalog.establish(catalog_path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
+        print("The '%s' catalog established at: '%s'" % (self.cwc.name, self.cwc.path))
+        print("The current working catalog set to: '%s'" % self.cwc.name)
+
+    def do_destroy(self, line):
+        """ Destroys or deletes a catalog. This will delete all of the files as well """
+        
+        if line:
+            split_line = line.split()
+            catalog_path = split_line[0]
+        
+            self.do_catalog(catalog_path)
+            
+            if self.cwc is not None:
+                print("All files will be lost and this cannot be undone!")
+                print("Are you sure you want to destroy the '%s' catalog?" % self.cwc.name)
+                response = input("(Y/Yes or N/No): ")
+            
+                if response == 'Y' or response == 'Yes':
+                    catalog.destroy(catalog_path)
+                    print("The catalog has been destroyed!")
+                    
+                    self.cwc = None
+                else:
+                    print("Good choice!")
+        else:
+            print("Please specify an absolute path to the catalog to be destroyed")
     
     def do_checkin(self, line):
         """Checks in the current working file into the current working catalog"""
@@ -271,7 +327,7 @@ class Console(cmd.Cmd):
                 break
     
     def do_show(self, line):
-        """Shows various properties and values for the specified catalog"""
+        """ Shows various properties and values for the specified catalog """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -284,9 +340,10 @@ class Console(cmd.Cmd):
             if args[constants.MAP_ARGUMENT_LONG_NAME]:
                 self.show_map(args)
             else:
-                print("Nothing to show")
+                print("Nothing to show!")
     
     def show_map(self, args):
+        """ Shows the file extension maps in a ASCII table sorted in descending alphabetical order """
         
         map_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
         map_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT

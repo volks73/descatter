@@ -24,7 +24,7 @@ def create_hook_folders(catalog_path):
             trigger_path = os.path.join(hook_path, trigger_name)
             os.mkdir(trigger_path)
 
-def create(catalog_path, schema_path=None):
+def establish(catalog_path, schema_path=None):
 
     if not os.path.isdir(catalog_path):
         os.mkdir(catalog_path)
@@ -217,7 +217,7 @@ class ContentMap(object):
         if file_extension in self.map:    
             self.map.pop(file_extension, None)
         else:
-            print("File extension not mapped. Nothing to remove.")
+            raise KeyError("File extension not recognized")
         
         self.write_schema()
     
