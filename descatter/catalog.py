@@ -5,6 +5,7 @@ import shutil
 import constants
 
 def create_folder_structure(catalog_path):        
+    """ Creates the catalog folder structure. """
     
     for folder_name in constants.CATALOG_FOLDER_NAMES:
         folder_path = os.path.join(catalog_path, folder_name)
@@ -13,6 +14,7 @@ def create_folder_structure(catalog_path):
     create_hook_folders(catalog_path)
 
 def create_hook_folders(catalog_path):
+    """ Creates the hook folder sub-structure. """    
         
     hooks_folder_path = os.path.join(catalog_path, constants.HOOKS_FOLDER_NAME)
         
@@ -25,6 +27,7 @@ def create_hook_folders(catalog_path):
             os.mkdir(trigger_path)
 
 def establish(catalog_path, schema_path=None):
+    """ Establishes, or creates, a catalog at the specified path. The schema is optional. """
 
     if not os.path.isdir(catalog_path):
         os.mkdir(catalog_path)
@@ -53,6 +56,7 @@ def establish(catalog_path, schema_path=None):
     return Catalog(catalog_path)
     
 def destroy(catalog_path, content=True):
+    """ Destroys, removes, or deletes a catalog at the specified path. All files and sub-folders will also be destroyed. """
 
     if content:
         content_path = os.path.join(catalog_path, constants.CONTENT_FOLDER_NAME)
@@ -77,6 +81,7 @@ def destroy(catalog_path, content=True):
     os.remove(readme_path)
 
 def is_catalog(catalog_path):
+    """ Checks if the path is to catalog by looking for the appropriate files and folder structure. """
     
     if catalog_path is None:
         return False
@@ -99,6 +104,7 @@ def is_catalog(catalog_path):
 class Catalog(object):
     
     def __init__(self, path):
+        """ Initializes the catalog. """
         
         self.db = TagsDatabase(path)
         self.content_map = ContentMap(path)
@@ -111,6 +117,7 @@ class Catalog(object):
             path = os.path.dirname(path)
         
     def checkin(self, file_path):
+        """ Checks in a file. """
 
         file_name = os.path.basename(file_path)
         file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
@@ -135,12 +142,25 @@ class Catalog(object):
 class ContentMap(object):
     
     def __init__(self, catalog_path):
+        """ Initializes the content map. 
+        
+            Keyword arguments:
+                catalog_path -- The absolute path to the catalog
+            
+        """     
                 
         self.schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
         self.map = {}
         self.load()
     
     def _load(self, parent, file_destination=None):
+        """ Recursive call to load the map from the schema file. 
+        
+            Keyword arguments:
+                parent -- The parent XML element
+                file_destination -- The relative path to the content folder for a file. Optional
+            
+        """
         
         for child in parent:
             if child.tag == constants.FOLDER_TAG_NAME:
@@ -152,6 +172,12 @@ class ContentMap(object):
                 self.map[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
         
     def write_schema(self, schema_path=None):
+        """ Write the map to the schema file. 
+        
+            Keyword arguments:
+                schema_path -- The file path to write the schema. Optional
+            
+        """        
                 
         root = self.create_schema()
         tree = etree.ElementTree(root)
@@ -162,6 +188,11 @@ class ContentMap(object):
         tree.write(schema_path, pretty_print=True, xml_declaration=True, encoding=constants.XML_ENCODING)
     
     def create_schema(self):
+        """ Creates an XML document of the schema. 
+        
+            Return:
+                The root element of the XML document
+        """
         
         root = etree.Element(constants.CONTENT_FOLDER_TAG_NAME, nsmap=constants.NAMESPACE_MAP)
         
@@ -199,7 +230,8 @@ class ContentMap(object):
         return root
         
     def load(self):
-        
+        """ Loads the file extension maps from the schema file. """
+                
         self.map = {}
         
         tree = etree.parse(self.schema_path)
@@ -207,12 +239,25 @@ class ContentMap(object):
         self._load(tree.getroot())
                             
     def add(self, file_extension, destination):
+        """ Adds a file extension map to the mappings. 
+        
+            Keyword arguments:
+                file_extension -- The file extension without a leading period
+                destination -- The relative path to the content parent folder of a catalog for files with the given file_extension
+        
+        """       
                
         self.map[file_extension] = destination
         
         self.write_schema()
     
     def remove(self, file_extension):
+        """ Removes a file extension from the mappings. 
+        
+            Keyword arguments:
+                file_extension -- The file extension without a leading period
+            
+        """
         
         if file_extension in self.map:    
             self.map.pop(file_extension, None)
@@ -222,6 +267,12 @@ class ContentMap(object):
         self.write_schema()
     
     def get_destination(self, file_extension):
+        """ Gets the sub-folder relative to the content folder where files with the specified extension will be located. 
+        
+            Keyword arguments:
+                file_extension -- The file extension without a leading period
+            
+        """ 
               
         if file_extension in self.map:
             return self.map[file_extension]

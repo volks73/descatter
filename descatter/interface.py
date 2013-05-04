@@ -37,6 +37,7 @@ class Console(cmd.Cmd):
     prompt = constants.CONSOLE_PROMPT
     
     def __init__(self, cwc=None, cwf=None):
+        """ Initializes the console. """
         
         self.cwc = cwc # Current Working Catalog
         self.cwf = cwf # Current Working File
@@ -95,15 +96,17 @@ class Console(cmd.Cmd):
         super(Console, self).__init__()
     
     def print_specify_catalog(self):
+        """ Prints a message to the console to specify a catalog for the command. """
         
         print("No catalog specified. Please specify a catalog with the '" + constants.COMMAND_SHORT_PREFIX + constants.CATALOG_ARGUMENT_SHORT_NAME + "' argument or set a current working catalog with the '" + constants.CATALOG_ARGUMENT_LONG_NAME + "' command")
     
     def print_specify_file(self):
+        """ Prints a message to the console to specify a file for the command. """
         
         print("Please specific a file with the '" + constants.COMMAND_SHORT_PREFIX + constants.FILE_ARGUMENT_SHORT_NAME + "' argument or set a current working file with the '" + constants.FILE_ARGUMENT_LONG_NAME + "' command.")
     
     def do_cwc(self, line):
-        """ Display the current working catalog """
+        """ Display the current working catalog. """
                 
         args = vars(self.parser.parse_args(line.split()))
         
@@ -116,7 +119,7 @@ class Console(cmd.Cmd):
                 print("Current working catalog: '%s'" % self.cwc.name)
         
     def do_cwf(self, line):
-        """Display the current working file"""
+        """ Display the current working file. """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -129,12 +132,12 @@ class Console(cmd.Cmd):
                 print("Current working file: '%s'" % self.cwf[constants.FILE_NAME_KEY])          
     
     def do_cwd(self, line):
-        """Display the current working directory"""
+        """ Display the current working directory. """
         
         print("Current working directory: %s" % os.getcwd())
     
     def do_catalog(self, catalog_path):
-        """Sets the current working catalog"""
+        """ Sets the current working catalog. """
         
         if not os.path.isabs(catalog_path):
             catalog_path = os.path.join(os.getcwd(), catalog_path)    
@@ -147,7 +150,7 @@ class Console(cmd.Cmd):
             self.cwc = None
     
     def do_file(self, file_path):
-        """Sets the current working file"""
+        """ Sets the current working file. """
         
         if os.path.isfile(file_path):       
             file_path = os.path.join(os.getcwd(), file_path)
@@ -162,7 +165,7 @@ class Console(cmd.Cmd):
             print("Path is not a file!")
     
     def do_create(self, line):
-        """Sub-command to create file extension maps, templates, and tags"""
+        """ Sub-command to create file extension maps, templates, and tags at the specified catalog. """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -174,7 +177,7 @@ class Console(cmd.Cmd):
             print("Nothing to create")
 
     def create_map(self, args):
-        """ Creates a file extension map for the specified catalog """
+        """ Creates a file extension map for the specified catalog. """
         
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
             self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
@@ -187,10 +190,11 @@ class Console(cmd.Cmd):
             if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
                 file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
             else:
-                print("Please specify a file extension without the leading period.")
+                print("Please specify a file extension")
                 file_extension = input("(file extension): ")
             
-            # TODO: Add removal of leading period from file_extension if added
+            if file_extension[0] == '.':
+                file_extension = file_extension[1:]
                 
             destination = None
             
@@ -199,8 +203,6 @@ class Console(cmd.Cmd):
             else:
                 print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
                 destination = input("(content folder path): ")
-            
-            # TODO: Sanitize input, make sure the correct path separator is used.
                 
             self.cwc.content_map.add(file_extension, destination)
             
@@ -208,7 +210,7 @@ class Console(cmd.Cmd):
             print("The '%s' file extension mapped to the '%s' content folder" % (file_extension, catalog_destination))
 
     def do_remove(self, line):
-        """ Removes a file extension mapping from a catalog """
+        """ Removes a file extension mapping from the specified catalog. """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -223,16 +225,18 @@ class Console(cmd.Cmd):
             print("Nothing to remove!")    
         
     def remove_map(self, args):
+        """ Removes a file extension map from the current working catalog. """
         
         file_extension = None
             
         if args[constants.EXTENSION_ARGUMENT_LONG_NAME]:
             file_extension = args[constants.EXTENSION_ARGUMENT_LONG_NAME]
         else:
-            print("Please specify a file extension without the leading period")
+            print("Please specify a file extension")
             file_extension = input("(file extension): ")
-            
-        # TODO: Sanitize file_extension, i.e. remove leading period if added.
+        
+        if file_extension[0] == '.':
+            file_extension = file_extension[1:]
             
         try:
             self.cwc.content_map.remove(file_extension)
@@ -241,7 +245,7 @@ class Console(cmd.Cmd):
             print("The '%s' file extension not mapped in the '%s' catalog" % (file_extension, self.cwc.name))
 
     def do_establish(self, line):
-        """ Establishes a new catalog at the specified path """
+        """ Establishes a new catalog at the specified path. """
         
         split_line = line.split()
         catalog_path = split_line[0]
@@ -255,7 +259,7 @@ class Console(cmd.Cmd):
         print("The current working catalog set to: '%s'" % self.cwc.name)
 
     def do_destroy(self, line):
-        """ Destroys or deletes a catalog. This will delete all of the files as well """
+        """ Destroys or deletes a catalog at the specified path. This will delete all of the files as well. """
         
         if line:
             split_line = line.split()
@@ -369,11 +373,11 @@ class Console(cmd.Cmd):
         print(map_table)
     
     def do_exit(self, line):
-        """Exits the console or interactive mode"""
+        """ Safely exits the console or interactive mode. """
         
         return True
     
     def do_quit(self, line):
-        """Exits the console or interactive mode"""
+        """ Safely exits the console or interactive mode. """
         
         return True
