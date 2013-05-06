@@ -283,7 +283,7 @@ class Console(cmd.Cmd):
             print("Please specify an absolute path to the catalog to be destroyed")
     
     def do_checkin(self, line):
-        """Checks in the current working file into the current working catalog"""
+        """ Checks in the current working file into the current working catalog """
     
         args = vars(self.parser.parse_args(line.split()))
     

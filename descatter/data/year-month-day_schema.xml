@@ -37,7 +37,7 @@
 			<folder name="checkin-month">
 				<folder name="checkin-day">
 					<extensions>
-						<extension id="txt">
+						<extension name="*">
 							<file name="checkin-file-name"/>
 						</extension>
 					</extensions>
