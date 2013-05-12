@@ -1,11 +1,12 @@
 from lxml import etree
 
 import os
+import sqlite3
+import tempfile
 import shutil
 import constants
 
 def create_folder_structure(catalog_path):        
-    """ Creates the catalog folder structure. """
     
     for folder_name in constants.CATALOG_FOLDER_NAMES:
         folder_path = os.path.join(catalog_path, folder_name)
@@ -13,8 +14,7 @@ def create_folder_structure(catalog_path):
             
     create_hook_folders(catalog_path)
 
-def create_hook_folders(catalog_path):
-    """ Creates the hook folder sub-structure. """    
+def create_hook_folders(catalog_path):    
         
     hooks_folder_path = os.path.join(catalog_path, constants.HOOKS_FOLDER_NAME)
         
@@ -27,7 +27,6 @@ def create_hook_folders(catalog_path):
             os.mkdir(trigger_path)
 
 def establish(catalog_path, schema_path=None):
-    """ Establishes, or creates, a catalog at the specified path. The schema is optional. """
 
     if not os.path.isdir(catalog_path):
         os.mkdir(catalog_path)
@@ -56,7 +55,6 @@ def establish(catalog_path, schema_path=None):
     return Catalog(catalog_path)
     
 def destroy(catalog_path, content=True):
-    """ Destroys, removes, or deletes a catalog at the specified path. All files and sub-folders will also be destroyed. """
 
     if content:
         content_path = os.path.join(catalog_path, constants.CONTENT_FOLDER_NAME)
@@ -81,7 +79,6 @@ def destroy(catalog_path, content=True):
     os.remove(readme_path)
 
 def is_catalog(catalog_path):
-    """ Checks if the path is to catalog by looking for the appropriate files and folder structure. """
     
     if catalog_path is None:
         return False
@@ -104,7 +101,6 @@ def is_catalog(catalog_path):
 class Catalog(object):
     
     def __init__(self, path):
-        """ Initializes the catalog. """
         
         self.db = TagsDatabase(path)
         self.content_map = ContentMap(path)
@@ -115,25 +111,28 @@ class Catalog(object):
         while not self.name:
             self.name = os.path.basename(path)
             path = os.path.dirname(path)
-        
+           
     def checkin(self, file_path):
-        """ Checks in a file. """
 
-        file_name = os.path.basename(file_path)
+        original_file_name = os.path.basename(file_path)
         file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
         destination = self.content_map.get_destination(file_extension)
         
         if destination:
             content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
-            dst_folder_path = os.path.join(content_folder_path, destination)
+            dst_content_folder_path = os.path.join(content_folder_path, destination)
             
-            if not os.path.isdir(dst_folder_path):
-                os.makedirs(dst_folder_path)
-        
-            # TODO: Use tmp file module to create unique file name instead of using original name
-            dst_file_path = os.path.join(dst_folder_path, file_name)
+            if not os.path.isdir(dst_content_folder_path):
+                os.makedirs(dst_content_folder_path)
             
-            shutil.copyfile(file_path, dst_file_path)   
+            dst_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=dst_content_folder_path)
+            # TODO: Add schema setting to use original file name, generic name, or random name
+#             dst_file_name = constants.CONTENT_FILE_NAME + '.' + file_extension
+            dst_file_path = os.path.join(dst_folder_path, original_file_name) 
+            
+            shutil.copyfile(file_path, dst_file_path)
+            
+            # TODO: Add metadata file creation
         else:
             raise KeyError("Mapping does not exist")
         
@@ -141,27 +140,14 @@ class Catalog(object):
 
 class ContentMap(object):
     
-    def __init__(self, catalog_path):
-        """ Initializes the content map. 
-        
-            Keyword arguments:
-                catalog_path -- The absolute path to the catalog
-            
-        """     
+    def __init__(self, catalog_path):   
                 
         self.schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
         self.map = {}
         self.load()
     
     def _load(self, parent, file_destination=None):
-        """ Recursive call to load the map from the schema file. 
-        
-            Keyword arguments:
-                parent -- The parent XML element
-                file_destination -- The relative path to the content folder for a file. Optional
-            
-        """
-        
+                
         for child in parent:
             if child.tag == constants.FOLDER_TAG_NAME:
                 child_destination = os.path.join(file_destination, child.get(constants.NAME_ATTRIBUTE_NAME))
@@ -171,13 +157,7 @@ class ContentMap(object):
             for extension in parent.findall(constants.EXTENSIONS_TAG_NAME + '/' + constants.EXTENSION_TAG_NAME):
                 self.map[extension.get(constants.ID_ATTRIBUTE_NAME)] = file_destination
         
-    def write_schema(self, schema_path=None):
-        """ Write the map to the schema file. 
-        
-            Keyword arguments:
-                schema_path -- The file path to write the schema. Optional
-            
-        """        
+    def write_schema(self, schema_path=None):      
                 
         root = self.create_schema()
         tree = etree.ElementTree(root)
@@ -188,12 +168,7 @@ class ContentMap(object):
         tree.write(schema_path, pretty_print=True, xml_declaration=True, encoding=constants.XML_ENCODING)
     
     def create_schema(self):
-        """ Creates an XML document of the schema. 
-        
-            Return:
-                The root element of the XML document
-        """
-        
+                
         root = etree.Element(constants.CONTENT_FOLDER_TAG_NAME, nsmap=constants.NAMESPACE_MAP)
         
         for file_extension, destination in self.map.items():      
@@ -230,35 +205,21 @@ class ContentMap(object):
         return root
         
     def load(self):
-        """ Loads the file extension maps from the schema file. """
-                
+                        
         self.map = {}
         
         tree = etree.parse(self.schema_path)
         
         self._load(tree.getroot())
                             
-    def add(self, file_extension, destination):
-        """ Adds a file extension map to the mappings. 
-        
-            Keyword arguments:
-                file_extension -- The file extension without a leading period
-                destination -- The relative path to the content parent folder of a catalog for files with the given file_extension
-        
-        """       
+    def add(self, file_extension, destination):    
                
         self.map[file_extension] = destination
         
         self.write_schema()
     
     def remove(self, file_extension):
-        """ Removes a file extension from the mappings. 
-        
-            Keyword arguments:
-                file_extension -- The file extension without a leading period
-            
-        """
-        
+                
         if file_extension in self.map:    
             self.map.pop(file_extension, None)
         else:
@@ -267,13 +228,7 @@ class ContentMap(object):
         self.write_schema()
     
     def get_destination(self, file_extension):
-        """ Gets the sub-folder relative to the content folder where files with the specified extension will be located. 
-        
-            Keyword arguments:
-                file_extension -- The file extension without a leading period
-            
-        """ 
-              
+                      
         if file_extension in self.map:
             return self.map[file_extension]
         else:
@@ -285,4 +240,55 @@ class TagsDatabase(object):
         
         self.path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
         self.name = None
-        self.connection = None
+        self.connect()
+    
+    def connect(self):
+        
+        self.connection = sqlite3.connect(self.path)
+        self.connection.row_factory = sqlite3.Row
+    
+    def disconnect(self):
+        
+        self.connection.close()
+        
+    def add_tag(self, name):
+        
+        cursor = self.connection.cursor()
+        
+        values = (name,)
+        sql = "insert into " + constants.TAGS_TABLE_NAME + "(" + constants.NAME_COLUMN_NAME + ")  values (?)"
+        cursor.execute(sql, values)
+        self.connection.commit()
+        cursor.close()
+    
+    def remove_tag(self, name):
+        
+        cursor = self.connection.cursor()
+        
+        values = (name,)
+        sql = "delete from " + constants.TAGS_TABLE_NAME + " where " + constants.NAME_COLUMN_NAME + " = ?"
+        cursor.execute(sql, values)
+        self.connection.commit()
+        cursor.close()        
+    
+    def rename_tag(self, old_name, new_name):
+        
+        pass
+    
+    def tag(self, file, name):
+        
+        pass
+    
+    def get_all(self):
+        
+        cursor = self.connection.cursor()
+        
+        sql = "select * from " + constants.TAGS_TABLE_NAME + " order by " + constants.NAME_COLUMN_NAME
+        cursor.execute(sql)
+        tags = []
+        for row in cursor:
+            tags.append(row[constants.NAME_COLUMN_NAME])
+        cursor.close()
+        
+        return tags
+        

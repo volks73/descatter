@@ -16,21 +16,6 @@
 				<date-part name="day" form="numeric-leading-zeros"/>
 			</date>
 		</macro>
-		<macro name="checkin-file-name">
-			<date variable="checkin-timestamp">
-				<date-part name="year"/>
-				<date-part name="month" form="numeric-leading-zeros"/>
-				<date-part name="day" form="numeric-leading-zeros"/>
-			</date>
-			<literal>T</literal>
-			<time variable="checkin-timestamp">
-				<time-part name="hour" form="24-hour"/>
-				<time-part name="minute"/>
-				<time-part name="second"/>
-			</time>
-			<literal>_file_</literal>
-			<number variable="checkin-order" digits="4" form="leading-zeros"/>
-		</macro>
 	</macros>
 	<structure>
 		<folder name="checkin-year">
@@ -38,7 +23,7 @@
 				<folder name="checkin-day">
 					<extensions>
 						<extension name="*">
-							<file name="checkin-file-name"/>
+							<file name="original-file-name"/>
 						</extension>
 					</extensions>
 				</folder>

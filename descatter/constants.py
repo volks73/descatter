@@ -6,31 +6,38 @@ FILE_NAME_KEY = 'name'
 FILE_PATH_KEY = 'path'
 FILE_EXT_KEY = 'ext'
 
-# Database constants
+# Database
 SQLITE_EXTENSION = '.sqlite'
 TAGS_DB_NAME = 'tags' + SQLITE_EXTENSION
 DEFAULT_TAGS_DB_NAME = 'default_' + TAGS_DB_NAME
+
+# Database table names
 TAGS_TABLE_NAME = 'tags'
-DATE_ADDED_COLUMN_NAME = 'date_added'
-TAG_HIERARCHY_TABLE_NAME = 'tag_hierarchy'
+TAGS_HIERARCHY_TABLE_NAME = 'tags_hierarchy'
 FILES_TABLE_NAME = 'files'
 FILES_TAGS_TABLE_NAME = 'files_tags'
-CONTENT_TYPES_TABLE_NAME = 'content_types'
-CONTENT_TYPES_ID_COLUMN_NAME = 'content_types_id'
-MEDIA_TYPE_NAME_COLUMN_NAME = 'media_type_name'
-MEDIA_SUBTYPE_NAME_COLUMN_NAME = 'media_subtype_name'
-FILE_EXTENSIONS_TABLE_NAME = 'file_extensions'
-FILE_EXTENSIONS_ID_COLUMN_NAME = 'file_extensions_id'
-EXTENSION_COLUMN_NAME = 'extension'
-DESCRIPTION_COLUMN_NAME = 'description'
-FILE_ASSOCIATIONS_TABLE_NAME = 'file_associations'
-FILE_ASSOCIATIONS_ID_COLUMN_NAME = 'file_associations_id'
+VIRTUAL_FOLDERS_TABLE_NAME = 'virutal_folders'
+VIRTUAL_FOLDERS_TAGS_TABLE_NAME = 'virtual_folders_tags'
 
-# Tests constants
+# Database column names
+ID_COLUMN_NAME = '_id'
+FILES_ID_COLUMN_NAME = FILES_TABLE_NAME + ID_COLUMN_NAME
+FILES_PATH_COLUM_NAME = 'file_path'
+ORIGINAL_FILE_NAME_COLUMN_NAME = 'original_file_name'
+FILES_TAGS_ID_COLUMN_NAME = FILES_TAGS_TABLE_NAME + ID_COLUMN_NAME
+TAGS_ID_COLUMN_NAME = TAGS_TABLE_NAME + ID_COLUMN_NAME
+NAME_COLUMN_NAME = 'name'
+TAGS_HIERARCHY_ID_COLUMN_NAME = TAGS_HIERARCHY_TABLE_NAME + ID_COLUMN_NAME
+TAGS_ID_CHILD_COLUMN_NAME = TAGS_ID_COLUMN_NAME + '_child'
+TAGS_ID_PARENT_COLUMN_NAME = TAGS_ID_COLUMN_NAME + '_parent'
+VIRTUAL_FOLDERS_ID_COLUMN_NAME = VIRTUAL_FOLDERS_TABLE_NAME + ID_COLUMN_NAME
+VIRTUAL_FOLDERS_TAGS_ID_COLUMN_NAME = VIRTUAL_FOLDERS_TAGS_TABLE_NAME + ID_COLUMN_NAME
+
+# Tests
 TEST_CATALOG_NAME = 'Test_Catalog'
 TESTS_FOLDER_NAME = 'tests'
 
-# Command line constants
+# Command line
 COMMAND_SHORT_PREFIX = '-'
 COMMAND_LONG_PREFIX = '--'
 CATALOG_ARGUMENT_SHORT_NAME = 'c'
@@ -49,28 +56,40 @@ INTERACTIVE_ARGUMENT_LONG_NAME = 'interactive'
 INTERACTIVE_ARGUMENT_HELP = "Start a console or interactive mode to execute a series of commands within the descatter application"
 MAP_ARGUMENT_SHORT_NAME = 'm'
 MAP_ARGUMENT_LONG_NAME = 'map'
-MAP_ARGUMENT_HELP = "List the map for the content folder"
+MAP_ARGUMENT_HELP = "Perform an action related to maps"
+TAG_ARGUMENT_SHORT_NAME = 't'
+TAG_ARGUMENT_LONG_NAME = 'tag'
+TAG_ARGUMENT_HELP = "Perform an action related to tags"
+NAME_ARGUMENT_SHORT_NAME = 'n'
+NAME_ARGUMENT_LONG_NAME = 'name'
+NAME_ARGUMENT_HELP = "The name of a tag"
 EXTENSION_ARGUMENT_SHORT_NAME = 'e'
 EXTENSION_ARGUMENT_LONG_NAME = 'extension'
 EXTENSION_ARGUMENT_HELP = "List the mapping for only the specified file extension"
 DESTINATION_ARGUMENT_SHORT_NAME = 'd'
 DESTINATION_ARGUMENT_LONG_NAME = 'destination'
 DESTINATION_ARGUMENT_HELP = "Specifies the destination for a file extension relative to the content folder of the specified catalog"
-
-# Console constants
-CONSOLE_PROMPT = APPLICATION_NAME + ': '
-CONSOLE_DESCRIPTION = APPLICATION_NAME + " Interactive Console"
 ABSOLUTE_ARGUMENT_SHORT_NAME = 'a'
 ABSOLUTE_ARGUMENT_LONG_NAME = 'absolute'
 ABSOLUTE_ARGUMENT_HELP = "Display the absolute path instead of the relative path"
 SCHEMA_ARGUMENT_SHORT_NAME = 's'
 SCHEMA_ARGUMENT_LONG_NAME = 'schema'
 SCHEMA_ARGUMENT_HELP = "Define the initial content folder structure and file associations"
+
+# Console
+CONSOLE_PROMPT_TERMINATOR = ': '
+CONSOLE_PROMPT = APPLICATION_NAME + CONSOLE_PROMPT_TERMINATOR
+CONSOLE_PROMPT_PREFIX = '['
+CONSOLE_PROMPT_SUFFIX = ']'
+CONSOLE_DESCRIPTION = APPLICATION_NAME + " Interactive Console"
+
+# Console ASCII tables
 FILE_EXTENSION_HEADER_NAME = 'Extension'
 CONTENT_FOLDER_HEADER_NAME = 'Content Folder'
 CONTENT_FOLDER_HEADER_ALIGNMENT = 'l'
+TAG_HEADER_NAME = 'Tag'
 
-# XML constants
+# XML
 CONTENT_SCHEMA_FILE_NAME = 'content_schema.xml'
 DEFAULT_CONTENT_SCHEMA_FILE_NAME = 'default_' + CONTENT_SCHEMA_FILE_NAME
 CONTENT_SCHEMA_NAMESPACE = APPLICATION_NAME + '/2013/content_schema'
@@ -85,7 +104,7 @@ ID_ATTRIBUTE_NAME = 'id'
 EXTENSIONS_TAG_NAME = CONTENT_SCHEMA + 'extensions'
 EXTENSION_TAG_NAME = CONTENT_SCHEMA + 'extension'
 
-# Catalog folder structure constants
+# Catalog folder structure
 CONTENT_FOLDER_NAME = 'content'
 TEMPLATES_FOLDER_NAME = 'templates'
 HOOKS_FOLDER_NAME = 'hooks'
