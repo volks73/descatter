@@ -69,8 +69,8 @@ class Console(cmd.Cmd):
                                  constants.FILE_ARGUMENT_SHORT_NAME,
                                  constants.COMMAND_LONG_PREFIX + 
                                  constants.FILE_ARGUMENT_LONG_NAME,
-                                 nargs='?',
-                                 help=constants.FILE_ARGUMENT_HELP)
+                                 help=constants.FILE_ARGUMENT_HELP,
+                                 action='store_true')
         
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
                                  constants.MAP_ARGUMENT_SHORT_NAME,
@@ -328,13 +328,14 @@ class Console(cmd.Cmd):
     def do_checkin(self, line):
         """ Checks in the current working file into the current working catalog """
     
-        args = vars(self.parser.parse_args(line.split()))
+        split_line = line.split()
+        file_path = split_line[0]
+        args = vars(self.parser.parse_args(split_line[1:]))
+    
+        self.do_file(file_path)
     
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
-            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
-            
-        if args[constants.FILE_ARGUMENT_LONG_NAME]:
-            self.do_file(args[constants.FILE_ARGUMENT_LONG_NAME])
+            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
         
         if self.cwc is None:
             self.print_specify_catalog()
@@ -387,6 +388,8 @@ class Console(cmd.Cmd):
             self.show_map(args)
         elif args[constants.TAG_ARGUMENT_LONG_NAME]:
             self.show_tags(args)
+        elif args[constants.FILE_ARGUMENT_LONG_NAME]:
+            self.show_files(args)
         else:
             print("Nothing to show!")
     
@@ -421,13 +424,31 @@ class Console(cmd.Cmd):
         
         tags_table = PrettyTable([constants.TAG_HEADER_NAME])
         
-        tags = self.cwc.db.get_all()
+        tags = self.cwc.db.get_all_tags()
         
+        # TODO: Check PrettyTable module for adding multiple rows in a batch, might be able to remove for loop
         for tag in tags:
             row = [tag]
             tags_table.add_row(row)
         
         print(tags_table)
+        
+    def show_files(self, args):
+        """ Shows all of the files in an ASCII table sorted in descending alphabetical order """
+        
+        files_table = PrettyTable([constants.TITLE_HEADER_NAME, 
+                                   constants.CONTENT_PATH_HEADER_NAME, 
+                                   constants.CONTENT_FILE_NAME_HEADER_NAME, 
+                                   constants.ORIGINAL_FILE_NAME_HEADER_NAME])
+        
+        files = self.cwc.db.get_all_files()
+        
+        # TODO: Check PrettyTable module for adding multiple rows in a batch, might be able to remove for loop
+        for file in files:
+            row = file
+            files_table.add_row(row)
+            
+        print(files_table)
     
     def do_exit(self, line):
         """ Safely exits the console or interactive mode. """

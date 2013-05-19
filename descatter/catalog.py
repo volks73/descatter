@@ -118,23 +118,41 @@ class Catalog(object):
         file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
         destination = self.content_map.get_destination(file_extension)
         
+        # TODO: refactor code to clean up folder creation and path determination
         if destination:
-            content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
-            dst_content_folder_path = os.path.join(content_folder_path, destination)
+            abs_content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
+            dst_content_folder_path = os.path.join(abs_content_folder_path, destination)
             
             if not os.path.isdir(dst_content_folder_path):
                 os.makedirs(dst_content_folder_path)
             
-            dst_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=dst_content_folder_path)
+            # Create a folder with a unique name in a safe manner
+            abs_content_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=dst_content_folder_path)
+            temp_folder_name = os.path.basename(abs_content_folder_path)
+            content_folder_path = os.path.join(destination, temp_folder_name)
+            
             # TODO: Add schema setting to use original file name, generic name, or random name
-#             dst_file_name = constants.CONTENT_FILE_NAME + '.' + file_extension
-            dst_file_path = os.path.join(dst_folder_path, original_file_name) 
+#             catalog_file_name = constants.CONTENT_FILE_NAME + '.' + file_extension
+            # TODO: Replace spaces in file name with underscores
+            content_file_name = original_file_name
+            
+            dst_file_path = os.path.join(abs_content_folder_path, content_file_name) 
             
             shutil.copyfile(file_path, dst_file_path)
             
             # TODO: Add metadata file creation
         else:
             raise KeyError("Mapping does not exist")
+        
+        # TODO: Allow user to specify a title for the file
+        title = os.path.splitext(original_file_name)[0].strip().lower()
+        
+        catalog_file = {constants.ORIGINAL_FILE_NAME_COLUMN_NAME : original_file_name,
+                        constants.CONTENT_FILE_NAME_COLUMN_NAME : content_file_name,
+                        constants.CONTENT_PATH_COLUMN_NAME : content_folder_path,
+                        constants.TITLE_COLUMN_NAME : title}
+                        
+        self.db.add_file(catalog_file)
         
         return destination
 
@@ -255,20 +273,54 @@ class TagsDatabase(object):
         
         cursor = self.connection.cursor()
         
-        values = (name,)
-        sql = "insert into " + constants.TAGS_TABLE_NAME + "(" + constants.NAME_COLUMN_NAME + ")  values (?)"
+        values = { constants.NAME_COLUMN_NAME : name }
+        sql = ("insert into " + constants.TAGS_TABLE_NAME + 
+               "(" +
+                constants.NAME_COLUMN_NAME + 
+                ")  values (" +
+                ":" + constants.NAME_COLUMN_NAME +
+                ")")
+        
         cursor.execute(sql, values)
         self.connection.commit()
+        
+        cursor.close()
+    
+    def add_file(self, catalog_file):
+        
+        cursor = self.connection.cursor()
+        
+        sql = ("insert into " + constants.FILES_TABLE_NAME +
+               "(" + 
+               constants.CONTENT_PATH_COLUMN_NAME + ", " + 
+               constants.CONTENT_FILE_NAME_COLUMN_NAME + ", " + 
+               constants.ORIGINAL_FILE_NAME_COLUMN_NAME + ", " + 
+               constants.TITLE_COLUMN_NAME + 
+               ") values (" + 
+               ":" + constants.CONTENT_PATH_COLUMN_NAME + 
+               ", :" + constants.CONTENT_FILE_NAME_COLUMN_NAME + 
+               ", :" + constants.ORIGINAL_FILE_NAME_COLUMN_NAME + 
+               ", :" + constants.TITLE_COLUMN_NAME + 
+               ")")
+        
+        cursor.execute(sql, catalog_file)
+        self.connection.commit()
+        
         cursor.close()
     
     def remove_tag(self, name):
         
         cursor = self.connection.cursor()
         
-        values = (name,)
-        sql = "delete from " + constants.TAGS_TABLE_NAME + " where " + constants.NAME_COLUMN_NAME + " = ?"
+        values = { constants.NAME_COLUMN_NAME : name }
+        sql = ("delete from " + 
+               constants.TAGS_TABLE_NAME + 
+               " where " + 
+               constants.NAME_COLUMN_NAME + " = :" + constants.NAME_COLUMN_NAME)
+        
         cursor.execute(sql, values)
         self.connection.commit()
+        
         cursor.close()        
     
     def rename_tag(self, old_name, new_name):
@@ -279,16 +331,40 @@ class TagsDatabase(object):
         
         pass
     
-    def get_all(self):
+    def get_all_tags(self):
         
         cursor = self.connection.cursor()
         
-        sql = "select * from " + constants.TAGS_TABLE_NAME + " order by " + constants.NAME_COLUMN_NAME
+        sql = ("select * from " + constants.TAGS_TABLE_NAME + 
+               " order by " + constants.NAME_COLUMN_NAME)
+        
         cursor.execute(sql)
         tags = []
         for row in cursor:
             tags.append(row[constants.NAME_COLUMN_NAME])
+            
         cursor.close()
         
         return tags
+    
+    def get_all_files(self):
+        
+        cursor = self.connection.cursor()
+        
+        sql = ("select " +
+               constants.TITLE_COLUMN_NAME + ", " +
+               constants.CONTENT_PATH_COLUMN_NAME + ", " +
+               constants.CONTENT_FILE_NAME_COLUMN_NAME + ", " +
+               constants.ORIGINAL_FILE_NAME_COLUMN_NAME +
+               " from " + constants.FILES_TABLE_NAME +
+               " order by " + constants.TITLE_COLUMN_NAME)
+        
+        cursor.execute(sql)
+        files = []
+        for row in cursor:
+            files.append(row)
+            
+        cursor.close()
+        
+        return files
         
