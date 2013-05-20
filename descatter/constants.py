@@ -61,18 +61,6 @@ MAP_ARGUMENT_HELP = "Perform an action related to maps"
 TAG_ARGUMENT_SHORT_NAME = 't'
 TAG_ARGUMENT_LONG_NAME = 'tag'
 TAG_ARGUMENT_HELP = "Perform an action related to tags"
-NAME_ARGUMENT_SHORT_NAME = 'n'
-NAME_ARGUMENT_LONG_NAME = 'name'
-NAME_ARGUMENT_HELP = "The name of a tag"
-EXTENSION_ARGUMENT_SHORT_NAME = 'e'
-EXTENSION_ARGUMENT_LONG_NAME = 'extension'
-EXTENSION_ARGUMENT_HELP = "List the mapping for only the specified file extension"
-DESTINATION_ARGUMENT_SHORT_NAME = 'd'
-DESTINATION_ARGUMENT_LONG_NAME = 'destination'
-DESTINATION_ARGUMENT_HELP = "Specifies the destination for a file extension relative to the content folder of the specified catalog"
-ABSOLUTE_ARGUMENT_SHORT_NAME = 'a'
-ABSOLUTE_ARGUMENT_LONG_NAME = 'absolute'
-ABSOLUTE_ARGUMENT_HELP = "Display the absolute path instead of the relative path"
 SCHEMA_ARGUMENT_SHORT_NAME = 's'
 SCHEMA_ARGUMENT_LONG_NAME = 'schema'
 SCHEMA_ARGUMENT_HELP = "Define the initial content folder structure and file associations"
@@ -100,7 +88,7 @@ ORIGINAL_NAME_HEADER_NAME = 'Original Name'
 
 # XML
 CONTENT_SCHEMA_FILE_NAME = 'content_schema.xml'
-DEFAULT_CONTENT_SCHEMA_FILE_NAME = 'default_' + CONTENT_SCHEMA_FILE_NAME
+DEFAULT_CONTENT_SCHEMA_FILE_NAME = 'content_type_schema.xml'
 CONTENT_SCHEMA_NAMESPACE = APPLICATION_NAME + '/2013/content_schema'
 CONTENT_SCHEMA = '{%s}' % CONTENT_SCHEMA_NAMESPACE
 NAMESPACE_MAP = {None : CONTENT_SCHEMA_NAMESPACE}

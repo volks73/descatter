@@ -114,11 +114,11 @@ class Catalog(object):
             self.name = os.path.basename(path)
             path = os.path.dirname(path)
            
-    def checkin(self, catalog_file):
+    def checkin(self, file_path, title=None):
 
+        catalog_file = CatalogFile(file_path, title)
         destination = self.content_map.get_destination(catalog_file.get_extension())
         
-        # TODO: refactor code to clean up folder creation and path determination
         if destination:
             abs_content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
             dst_content_folder_path = os.path.join(abs_content_folder_path, destination)
@@ -145,7 +145,21 @@ class Catalog(object):
                         
         self.db.add_file(catalog_file)
         
-        return destination
+        return catalog_file
+    
+    def get_file(self, content_path):
+        
+        return self.db.get_file_by_content_path(content_path)
+    
+    def remove_file(self, content_path):
+        
+        file = self.db.get_file_by_content_path(content_path)
+        abs_content_folder_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME)
+        abs_folder_path = os.path.join(abs_content_folder_path, file.get_content_path())
+        
+        shutil.rmtree(abs_folder_path)
+        
+        self.db.remove_file(file)
 
 class ContentMap(object):
     
@@ -245,7 +259,8 @@ class ContentMap(object):
 
 class CatalogFile(object):
     
-    def __init__(self, original_path, title=None, content_path=None):
+    def __init__(self, original_path, db_id=None, title=None, content_path=None):
+        self.db_id = db_id
         self.original_path = original_path
         self.content_path = content_path
         
@@ -346,22 +361,44 @@ class TagsDatabase(object):
         
         cursor = self.connection.cursor()
         
+        # TODO: Remove from all tables
         values = { constants.NAME_COLUMN_NAME : name }
         sql = ("delete from " + 
                constants.TAGS_TABLE_NAME + 
                " where " + 
-               constants.NAME_COLUMN_NAME + " = :" + constants.NAME_COLUMN_NAME)
+               constants.NAME_COLUMN_NAME + 
+               " = :" + 
+               constants.NAME_COLUMN_NAME)
         
         cursor.execute(sql, values)
         self.connection.commit()
         
         cursor.close()        
     
+    def remove_file(self, catalog_file):
+        
+        cursor = self.connection.cursor()
+        
+        # TODO: Remove from all tables
+        values = { constants.FILES_ID_COLUMN_NAME : catalog_file.db_id }
+        sql = ("delete from " + 
+               constants.FILES_TABLE_NAME +
+               " where " + 
+               constants.FILES_ID_COLUMN_NAME +
+               " = :" +
+               constants.FILES_ID_COLUMN_NAME)
+    
+        cursor.execute(sql, values)
+                
+        self.connection.commit()    
+        
+        cursor.close()
+    
     def rename_tag(self, old_name, new_name):
         
         pass
     
-    def tag(self, catalog_file, name):
+    def tag_file(self, catalog_file, name):
         
         pass
     
@@ -388,16 +425,23 @@ class TagsDatabase(object):
         cursor = self.connection.cursor()
         
         sql = ("select " +
-               constants.TITLE_COLUMN_NAME + ", " +
-               constants.CONTENT_PATH_COLUMN_NAME + ", " +
+               constants.FILES_ID_COLUMN_NAME +
+               ", " +
+               constants.TITLE_COLUMN_NAME + 
+               ", " +
+               constants.CONTENT_PATH_COLUMN_NAME + 
+               ", " +
                constants.ORIGINAL_PATH_COLUMN_NAME +
-               " from " + constants.FILES_TABLE_NAME +
-               " order by " + constants.TITLE_COLUMN_NAME)
+               " from " + 
+               constants.FILES_TABLE_NAME +
+               " order by " + 
+               constants.TITLE_COLUMN_NAME)
         
         cursor.execute(sql)
         files = []
         for row in cursor:
             catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],
+                                       row[constants.FILES_ID_COLUMN_NAME],
                                        row[constants.TITLE_COLUMN_NAME],
                                        row[constants.CONTENT_PATH_COLUMN_NAME])
             files.append(catalog_file)
@@ -405,4 +449,38 @@ class TagsDatabase(object):
         cursor.close()
         
         return files
+    
+    def get_file_by_content_path(self, content_path):
+        
+        cursor = self.connection.cursor()
+        
+        values = (content_path + '%', )
+        sql = ("select " +
+               constants.FILES_ID_COLUMN_NAME +
+               ", " +
+               constants.TITLE_COLUMN_NAME + 
+               ", " +
+               constants.CONTENT_PATH_COLUMN_NAME + 
+               ", " +
+               constants.ORIGINAL_PATH_COLUMN_NAME +
+               " from " + 
+               constants.FILES_TABLE_NAME +
+               " where " + 
+               constants.CONTENT_PATH_COLUMN_NAME +
+               " like " +
+               "?")
+        
+        cursor.execute(sql, values)
+        row = cursor.fetchone()
+        catalog_file = None
+        
+        if row is not None:
+            catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],
+                                       row[constants.FILES_ID_COLUMN_NAME],
+                                       row[constants.TITLE_COLUMN_NAME],
+                                       row[constants.CONTENT_PATH_COLUMN_NAME])
+        
+        cursor.close()
+        
+        return catalog_file
         
