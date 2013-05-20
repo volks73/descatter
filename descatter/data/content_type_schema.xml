@@ -19,6 +19,11 @@
 				<extension id="pptx"/>
 			</extensions>
 		</folder>
+		<folder name="vnd.origin">
+			<extensions>
+				<extension id="opj"/>
+			</extensions>
+		</folder>
 	</folder>
 	<folder name="audio">
 		<folder name="mp3">
@@ -71,6 +76,11 @@
 		<folder name="xml">
 			<extensions>
 				<extension id="xml"/>
+			</extensions>
+		</folder>
+		<folder name="x-markdown">
+			<extensions>
+				<extension id="md"/>
 			</extensions>
 		</folder>
 	</folder>

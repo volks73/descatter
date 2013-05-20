@@ -339,14 +339,21 @@ class TagsDatabase(object):
         
         sql = ("insert into " + constants.FILES_TABLE_NAME +
                "(" + 
-               constants.CONTENT_PATH_COLUMN_NAME + ", " + 
-               constants.ORIGINAL_PATH_COLUMN_NAME + ", " + 
+               constants.CONTENT_PATH_COLUMN_NAME + 
+               ", " + 
+               constants.ORIGINAL_PATH_COLUMN_NAME + 
+               ", " + 
                constants.TITLE_COLUMN_NAME + 
+               ", " +
+               constants.DATE_ADDED_COLUMN_NAME + 
                ") values (" + 
-               ":" + constants.CONTENT_PATH_COLUMN_NAME + 
-               ", :" + constants.ORIGINAL_PATH_COLUMN_NAME +  
-               ", :" + constants.TITLE_COLUMN_NAME + 
-               ")")
+               ":" + 
+               constants.CONTENT_PATH_COLUMN_NAME + 
+               ", :" + 
+               constants.ORIGINAL_PATH_COLUMN_NAME +  
+               ", :" + 
+               constants.TITLE_COLUMN_NAME + 
+               ", datetime('now'))")
         
         db_catalog_file = {constants.CONTENT_PATH_COLUMN_NAME : catalog_file.content_path,
                            constants.ORIGINAL_PATH_COLUMN_NAME : catalog_file.original_path,

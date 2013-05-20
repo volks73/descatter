@@ -91,24 +91,14 @@ class Console(cmd.Cmd):
     def print_specify_catalog(self):
         """ Prints a message to the console to specify a catalog for the command. """
         
-        text = ("No catalog specified. Please specify a catalog with the '" + 
+        print("No catalog specified!")
+        
+        text = ("Please specify a catalog with the '" + 
                 constants.COMMAND_SHORT_PREFIX + 
                 constants.CATALOG_ARGUMENT_SHORT_NAME + 
                 "' argument or set a current working catalog with the '" + 
                 constants.CATALOG_ARGUMENT_LONG_NAME + 
                 "' command")
-        
-        print(text)
-    
-    def print_specify_file(self):
-        """ Prints a message to the console to specify a file for the command. """
-        
-        text = ("Please specific a file with the '" + 
-                constants.COMMAND_SHORT_PREFIX + 
-                constants.FILE_ARGUMENT_SHORT_NAME + 
-                "' argument or set a current working file with the '" + 
-                constants.FILE_ARGUMENT_LONG_NAME + 
-                "' command.") 
         
         print(text)
     
@@ -154,7 +144,7 @@ class Console(cmd.Cmd):
         args = vars(self.parser.parse_args(line.split()))
         
         if self.cwc is None:
-            print("No current working catalog has been set")
+            print("No current working catalog has been set!")
         else:
             if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
                 print("Current working catalog: '%s'" % self.cwc.path)
@@ -165,7 +155,7 @@ class Console(cmd.Cmd):
         """ Display the current working file. """
         
         if self.cwf is None:
-            print("No current working file has been set")
+            print("No current working file has been set!")
         else:
             self.print_catalog_files_table([self.cwf])         
     
@@ -183,6 +173,7 @@ class Console(cmd.Cmd):
         if catalog.is_catalog(catalog_path):
             
             # TODO: Add saving a history of catalogs used in User home directory installation of descatter
+            
             if self.cwc is not None:
                 self.cwc.db.disconnect()
             
@@ -372,7 +363,6 @@ class Console(cmd.Cmd):
                         print("File successfully checked in!")
                         
                 except LookupError:
-                    # TODO: Replace with call to "create_map" method
                     print("The '%s' file extension is unknown for the '%s' catalog." % (self.cwf.extension, self.cwc.name))
                     print("Would you like to add the '%s' file extension to the '%s' catalog?" % (self.cwf.extension, self.cwc.name))
                     response = self.input_prompt('Y/Yes or N/No')
@@ -392,8 +382,8 @@ class Console(cmd.Cmd):
                         print("The file was not checked in")
                 break
     
-    def do_show(self, line):
-        """ Shows various properties and values for the specified catalog """
+    def do_list(self, line):
+        """ Lists various properties and values for the specified catalog """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -403,15 +393,15 @@ class Console(cmd.Cmd):
         if self.cwc is None:
             self.print_specify_catalog()
         elif args[constants.MAP_ARGUMENT_LONG_NAME]:
-            self.show_map(args)
+            self.list_maps(args)
         elif args[constants.TAG_ARGUMENT_LONG_NAME]:
-            self.show_tags(args)
+            self.list_tags(args)
         elif args[constants.FILE_ARGUMENT_LONG_NAME]:
-            self.show_files(args)
+            self.list_files(args)
         else:
-            print("Nothing to show!")
+            print("Nothing to list!")
     
-    def show_map(self, args):
+    def list_maps(self, args):
         """ Shows the file extension maps in an ASCII table sorted in descending alphabetical order """
         
         map_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
@@ -428,7 +418,7 @@ class Console(cmd.Cmd):
                     
         print(map_table)
     
-    def show_tags(self, args):
+    def list_tags(self, args):
         """ Shows all of the tags in an ASCII table sorted in descending alphabetical order """
         
         tags_table = PrettyTable([constants.TAG_HEADER_NAME])
@@ -440,7 +430,7 @@ class Console(cmd.Cmd):
         
         print(tags_table)        
     
-    def show_files(self, args):
+    def list_files(self, args):
         """ Shows all of the files in an ASCII table sorted in descending alphabetical order """
                 
         files = self.cwc.db.get_all_files()
