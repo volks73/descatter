@@ -160,6 +160,10 @@ class Catalog(object):
         shutil.rmtree(abs_folder_path)
         
         self.db.remove_file(file)
+        
+    def tag(self, catalog_file, tag):
+        
+        self.db.tag(catalog_file, tag)
 
 class ContentMap(object):
     
@@ -265,7 +269,7 @@ class CatalogFile(object):
         self.content_path = content_path
         
         if title is None:
-            self.title = os.path.splitext(self.get_original_name())[0].lower()
+            self.title = os.path.splitext(self.get_original_name())[0]
         else:
             self.title = title
     
@@ -297,7 +301,17 @@ class CatalogFile(object):
     
     def get_title(self):
         
-        return self.title.title()
+        return self.title
+
+class Tag(object):
+    
+    def __init__(self, name, db_id=None):
+        self.name = name.lower()
+        self.db_id = db_id
+    
+    def get_name(self):
+        
+        return self.name.title()
     
 class TagsDatabase(object):
     
@@ -316,28 +330,34 @@ class TagsDatabase(object):
         
         self.connection.close()
         
-    def add_tag(self, name):
+    def add_tag(self, tag):
         
         cursor = self.connection.cursor()
         
-        values = { constants.NAME_COLUMN_NAME : name }
-        sql = ("insert into " + constants.TAGS_TABLE_NAME + 
+        values = { constants.NAME_COLUMN_NAME : tag.name }
+        sql = ("insert into " + 
+               constants.TAGS_TABLE_NAME + 
                "(" +
                 constants.NAME_COLUMN_NAME + 
-                ")  values (" +
-                ":" + constants.NAME_COLUMN_NAME +
+                ")  values (:" +
+                constants.NAME_COLUMN_NAME +
                 ")")
         
         cursor.execute(sql, values)
         self.connection.commit()
         
+        tag.db_id = cursor.lastrowid
+        
         cursor.close()
+        
+        return tag
     
     def add_file(self, catalog_file):
         
         cursor = self.connection.cursor()
         
-        sql = ("insert into " + constants.FILES_TABLE_NAME +
+        sql = ("insert into " + 
+               constants.FILES_TABLE_NAME +
                "(" + 
                constants.CONTENT_PATH_COLUMN_NAME + 
                ", " + 
@@ -362,14 +382,18 @@ class TagsDatabase(object):
         cursor.execute(sql, db_catalog_file)
         self.connection.commit()
         
+        catalog_file.db_id = cursor.lastrowid
+        
         cursor.close()
+        
+        return catalog_file
     
-    def remove_tag(self, name):
+    def remove_tag(self, file_tag):
         
         cursor = self.connection.cursor()
         
         # TODO: Remove from all tables
-        values = { constants.NAME_COLUMN_NAME : name }
+        values = { constants.NAME_COLUMN_NAME : file_tag.name }
         sql = ("delete from " + 
                constants.TAGS_TABLE_NAME + 
                " where " + 
@@ -405,8 +429,48 @@ class TagsDatabase(object):
         
         pass
     
-    def tag_file(self, catalog_file, name):
+    def tag(self, catalog_file, tag):
         
+        db_tag = None
+        if tag.db_id is None:
+            db_tag = self.get_tag_by_name(tag.name)
+        
+            if db_tag is None:
+                db_tag = self.add_tag(tag)
+        
+        db_catalog_file = None
+        if catalog_file.db_id is None:    
+            db_catalog_file = self.get_file_by_content_path(catalog_file.get_content_path())
+        else:
+            db_catalog_file = catalog_file
+        
+        if not self.is_file_tagged(db_catalog_file, db_tag):
+            cursor = self.connection.cursor()
+            
+            values = {constants.FILES_ID_COLUMN_NAME : db_catalog_file.db_id,
+                      constants.TAGS_ID_COLUMN_NAME : db_tag.db_id}
+            sql = ("insert into " +
+                   constants.FILES_TAGS_TABLE_NAME +
+                   "(" +
+                   constants.FILES_ID_COLUMN_NAME +
+                   ", " +
+                   constants.TAGS_ID_COLUMN_NAME +
+                   ") values (" +
+                   ":" +
+                   constants.FILES_ID_COLUMN_NAME +
+                   ", :" + 
+                   constants.TAGS_ID_COLUMN_NAME +
+                   ")")
+            
+            cursor.execute(sql, values)
+            
+            self.connection.commit()
+            
+            cursor.close()
+    
+    def detag(self, catalog_file, tag):
+        
+        # TODO: Add detag ability
         pass
     
     def get_all_tags(self):
@@ -414,14 +478,20 @@ class TagsDatabase(object):
         cursor = self.connection.cursor()
         
         sql = ("select " +
+               constants.TAGS_ID_COLUMN_NAME +
+               ", " +
                constants.NAME_COLUMN_NAME +
-               " from " + constants.TAGS_TABLE_NAME + 
-               " order by " + constants.NAME_COLUMN_NAME)
+               " from " + 
+               constants.TAGS_TABLE_NAME + 
+               " order by " + 
+               constants.NAME_COLUMN_NAME)
         
         cursor.execute(sql)
         tags = []
         for row in cursor:
-            tags.append(row)
+            tag = Tag(row[constants.NAME_COLUMN_NAME],
+                               row[constants.TAGS_ID_COLUMN_NAME])
+            tags.append(tag)
             
         cursor.close()
         
@@ -457,6 +527,34 @@ class TagsDatabase(object):
         
         return files
     
+    def get_tag_by_name(self, tag_name):
+        
+        cursor = self.connection.cursor()
+        
+        values = {constants.NAME_COLUMN_NAME : tag_name}
+        sql = ("select " +
+               constants.TAGS_ID_COLUMN_NAME +
+               ", " +
+               constants.NAME_COLUMN_NAME +
+               " from " +
+               constants.TAGS_TABLE_NAME +
+               " where " +
+               constants.NAME_COLUMN_NAME +
+               " = :" +
+               constants.NAME_COLUMN_NAME)
+        
+        cursor.execute(sql, values)
+        row = cursor.fetchone()
+        tag = None
+        
+        if row is not None:
+            tag = Tag(row[constants.NAME_COLUMN_NAME],
+                      row[constants.TAGS_ID_COLUMN_NAME])
+        
+        cursor.close()
+        
+        return tag
+    
     def get_file_by_content_path(self, content_path):
         
         cursor = self.connection.cursor()
@@ -474,8 +572,7 @@ class TagsDatabase(object):
                constants.FILES_TABLE_NAME +
                " where " + 
                constants.CONTENT_PATH_COLUMN_NAME +
-               " like " +
-               "?")
+               " like ?")
         
         cursor.execute(sql, values)
         row = cursor.fetchone()
@@ -490,4 +587,28 @@ class TagsDatabase(object):
         cursor.close()
         
         return catalog_file
+    
+    def is_file_tagged(self, catalog_file, tag):
         
+        cursor = self.connection.cursor()
+        
+        values = {constants.FILES_ID_COLUMN_NAME : catalog_file.db_id,
+                  constants.TAGS_ID_COLUMN_NAME : tag.db_id}
+        sql = ("select " +
+               constants.FILES_TAGS_ID_COLUMN_NAME +
+               " from " +
+               constants.FILES_TAGS_TABLE_NAME +
+               " where " +
+               constants.FILES_ID_COLUMN_NAME +
+               " = :" +
+               constants.FILES_ID_COLUMN_NAME +
+               " and " +
+               constants.TAGS_ID_COLUMN_NAME + 
+               " = :" +
+               constants.TAGS_ID_COLUMN_NAME +
+               " limit 1")
+        
+        cursor.execute(sql, values)
+        row = cursor.fetchone()
+        
+        return row is not None
