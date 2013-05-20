@@ -259,7 +259,7 @@ class ContentMap(object):
 
 class CatalogFile(object):
     
-    def __init__(self, original_path, db_id=None, title=None, content_path=None):
+    def __init__(self, original_path, title=None, content_path=None, db_id=None):
         self.db_id = db_id
         self.original_path = original_path
         self.content_path = content_path
@@ -440,10 +440,10 @@ class TagsDatabase(object):
         cursor.execute(sql)
         files = []
         for row in cursor:
-            catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],
-                                       row[constants.FILES_ID_COLUMN_NAME],
+            catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],                                
                                        row[constants.TITLE_COLUMN_NAME],
-                                       row[constants.CONTENT_PATH_COLUMN_NAME])
+                                       row[constants.CONTENT_PATH_COLUMN_NAME],
+                                       row[constants.FILES_ID_COLUMN_NAME])
             files.append(catalog_file)
             
         cursor.close()
@@ -475,10 +475,10 @@ class TagsDatabase(object):
         catalog_file = None
         
         if row is not None:
-            catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],
-                                       row[constants.FILES_ID_COLUMN_NAME],
+            catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],                                       
                                        row[constants.TITLE_COLUMN_NAME],
-                                       row[constants.CONTENT_PATH_COLUMN_NAME])
+                                       row[constants.CONTENT_PATH_COLUMN_NAME],
+                                       row[constants.FILES_ID_COLUMN_NAME])
         
         cursor.close()
         

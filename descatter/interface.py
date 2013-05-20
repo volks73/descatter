@@ -333,7 +333,7 @@ class Console(cmd.Cmd):
             if self.cwc is not None:
                 print("All files will be lost and this cannot be undone!")
                 print("Are you sure you want to destroy the '%s' catalog?" % self.cwc.name)
-                response = input("(Y/Yes or N/No): ")
+                response = self.input_prompt('Y/Yes or N/No')
             
                 if response == 'Y' or response == 'Yes':
                     catalog.destroy(self.cwc)
@@ -358,9 +358,12 @@ class Console(cmd.Cmd):
         if self.cwc is None:
             self.print_specify_catalog()
         else:
+            print("Please enter a title for the file")
+            title = self.input_prompt('title')
+            
             while True:
                 try: 
-                    self.cwf = self.cwc.checkin(file_path)
+                    self.cwf = self.cwc.checkin(file_path, title)
                       
                     if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
                         print("File successfully checked in as:")
@@ -372,16 +375,16 @@ class Console(cmd.Cmd):
                     # TODO: Replace with call to "create_map" method
                     print("The '%s' file extension is unknown for the '%s' catalog." % (self.cwf.extension, self.cwc.name))
                     print("Would you like to add the '%s' file extension to the '%s' catalog?" % (self.cwf.extension, self.cwc.name))
-                    response = input("(Y/Yes or N/No): ")
+                    response = self.input_prompt('Y/Yes or N/No')
                     
                     if response == 'Y' or response == 'Yes':
                         
                         print("Please specify a folder path relative to the content folder for the '%s' file extension." % self.cwf.extension)
-                        destination = input("(content folder path): ")
+                        destination = self.input_prompt('content path')
                         
                         while os.path.isabs(response):
-                            print("The folder path must be relative to the content folder. Please try again.")
-                            response = input("(content folder path): ")
+                            print("The path must be relative to the content folder. Please try again.")
+                            response = input('content path')
                            
                         self.cwc.content_map.add(self.cwf.extension, destination)
                         continue
