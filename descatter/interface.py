@@ -140,22 +140,29 @@ class Console(cmd.Cmd):
         
         print(text)
     
-    def print_catalog_files_table(self, catalog_files):
+    def print_catalog_files_table(self, catalog_files, verbose=False):
         
-        table_headers = [constants.TITLE_HEADER_NAME, 
-                                   constants.CONTENT_PATH_HEADER_NAME, 
-                                   constants.CONTENT_NAME_HEADER_NAME,
-                                   constants.ORIGINAL_PATH_HEADER_NAME, 
-                                   constants.ORIGINAL_NAME_HEADER_NAME]
+        table_headers = [constants.TITLE_HEADER_NAME,
+                         constants.CONTENT_PATH_HEADER_NAME,
+                         constants.CONTENT_NAME_HEADER_NAME]
+        
+        if verbose:
+            table_headers.append(constants.ORIGINAL_PATH_HEADER_NAME)
+            table_headers.append(constants.ORIGINAL_NAME_HEADER_NAME) 
         
         files_table = PrettyTable(table_headers)
         
         for catalog_file in catalog_files:
-            files_table.add_row([catalog_file.get_title(),
-                                 catalog_file.get_content_path(),
-                                 catalog_file.get_content_name(),
-                                 catalog_file.get_original_path(),
-                                 catalog_file.get_original_name()])
+            
+            row = [catalog_file.get_title(),
+                   catalog_file.get_content_path(),
+                   catalog_file.get_content_name()]
+            
+            if verbose:
+                row.append(catalog_file.get_original_path())
+                row.append(catalog_file.get_original_name())
+            
+            files_table.add_row(row)
         
         print(files_table)
     
@@ -363,7 +370,7 @@ class Console(cmd.Cmd):
                 response = input("(Y/Yes or N/No): ")
             
                 if response == 'Y' or response == 'Yes':
-                    catalog.destroy(catalog)
+                    catalog.destroy(self.cwc)
                     print("The catalog has been destroyed!")
                     
                     self.cwc = None
@@ -480,7 +487,7 @@ class Console(cmd.Cmd):
                 
         files = self.cwc.db.get_all_files()
                    
-        self.print_files_table(files)
+        self.print_catalog_files_table(files, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
     
     def do_exit(self, line):
         """ Safely exits the console or interactive mode. """

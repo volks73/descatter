@@ -398,8 +398,8 @@ class TagsDatabase(object):
         files = []
         for row in cursor:
             catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],
-                                       row[constants.CONTENT_PATH_COLUMN_NAME],
-                                       row[constants.TITLE_COLUMN_NAME])
+                                       row[constants.TITLE_COLUMN_NAME],
+                                       row[constants.CONTENT_PATH_COLUMN_NAME])
             files.append(catalog_file)
             
         cursor.close()
