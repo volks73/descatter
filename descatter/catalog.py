@@ -54,28 +54,30 @@ def establish(catalog_path, schema_path=None):
     
     return Catalog(catalog_path)
     
-def destroy(catalog_path, content=True):
+def destroy(catalog, content=True):
+
+    catalog.db.disconnect()
 
     if content:
-        content_path = os.path.join(catalog_path, constants.CONTENT_FOLDER_NAME)
+        content_path = os.path.join(catalog.path, constants.CONTENT_FOLDER_NAME)
         shutil.rmtree(content_path)
     
-    templates_path = os.path.join(catalog_path, constants.TEMPLATES_FOLDER_NAME)
+    templates_path = os.path.join(catalog.path, constants.TEMPLATES_FOLDER_NAME)
     shutil.rmtree(templates_path)
     
-    hooks_path = os.path.join(catalog_path, constants.HOOKS_FOLDER_NAME)
+    hooks_path = os.path.join(catalog.path, constants.HOOKS_FOLDER_NAME)
     shutil.rmtree(hooks_path)
     
-    log_path = os.path.join(catalog_path, constants.LOG_FOLDER_NAME) 
+    log_path = os.path.join(catalog.path, constants.LOG_FOLDER_NAME) 
     shutil.rmtree(log_path)
     
-    db_path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
+    db_path = os.path.join(catalog.path, constants.TAGS_DB_NAME)
     os.remove(db_path) 
     
-    content_schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
+    content_schema_path = os.path.join(catalog.path, constants.CONTENT_SCHEMA_FILE_NAME)
     os.remove(content_schema_path)
     
-    readme_path = os.path.join(catalog_path, constants.CATALOG_README_FILE_NAME)
+    readme_path = os.path.join(catalog.path, constants.CATALOG_README_FILE_NAME)
     os.remove(readme_path)
 
 def is_catalog(catalog_path):
@@ -112,11 +114,9 @@ class Catalog(object):
             self.name = os.path.basename(path)
             path = os.path.dirname(path)
            
-    def checkin(self, file_path):
+    def checkin(self, catalog_file):
 
-        original_file_name = os.path.basename(file_path)
-        file_extension = os.path.splitext(file_path)[1][1:].strip().lower()
-        destination = self.content_map.get_destination(file_extension)
+        destination = self.content_map.get_destination(catalog_file.get_extension())
         
         # TODO: refactor code to clean up folder creation and path determination
         if destination:
@@ -126,31 +126,22 @@ class Catalog(object):
             if not os.path.isdir(dst_content_folder_path):
                 os.makedirs(dst_content_folder_path)
             
-            # Create a folder with a unique name in a safe manner
             abs_content_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=dst_content_folder_path)
             temp_folder_name = os.path.basename(abs_content_folder_path)
             content_folder_path = os.path.join(destination, temp_folder_name)
             
             # TODO: Add schema setting to use original file name, generic name, or random name
-#             catalog_file_name = constants.CONTENT_FILE_NAME + '.' + file_extension
-            # TODO: Replace spaces in file name with underscores
-            content_file_name = original_file_name
+            content_file_name = catalog_file.get_original_name().replace(' ', '_')
+            catalog_file.content_path = os.path.join(content_folder_path, content_file_name)
             
             dst_file_path = os.path.join(abs_content_folder_path, content_file_name) 
             
-            shutil.copyfile(file_path, dst_file_path)
+            shutil.copyfile(catalog_file.original_path, dst_file_path)
             
+            # TODO: Update file checkin log. The checkin log will be a csv file with checkin date/time, original path, and content path located in the logs folder of the catalog.
             # TODO: Add metadata file creation
         else:
             raise KeyError("Mapping does not exist")
-        
-        # TODO: Allow user to specify a title for the file
-        title = os.path.splitext(original_file_name)[0].strip().lower()
-        
-        catalog_file = {constants.ORIGINAL_FILE_NAME_COLUMN_NAME : original_file_name,
-                        constants.CONTENT_FILE_NAME_COLUMN_NAME : content_file_name,
-                        constants.CONTENT_PATH_COLUMN_NAME : content_folder_path,
-                        constants.TITLE_COLUMN_NAME : title}
                         
         self.db.add_file(catalog_file)
         
@@ -251,7 +242,48 @@ class ContentMap(object):
             return self.map[file_extension]
         else:
             return None
-                        
+
+class CatalogFile(object):
+    
+    def __init__(self, original_path, title=None, content_path=None):
+        self.original_path = original_path
+        self.content_path = content_path
+        
+        if title is None:
+            self.title = os.path.splitext(self.get_original_name())[0].lower()
+        else:
+            self.title = title
+    
+    def get_content_path(self):
+        
+        if self.content_path is None:
+            return self.content_path
+        else:
+            return os.path.dirname(self.content_path)
+    
+    def get_content_name(self):
+        
+        if self.content_path is None:
+            return None
+        else:
+            return os.path.basename(self.content_path)
+    
+    def get_original_path(self):
+        
+        return os.path.dirname(self.original_path)
+    
+    def get_original_name(self):
+        
+        return os.path.basename(self.original_path)
+    
+    def get_extension(self):
+        
+        return os.path.splitext(self.original_path)[1][1:].strip().lower()
+    
+    def get_title(self):
+        
+        return self.title.title()
+    
 class TagsDatabase(object):
     
     def __init__(self, catalog_path):
@@ -293,17 +325,19 @@ class TagsDatabase(object):
         sql = ("insert into " + constants.FILES_TABLE_NAME +
                "(" + 
                constants.CONTENT_PATH_COLUMN_NAME + ", " + 
-               constants.CONTENT_FILE_NAME_COLUMN_NAME + ", " + 
-               constants.ORIGINAL_FILE_NAME_COLUMN_NAME + ", " + 
+               constants.ORIGINAL_PATH_COLUMN_NAME + ", " + 
                constants.TITLE_COLUMN_NAME + 
                ") values (" + 
                ":" + constants.CONTENT_PATH_COLUMN_NAME + 
-               ", :" + constants.CONTENT_FILE_NAME_COLUMN_NAME + 
-               ", :" + constants.ORIGINAL_FILE_NAME_COLUMN_NAME + 
+               ", :" + constants.ORIGINAL_PATH_COLUMN_NAME +  
                ", :" + constants.TITLE_COLUMN_NAME + 
                ")")
         
-        cursor.execute(sql, catalog_file)
+        db_catalog_file = {constants.CONTENT_PATH_COLUMN_NAME : catalog_file.content_path,
+                           constants.ORIGINAL_PATH_COLUMN_NAME : catalog_file.original_path,
+                           constants.TITLE_COLUMN_NAME : catalog_file.title}
+        
+        cursor.execute(sql, db_catalog_file)
         self.connection.commit()
         
         cursor.close()
@@ -327,7 +361,7 @@ class TagsDatabase(object):
         
         pass
     
-    def tag(self, file, name):
+    def tag(self, catalog_file, name):
         
         pass
     
@@ -335,13 +369,15 @@ class TagsDatabase(object):
         
         cursor = self.connection.cursor()
         
-        sql = ("select * from " + constants.TAGS_TABLE_NAME + 
+        sql = ("select " +
+               constants.NAME_COLUMN_NAME +
+               " from " + constants.TAGS_TABLE_NAME + 
                " order by " + constants.NAME_COLUMN_NAME)
         
         cursor.execute(sql)
         tags = []
         for row in cursor:
-            tags.append(row[constants.NAME_COLUMN_NAME])
+            tags.append(row)
             
         cursor.close()
         
@@ -354,15 +390,17 @@ class TagsDatabase(object):
         sql = ("select " +
                constants.TITLE_COLUMN_NAME + ", " +
                constants.CONTENT_PATH_COLUMN_NAME + ", " +
-               constants.CONTENT_FILE_NAME_COLUMN_NAME + ", " +
-               constants.ORIGINAL_FILE_NAME_COLUMN_NAME +
+               constants.ORIGINAL_PATH_COLUMN_NAME +
                " from " + constants.FILES_TABLE_NAME +
                " order by " + constants.TITLE_COLUMN_NAME)
         
         cursor.execute(sql)
         files = []
         for row in cursor:
-            files.append(row)
+            catalog_file = CatalogFile(row[constants.ORIGINAL_PATH_COLUMN_NAME],
+                                       row[constants.CONTENT_PATH_COLUMN_NAME],
+                                       row[constants.TITLE_COLUMN_NAME])
+            files.append(catalog_file)
             
         cursor.close()
         

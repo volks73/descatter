@@ -106,23 +106,68 @@ class Console(cmd.Cmd):
                                  constants.DESTINATION_ARGUMENT_LONG_NAME,
                                  nargs='?',
                                  help=constants.DESTINATION_ARGUMENT_HELP)
+        
+        self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
+                                 constants.VERBOSE_ARGUMENT_SHORT_NAME,
+                                 constants.COMMAND_LONG_PREFIX +
+                                 constants.VERBOSE_ARGUMENT_LONG_NAME,
+                                 help=constants.VERBOSE_ARGUMENT_HELP,
+                                 action='store_true')
                                  
         super(Console, self).__init__()
     
     def print_specify_catalog(self):
         """ Prints a message to the console to specify a catalog for the command. """
         
-        print("No catalog specified. Please specify a catalog with the '" + constants.COMMAND_SHORT_PREFIX + constants.CATALOG_ARGUMENT_SHORT_NAME + "' argument or set a current working catalog with the '" + constants.CATALOG_ARGUMENT_LONG_NAME + "' command")
+        text = ("No catalog specified. Please specify a catalog with the '" + 
+                constants.COMMAND_SHORT_PREFIX + 
+                constants.CATALOG_ARGUMENT_SHORT_NAME + 
+                "' argument or set a current working catalog with the '" + 
+                constants.CATALOG_ARGUMENT_LONG_NAME + 
+                "' command")
+        
+        print(text)
     
     def print_specify_file(self):
         """ Prints a message to the console to specify a file for the command. """
         
-        print("Please specific a file with the '" + constants.COMMAND_SHORT_PREFIX + constants.FILE_ARGUMENT_SHORT_NAME + "' argument or set a current working file with the '" + constants.FILE_ARGUMENT_LONG_NAME + "' command.")
+        text = ("Please specific a file with the '" + 
+                constants.COMMAND_SHORT_PREFIX + 
+                constants.FILE_ARGUMENT_SHORT_NAME + 
+                "' argument or set a current working file with the '" + 
+                constants.FILE_ARGUMENT_LONG_NAME + 
+                "' command.") 
+        
+        print(text)
+    
+    def print_catalog_files_table(self, catalog_files):
+        
+        table_headers = [constants.TITLE_HEADER_NAME, 
+                                   constants.CONTENT_PATH_HEADER_NAME, 
+                                   constants.CONTENT_NAME_HEADER_NAME,
+                                   constants.ORIGINAL_PATH_HEADER_NAME, 
+                                   constants.ORIGINAL_NAME_HEADER_NAME]
+        
+        files_table = PrettyTable(table_headers)
+        
+        for catalog_file in catalog_files:
+            files_table.add_row([catalog_file.get_title(),
+                                 catalog_file.get_content_path(),
+                                 catalog_file.get_content_name(),
+                                 catalog_file.get_original_path(),
+                                 catalog_file.get_original_name()])
+        
+        print(files_table)
     
     def input_prompt(self, value):
         """ Display prompt to input a value after displaying a question """
-                
-        return input(constants.CONSOLE_PROMPT_PREFIX + value + constants.CONSOLE_PROMPT_SUFFIX + constants.CONSOLE_PROMPT_TERMINATOR)
+        
+        prompt = (constants.CONSOLE_PROMPT_PREFIX + 
+                  value + 
+                  constants.CONSOLE_PROMPT_SUFFIX + 
+                  constants.CONSOLE_PROMPT_TERMINATOR)
+        
+        return input(prompt)
     
     def do_cwc(self, line):
         """ Display the current working catalog. """
@@ -137,18 +182,13 @@ class Console(cmd.Cmd):
             else:
                 print("Current working catalog: '%s'" % self.cwc.name)
         
-    def do_cwf(self, line):
+    def do_cwf(self, line=None):
         """ Display the current working file. """
-        
-        args = vars(self.parser.parse_args(line.split()))
         
         if self.cwf is None:
             print("No current working file has been set")
-        else:        
-            if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
-                print("Current working file: '%s'" % self.cwf[constants.FILE_PATH_KEY])
-            else:
-                print("Current working file: '%s'" % self.cwf[constants.FILE_NAME_KEY])          
+        else:
+            self.print_catalog_files_table([self.cwf])         
     
     def do_cwd(self, line):
         """ Display the current working directory. """
@@ -173,18 +213,25 @@ class Console(cmd.Cmd):
             print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
             self.cwc = None
     
-    def do_file(self, file_path):
+    def do_file(self, line):
         """ Sets the current working file. """
         
+        split_line = line.split()
+        file_path = split_line[0]
+        args = vars(self.parser.parse_args(split_line[1:]))
+        
+        # TODO: Add history of recently used files
+        
         if os.path.isfile(file_path):       
-            file_path = os.path.join(os.getcwd(), file_path)
-            file_name = os.path.basename(file_path)
-            file_ext = os.path.splitext(file_path)[1][1:].strip().lower()
+            original_path = os.path.join(os.getcwd(), file_path)
                     
-            self.cwf = {constants.FILE_NAME_KEY : file_name,
-                        constants.FILE_EXT_KEY : file_ext,
-                        constants.FILE_PATH_KEY : file_path}
-            print("The current working file set to: '%s'" % self.cwf[constants.FILE_NAME_KEY])
+            self.cwf = catalog.CatalogFile(original_path)
+            
+            if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
+                print("Current working file set to:")
+                self.do_cwf()
+            else:
+                print("Current working file set!")
         else:
             print("Path is not a file!")
     
@@ -316,7 +363,7 @@ class Console(cmd.Cmd):
                 response = input("(Y/Yes or N/No): ")
             
                 if response == 'Y' or response == 'Yes':
-                    catalog.destroy(catalog_path)
+                    catalog.destroy(catalog)
                     print("The catalog has been destroyed!")
                     
                     self.cwc = None
@@ -329,10 +376,9 @@ class Console(cmd.Cmd):
         """ Checks in the current working file into the current working catalog """
     
         split_line = line.split()
-        file_path = split_line[0]
         args = vars(self.parser.parse_args(split_line[1:]))
     
-        self.do_file(file_path)
+        self.do_file(line)
     
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
             self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
@@ -344,31 +390,29 @@ class Console(cmd.Cmd):
         else:
             while True:
                 try: 
-                    destination = self.cwc.checkin(self.cwf[constants.FILE_PATH_KEY])
-                    
-                    if args[constants.ABSOLUTE_ARGUMENT_LONG_NAME]:
-                        checkin_absolute_path = os.path.join(self.cwc.path, constants.CONTENT_FOLDER_NAME)
-                        checkin_absolute_path = os.path.join(checkin_absolute_path, destination)
-                        print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_PATH_KEY], self.cwc.path, checkin_absolute_path))   
+                    self.cwc.checkin(self.cwf)
+                      
+                    if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
+                        print("File successfully checked in as:")
+                        self.print_catalog_files_table([self.cwf])
                     else:
-                        print("'%s' checked in to '%s' at '%s'" % (self.cwf[constants.FILE_NAME_KEY], self.cwc.name, destination))
+                        print("File successfully checked in!")
                         
                 except LookupError:
-                    file_extension = self.cwf[constants.FILE_EXT_KEY]
-                    print("The '%s' file extension is unknown for the '%s' catalog." % (file_extension, self.cwc.name))
-                    print("Would you like to add the '%s' file extension to the '%s' catalog?" % (file_extension, self.cwc.name))
+                    print("The '%s' file extension is unknown for the '%s' catalog." % (self.cwf.extension, self.cwc.name))
+                    print("Would you like to add the '%s' file extension to the '%s' catalog?" % (self.cwf.extension, self.cwc.name))
                     response = input("(Y/Yes or N/No): ")
                     
                     if response == 'Y' or response == 'Yes':
                         
-                        print("Please specify a folder path relative to the content folder for the '%s' file extension." % file_extension)
+                        print("Please specify a folder path relative to the content folder for the '%s' file extension." % self.cwf.extension)
                         destination = input("(content folder path): ")
                         
                         while os.path.isabs(response):
                             print("The folder path must be relative to the content folder. Please try again.")
                             response = input("(content folder path): ")
                            
-                        self.cwc.content_map.add(file_extension, destination)
+                        self.cwc.content_map.add(self.cwf.extension, destination)
                         continue
                     else:
                         print("The file was not checked in")
@@ -426,29 +470,17 @@ class Console(cmd.Cmd):
         
         tags = self.cwc.db.get_all_tags()
         
-        # TODO: Check PrettyTable module for adding multiple rows in a batch, might be able to remove for loop
         for tag in tags:
-            row = [tag]
-            tags_table.add_row(row)
+            tags_table.add_row(tag)
         
-        print(tags_table)
-        
+        print(tags_table)        
+    
     def show_files(self, args):
         """ Shows all of the files in an ASCII table sorted in descending alphabetical order """
-        
-        files_table = PrettyTable([constants.TITLE_HEADER_NAME, 
-                                   constants.CONTENT_PATH_HEADER_NAME, 
-                                   constants.CONTENT_FILE_NAME_HEADER_NAME, 
-                                   constants.ORIGINAL_FILE_NAME_HEADER_NAME])
-        
+                
         files = self.cwc.db.get_all_files()
-        
-        # TODO: Check PrettyTable module for adding multiple rows in a batch, might be able to remove for loop
-        for file in files:
-            row = file
-            files_table.add_row(row)
-            
-        print(files_table)
+                   
+        self.print_files_table(files)
     
     def do_exit(self, line):
         """ Safely exits the console or interactive mode. """
