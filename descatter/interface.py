@@ -44,6 +44,10 @@ class Console(cmd.Cmd):
         
         self.parser = argparse.ArgumentParser(description=constants.CONSOLE_DESCRIPTION)
         
+        self.parser.add_argument(constants.PATH_ARGUMENT_LONG_NAME,  
+                                 nargs='*',  
+                                 default=None)
+        
         self.parser.add_argument(constants.COMMAND_SHORT_PREFIX +
                                  constants.SCHEMA_ARGUMENT_SHORT_NAME, 
                                  constants.COMMAND_LONG_PREFIX +
@@ -114,6 +118,7 @@ class Console(cmd.Cmd):
         
         files_table = PrettyTable(table_headers)
         files_table.align[constants.TITLE_HEADER_NAME] = constants.TITLE_HEADER_ALIGNMENT
+        files_table.align[constants.CONTENT_PATH_HEADER_NAME] = constants.CONTENT_PATH_HEADER_ALIGNMENT
         
         for catalog_file in catalog_files:
             
@@ -141,7 +146,39 @@ class Console(cmd.Cmd):
         
         return input(prompt)
     
-    def do_cwc(self, line):
+    def set_cwc(self, catalog_path, verbose=False):
+        """ Sets the current working catalog """
+    
+        if catalog.is_catalog(catalog_path):           
+            if self.cwc is not None:
+                self.cwc.db.disconnect()
+            
+            self.cwc = catalog.Catalog(catalog_path)
+            
+            if verbose:
+                print("The current working catalog set to: '%s'" % self.cwc.path)
+            else:
+                print("The current working catalog set to: '%s'" % self.cwc.name)
+        else:
+            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
+    
+    def set_cwf(self, content_path, verbose=False):
+        """ Sets the current working file """
+        
+        possible_file = self.cwc.get_file(content_path)
+        
+        if possible_file is not None:
+            self.cwf = possible_file
+            
+            if verbose:
+                print("Current working file set to:")
+                self.do_cwf()
+            else:
+                print("Current working file set!")
+        else:
+            print("File could not be found!")
+    
+    def do_cwc(self, line=None):
         """ Display the current working catalog. """
                 
         args = vars(self.parser.parse_args(line.split()))
@@ -167,76 +204,70 @@ class Console(cmd.Cmd):
         
         print("Current working directory: %s" % os.getcwd())
     
-    def do_catalog(self, catalog_path):
+    def do_catalog(self, line):
         """ Sets the current working catalog. """
         
-        if not os.path.isabs(catalog_path):
-            catalog_path = os.path.join(os.getcwd(), catalog_path)    
+        args = vars(self.parser.parse_args(line.split()))
         
-        if catalog.is_catalog(catalog_path):
-            
-            # TODO: Add saving a history of catalogs used in User home directory installation of descatter
-            
-            if self.cwc is not None:
-                self.cwc.db.disconnect()
-            
-            self.cwc = catalog.Catalog(catalog_path)
-            print("The current working catalog set to: '%s'" % self.cwc.name)
+        catalog_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+        
+        if catalog_path:
+            catalog_path = catalog_path[0]
         else:
-            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
-            self.cwc = None
+            print("Please specify a catalog by its path")
+            catalog_path = self.input_prompt('catalog path')    
+        
+        self.set_cwc(catalog_path, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+            
+        # TODO: Add saving a history of catalogs used in User home directory installation of descatter
     
     def do_file(self, line):
         """ Sets the current working file. """
         
-        split_line = line.split()
-        content_path = split_line[0]
-        args = vars(self.parser.parse_args(split_line[1:]))
+        args = vars(self.parser.parse_args(line.split()))
+                
+        content_path = args[constants.PATH_ARGUMENT_LONG_NAME]
         
-        # TODO: Add history of recently used files
+        if content_path:
+            content_path = content_path[0]
+        else:
+            print("Please specify a catalog file by its content path")
+            content_path = self.input_prompt('content path')
         
         self.set_cwf(content_path, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
-    
-    def set_cwf(self, content_path, verbose=False):
-        """ Sets the current working file """
         
-        self.cwf = self.cwc.get_file(content_path)
-        
-        if self.cwf is None:
-            print("File could not be found!")
-        else:    
-            if verbose:
-                print("Current working file set to:")
-                self.do_cwf()
-            else:
-                print("Current working file set!")
-    
+        # TODO: Add history of recently used files
+
     def do_tag(self, line):
         """ Tags a file """
         
-        split_line = line.split()
+        args = vars(self.parser.parse_args(line.split()))
         
-        try:
-            content_path = split_line[0]
-            args = vars(self.parser.parse_args(split_line[1:]))
-            self.set_cwf(content_path)
-        except IndexError:
-            if self.cwf is None:
-                print("Please specify a content path to a file")
-                content_path = self.input_prompt('content path')
-                self.set_cwf(content_path)    
-    
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
-            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
         if self.cwc is None:
             self.print_specify_catalog()
-        elif self.cwf is not None:        
-            print("Please specify a tag")
-            tag_name = self.input_prompt('tag')
+        else:
+            content_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+            
+            if content_path:
+                content_path = content_path[0]
+            else:
+                print("Please specify a catalog file by its content path")
+                content_path = self.input_prompt('content path')
+
+            tag_file = self.cwc.get_file(content_path)
+
+            if tag_file is not None:                        
+                print("Please specify a tag")
+                tag_name = self.input_prompt('tag')
         
-            self.cwc.tag(self.cwf, catalog.Tag(tag_name))
-            print("File successfully tagged!")
+                # TODO: Add comma separated listing for batch tagging of file
+        
+                self.cwc.tag(tag_file, catalog.Tag(tag_name))
+                print("File successfully tagged!")
+                self.set_cwf(tag_file.content_path)
     
     def do_find(self, line):
         """ Find all files tagged with the specified tag """
@@ -249,7 +280,7 @@ class Console(cmd.Cmd):
         args = vars(self.parser.parse_args(line.split()))
         
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
-            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
         if self.cwc is None:
             self.print_specify_catalog()
@@ -292,7 +323,7 @@ class Console(cmd.Cmd):
         args = vars(self.parser.parse_args(line.split()))
         
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
-            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
         if self.cwc is None:
             self.print_specify_catalog()
@@ -341,12 +372,16 @@ class Console(cmd.Cmd):
     def do_establish(self, line):
         """ Establishes a new catalog at the specified path. """
         
-        split_line = line.split()
-        catalog_path = split_line[0]
-        args = vars(self.parser.parse_args(split_line[1:]))
+        args = vars(self.parser.parse_args(line.split()))
         
-        if not os.path.isabs(catalog_path):
-            catalog_path = os.path.join(os.getcwd(), catalog_path)    
+        catalog_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+        
+        if catalog_path:
+            catalog_path = catalog_path[0]
+        
+        while not os.path.isabs(catalog_path):
+            print("Please specify an absolute OS path for the catalog")
+            catalog_path = self.input_prompt('catalog')    
          
         self.cwc = catalog.establish(catalog_path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
         print("The '%s' catalog established at: '%s'" % (self.cwc.name, self.cwc.path))
@@ -355,45 +390,62 @@ class Console(cmd.Cmd):
     def do_destroy(self, line):
         """ Destroys or deletes a catalog at the specified path. This will delete all of the files as well. """
         
-        if line:
-            split_line = line.split()
-            catalog_path = split_line[0]
+        args = vars(self.parser.parse_args(line.split()))
         
-            self.do_catalog(catalog_path)
-            
-            if self.cwc is not None:
-                print("All files will be lost and this cannot be undone!")
-                print("Are you sure you want to destroy the '%s' catalog?" % self.cwc.name)
-                response = self.input_prompt('Y/Yes or N/No')
-            
-                if response == 'Y' or response == 'Yes':
-                    catalog.destroy(self.cwc)
-                    print("The catalog has been destroyed!")
-                    
-                    self.cwc = None
-                else:
-                    print("Good choice!")
+        catalog_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+        
+        if catalog_path:
+            catalog_path = catalog_path[0]
         else:
-            print("Please specify an absolute path to the catalog to be destroyed")
+            print("Please specify an absolute OS path for the catalog")
+            catalog_path = self.input_prompt('catalog')
+        
+        if catalog.is_catalog(catalog_path):
+            destroy_catalog = catalog.Catalog(catalog_path)
+            
+            print("All files will be lost and this cannot be undone!")
+            print("Are you sure you want to destroy the '%s' catalog?" % destroy_catalog.name)
+            
+            acceptable_answer = False
+            while not acceptable_answer:
+                response = self.input_prompt('Yes or No').lower()
+            
+                if response == 'yes':
+                    catalog.destroy(destroy_catalog)
+                    
+                    if self.cwc:
+                        if self.cwc.path == destroy_catalog.path:
+                            self.cwc = None
+                    
+                    print("The catalog has been destroyed!")
+                    acceptable_answer = True                    
+                elif response == 'no':
+                    print("Good choice!")
+                    acceptable_answer = True                    
+                else:
+                    acceptable_answer = False
+        else:
+            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
     
     def do_checkin(self, line):
         """ Checks in the current working file into the current working catalog """
     
-        split_line = line.split()
-        args = vars(self.parser.parse_args(split_line[1:]))
-        file_path = split_line[0]
-    
-        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
-            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])    
+        args = vars(self.parser.parse_args(line.split()))    
         
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+                            
         if self.cwc is None:
             self.print_specify_catalog()
-        else:
+        else:            
+            file_path = args[constants.PATH_ARGUMENT_LONG_NAME]
             
-            if file_path is None:
-                print("Please enter a file path")
-                file_path = self.input_prompt('file path')
-            
+            if file_path:
+                file_path = file_path[0]
+            else:
+                print("Please specify a file by its OS path")
+                file_path = self.input_prompt('file')
+                
             print("Please enter a title for the file")
             title = self.input_prompt('title')
             
@@ -433,7 +485,7 @@ class Console(cmd.Cmd):
         args = vars(self.parser.parse_args(line.split()))
         
         if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
-            self.do_catalog(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         
         if self.cwc is None:
             self.print_specify_catalog()

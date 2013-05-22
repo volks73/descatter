@@ -61,24 +61,29 @@ def destroy(catalog, content=True):
     if content:
         content_path = os.path.join(catalog.path, constants.CONTENT_FOLDER_NAME)
         shutil.rmtree(content_path)
-    
+
     templates_path = os.path.join(catalog.path, constants.TEMPLATES_FOLDER_NAME)
     shutil.rmtree(templates_path)
-    
+        
     hooks_path = os.path.join(catalog.path, constants.HOOKS_FOLDER_NAME)
     shutil.rmtree(hooks_path)
-    
+        
     log_path = os.path.join(catalog.path, constants.LOG_FOLDER_NAME) 
     shutil.rmtree(log_path)
-    
+        
     db_path = os.path.join(catalog.path, constants.TAGS_DB_NAME)
     os.remove(db_path) 
-    
+        
     content_schema_path = os.path.join(catalog.path, constants.CONTENT_SCHEMA_FILE_NAME)
     os.remove(content_schema_path)
-    
+        
     readme_path = os.path.join(catalog.path, constants.CATALOG_README_FILE_NAME)
     os.remove(readme_path)
+    
+    try:
+        os.rmdir(catalog.path)
+    except IOError:
+        pass
 
 def is_catalog(catalog_path):
     
