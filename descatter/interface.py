@@ -462,21 +462,28 @@ class Console(cmd.Cmd):
                 except LookupError:
                     print("The '%s' file extension is unknown for the '%s' catalog." % (self.cwf.extension, self.cwc.name))
                     print("Would you like to add the '%s' file extension to the '%s' catalog?" % (self.cwf.extension, self.cwc.name))
-                    response = self.input_prompt('Y/Yes or N/No')
                     
-                    if response == 'Y' or response == 'Yes':
+                    acceptable_answer = False
+                    while not acceptable_answer:
+                        response = self.input_prompt('Y/Yes or N/No').lower()
+                    
+                        if response == 'y' or response == 'yes':
+                            acceptable_answer = True
+                            print("Please specify a folder path relative to the content folder for the '%s' file extension." % self.cwf.extension)
+                            destination = self.input_prompt('content path')
                         
-                        print("Please specify a folder path relative to the content folder for the '%s' file extension." % self.cwf.extension)
-                        destination = self.input_prompt('content path')
-                        
-                        while os.path.isabs(response):
-                            print("The path must be relative to the content folder. Please try again.")
-                            response = input('content path')
+                            path = None
+                            while os.path.isabs(path):
+                                print("The path must be relative to the content folder. Please try again.")
+                                path = input('content path')
                            
-                        self.cwc.content_map.add(self.cwf.extension, destination)
-                        continue
-                    else:
-                        print("The file was not checked in")
+                            self.cwc.content_map.add(self.cwf.extension, destination)
+                            continue
+                        elif response == 'n' or response == 'no':
+                            acceptable_answer = True
+                            print("The file was not checked in")
+                        else:
+                            acceptable_answer = False
                 break
     
     def do_list(self, line):
