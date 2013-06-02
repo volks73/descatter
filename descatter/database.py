@@ -1,5 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.pool import NullPool
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, create_engine
 
 import os
@@ -52,7 +53,7 @@ def connect(catalog_path):
     
     db_file_path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
     engine_path = constants.DIALECT + ':///' + db_file_path
-    engine = create_engine(engine_path)
+    engine = create_engine(engine_path, echo=False, poolclass=NullPool)
     Base.metadata.create_all(engine)
     Session.configure(bind=engine)
     

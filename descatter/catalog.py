@@ -1,5 +1,4 @@
 from lxml import etree
-from sqlalchemy.orm.exc import NoResultFound
 
 import os
 import tempfile
@@ -64,21 +63,25 @@ def destroy(catalog, content=True):
     shutil.rmtree(hooks_path)
         
     log_path = os.path.join(catalog.path, constants.LOG_FOLDER_NAME) 
-    shutil.rmtree(log_path)
-        
-    db_path = os.path.join(catalog.path, constants.TAGS_DB_NAME)
-    os.remove(db_path) 
+    shutil.rmtree(log_path) 
         
     content_schema_path = os.path.join(catalog.path, constants.CONTENT_SCHEMA_FILE_NAME)
     os.remove(content_schema_path)
         
     readme_path = os.path.join(catalog.path, constants.CATALOG_README_FILE_NAME)
     os.remove(readme_path)
-    
+     
     try:
+        catalog.session.close_all()
+        db_path = os.path.join(catalog.path, constants.TAGS_DB_NAME)
+        os.remove(db_path)
+            
         os.rmdir(catalog.path)
     except IOError:
         pass
+    except PermissionError:
+        pass
+    
 
 def is_catalog(catalog_path):
     
@@ -108,7 +111,6 @@ class Catalog(object):
         self.content_map = ContentMap(self.path)
         self.name = os.path.basename(self.path)
         self.content_path = os.path.join(self.path, constants.CONTENT_FOLDER_NAME) # <path to catalog>/content/
-        
         self.session = database.connect(self.path)
            
     def checkin(self, file_path, title=None):
@@ -132,9 +134,7 @@ class Catalog(object):
             file_content_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=file_content_folder_path) # <path to catalog>/content/<schema path>/<temp folder>/
             temp_folder_name = os.path.basename(file_content_folder_path) # <temp folder>/
             catalog_file.content_path = os.path.join(destination, temp_folder_name) # <schema path>/<temp folder>/
-            
-            # TODO: Add schema setting to use original file name, generic name, or random name
-            catalog_file.content_name = catalog_file.original_name.replace(' ', '_')
+            catalog_file.content_name = catalog_file.original_name.replace(' ', '_').title()
             
             dst_file_path = os.path.join(file_content_folder_path, catalog_file.content_name) # <path to catalog>/content/<schema path>/<temp folder>/<content name>
             
@@ -145,7 +145,7 @@ class Catalog(object):
         else:
             raise KeyError("Mapping does not exist")
         
-        self.session.add(catalog_file)
+        self.session.add(catalog_file) 
         self.session.commit()
         
         return catalog_file
@@ -158,6 +158,7 @@ class Catalog(object):
     
     def file(self, catalog_file_id):
         
+        # TODO: Add finding file by ID, then by title, then by content_name, and then by content_path
         file = self.session.query(database.File).get(catalog_file_id)
         
         return file
@@ -170,15 +171,23 @@ class Catalog(object):
     
     def tag(self, catalog_file, tag_name):
         
-        try:
-            tag = self.session.query(database.Tag).filter_by(name=tag_name).one()
-        except NoResultFound:
+        tag = self.session.query(database.Tag).filter_by(name=tag_name).first()
+        
+        if not tag:
             tag = database.Tag(tag_name)
         
         catalog_file.tags.append(tag)
         self.session.commit()
         
         return (catalog_file, tag)
+    
+    def detag(self, catalog_file, tag_name):
+        
+        tag = self.session.query(database.Tag).filter_by(name=tag_name).first()
+        
+        if tag:
+            catalog_file.tags.remove(tag)
+            self.session.commit()
     
     def create_tag(self, tag_name):
         

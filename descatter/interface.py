@@ -45,7 +45,7 @@ class Console(cmd.Cmd):
         
         self.parser = argparse.ArgumentParser(description=constants.CONSOLE_DESCRIPTION)
         
-        self.parser.add_argument(constants.PATH_ARGUMENT_LONG_NAME,  
+        self.parser.add_argument(constants.PATHS_ARGUMENT_LONG_NAME,  
                                  nargs='*',  
                                  default=None)
         
@@ -166,6 +166,27 @@ class Console(cmd.Cmd):
             self.cwf = catalog_file
             self.do_cwf()
     
+    def get_catalog_file_ids(self, args):
+        
+        catalog_file_ids = args[constants.PATHS_ARGUMENT_LONG_NAME]
+            
+        if catalog_file_ids:
+            catalog_file_ids = catalog_file_ids[0]
+        elif self.cwf is None:
+            print("Please specify the ID(s) for the catalog file(s)")
+            catalog_file_ids = self.input_prompt('ID')
+        else:
+            catalog_file_ids = [self.cwf.id]
+        
+        return catalog_file_ids
+
+    def get_tag_names(self):
+        
+        print("Please specify the tag(s)")
+        tag_names = self.input_prompt('tag')
+        
+        return tuple(tag_names.split(constants.LIST_SEPARATOR))
+    
     def do_cwc(self, line=''):
         """ Display the current working catalog. """
         
@@ -205,12 +226,12 @@ class Console(cmd.Cmd):
         
         args = vars(self.parser.parse_args(line.split()))
         
-        catalog_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+        catalog_path = args[constants.PATHS_ARGUMENT_LONG_NAME]
         
         if catalog_path:
             catalog_path = catalog_path[0]
         else:
-            print("Please specify a path to a catalog")
+            print("Please specify a path to the catalog")
             catalog_path = self.input_prompt('path')    
         
         catalog_path = os.path.abspath(catalog_path)
@@ -224,12 +245,13 @@ class Console(cmd.Cmd):
         
         args = vars(self.parser.parse_args(line.split()))
                 
-        catalog_file_id = args[constants.PATH_ARGUMENT_LONG_NAME]
+        catalog_file_ids = args[constants.PATHS_ARGUMENT_LONG_NAME]
+        catalog_file_id = catalog_file_ids.split(constants.LIST_SEPARATOR)
         
         if catalog_file_id:
             catalog_file_id = catalog_file_id[0]
         else:
-            print("Please specify an ID for a catalog file")
+            print("Please specify the ID for a catalog file")
             catalog_file_id = self.input_prompt('ID')
         
         self.set_cwf(self.cwc.file(catalog_file_id))
@@ -237,7 +259,7 @@ class Console(cmd.Cmd):
         # TODO: Add history of recently used files
 
     def do_tag(self, line):
-        """ Tags a file """
+        """ Tags one or more files """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -247,28 +269,69 @@ class Console(cmd.Cmd):
         if self.cwc is None:
             self.print_specify_catalog()
         else:
-            catalog_file_id = args[constants.PATH_ARGUMENT_LONG_NAME]
+            catalog_file_ids = self.get_catalog_file_ids(args)
+            last_tagged_file = None    
             
-            if catalog_file_id:
-                catalog_file_id = catalog_file_id[0]
-                self.set_cwf(self.cwc.file(catalog_file_id))
-            elif self.cwf is None:
-                print("Please specify an ID for a catalog file")
-                catalog_file_id = self.input_prompt('ID')
-                self.set_cwf(self.cwc.file(catalog_file_id))
+            for catalog_file_id in catalog_file_ids.split(constants.LIST_SEPARATOR):
+                last_tagged_file = self.tag_file(catalog_file_id)
+            
+            if last_tagged_file is not None:
+                self.set_cwf(last_tagged_file)
+    
+    def tag_file(self, catalog_file_id):
+        
+        tagged_file = self.cwc.file(catalog_file_id)
                 
-            print("Tagging file: '%s'" % self.cwf.title)
-               
-            print("Please specify a tag")
-            # TODO: Add comma separated listing for batch tagging of file
-            tag_name = self.input_prompt('tag')
+        if tagged_file is None:
+            print("No catalog file found with ID: '%s'" % catalog_file_id)
+        else:    
+            print("Tagging catalog file: '%s'" % tagged_file.title)   
+                    
+            for tag_name in self.get_tag_names():
+                self.cwc.tag(tagged_file, tag_name)
+                        
+            print("The '%s' catalog file successfully tagged!" % tagged_file.title)
             
-            self.cwc.tag(self.cwf, tag_name)
-
-            print("File successfully tagged!")
+        return tagged_file
+    
+    def do_detag(self, line):
+        """ Detags one or more files """
+        
+        args = vars(self.parser.parse_args(line.split()))
+                
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+        
+        if self.cwc is None:
+            self.print_specify_catalog()
+        else:
+            catalog_file_ids = self.get_catalog_file_ids(args)
+            last_detagged_file = None
+            
+            for catalog_file_id in catalog_file_ids.split(constants.LIST_SEPARATOR):
+                last_detagged_file = self.detag_file(catalog_file_id)
+            
+            if last_detagged_file is not None:
+                self.set_cwf(last_detagged_file)
+    
+    def detag_file(self, catalog_file_id):
+        
+        detagged_file = self.cwc.file(catalog_file_id)
+               
+        if detagged_file is None:
+            print("No catalog file found with ID: '%s'" % catalog_file_id)
+        else:
+            print("Detagging catalog file: '%s'" % detagged_file.title)
+                                
+            for tag_name in self.get_tag_names():
+                self.cwc.detag(detagged_file, tag_name)
+                    
+            print("The '%s' catalog file successfully detagged!" % detagged_file.title)
+        
+        return detagged_file
     
     def do_create(self, line):
-        """ Sub-command to create file extension maps, templates, and tags at the specified catalog. """
+        """ Sub-command to create file extension maps and tags. """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -303,15 +366,13 @@ class Console(cmd.Cmd):
     
     def create_tag(self, args):
         """ Creates a tag to attach to files checked into the specified catalog. """
-               
-        print("Please specify a tag")
-        tag_name = self.input_prompt('tag')
-        
-        self.cwc.create_tag(tag_name)
-        print("The '%s' tag created" % tag_name)
+                       
+        for tag_name in self.get_tag_names():
+            self.cwc.create_tag(tag_name)
+            print("The '%s' tag created" % tag_name)
 
     def do_remove(self, line):
-        """ Removes a file extension mapping from the specified catalog. """
+        """ Sub-command to remove file extension maps and tags. """
         
         args = vars(self.parser.parse_args(line.split()))
         
@@ -324,8 +385,6 @@ class Console(cmd.Cmd):
             self.remove_map(args)
         elif args[constants.TAG_ARGUMENT_LONG_NAME]:
             self.remove_tag(args)
-        elif args[constants.FILE_ARGUMENT_LONG_NAME]:
-            self.remove_file(args)
         else:
             print("Nothing to remove!")    
         
@@ -346,28 +405,17 @@ class Console(cmd.Cmd):
 
     def remove_tag(self, args):
         """ Removes a tag """
-        
-        print("Please specify a tag")
-        tag_name = self.input_prompt('tag')
-        
-        self.cwc.remove_tag(tag_name)
-        print("Tag successfully removed!")
-
-    def remove_file(self, args):
-        """ Removes a file """
-
-        print("Please specify the content path for the file")
-        content_path = self.input_prompt('content path')
-                    
-        self.cwc.remove_file(content_path)
-        print("File successfully removed!")
+               
+        for tag_name in self.get_tag_names():
+            self.cwc.remove_tag(tag_name)
+            print("The '%s' tag successfully removed!" % tag_name)
 
     def do_establish(self, line):
         """ Establishes a new catalog at the specified path. """
         
         args = vars(self.parser.parse_args(line.split()))
         
-        catalog_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+        catalog_path = args[constants.PATHS_ARGUMENT_LONG_NAME]
         
         if catalog_path:
             catalog_path = catalog_path[0]  
@@ -395,7 +443,7 @@ class Console(cmd.Cmd):
         
         args = vars(self.parser.parse_args(line.split()))
         
-        catalog_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+        catalog_path = args[constants.PATHS_ARGUMENT_LONG_NAME]
         
         if catalog_path:
             catalog_path = catalog_path[0]
@@ -441,49 +489,96 @@ class Console(cmd.Cmd):
         if self.cwc is None:
             self.print_specify_catalog()
         else:            
-            file_path = args[constants.PATH_ARGUMENT_LONG_NAME]
+            file_paths = args[constants.PATHS_ARGUMENT_LONG_NAME]
             
-            if file_path:
-                file_path = file_path[0]
+            if file_paths:
+                file_paths = file_paths[0]
             else:
-                print("Please specify a path to the file")
-                file_path = self.input_prompt('path')
-                
-            print("Please enter a title for the file")
-            title = self.input_prompt('title')
+                print("Please specify the path(s) to the file(s)")
+                file_paths = self.input_prompt('path')
             
-            while True:
-                try: 
-                    checked_in_file = self.cwc.checkin(file_path, title)
-                    print("File successfully checked in!")
-                    
-                    self.set_cwf(checked_in_file)    
-                except LookupError:
-                    print("The '%s' file extension is unknown for the '%s' catalog." % (self.cwf.extension, self.cwc.name))
-                    print("Would you like to add the '%s' file extension to the '%s' catalog?" % (self.cwf.extension, self.cwc.name))
-                    
-                    acceptable_answer = False
-                    while not acceptable_answer:
-                        response = self.input_prompt('Y/Yes or N/No').lower()
-                    
-                        if response == 'y' or response == 'yes':
-                            acceptable_answer = True
-                            print("Please specify a folder path relative to the content folder for the '%s' file extension." % self.cwf.extension)
-                            destination = self.input_prompt('content path')
+            last_checkin_file = None
+            for file_path in file_paths.split(constants.LIST_SEPARATOR):            
+                last_checkin_file = self.checkin_file(file_path)
+                
+            if last_checkin_file is not None:
+                self.set_cwf(last_checkin_file)
+    
+    def checkin_file(self, file_path):
+        
+        print("Please enter a title for: %s" % file_path)
+        title = self.input_prompt('title')
+        
+        checkin_file = None        
+        while True:
+            try: 
+                checkin_file = self.cwc.checkin(file_path, title)
+                print("The '%s' file successfully checked in!" % checkin_file.original_name)    
+            except LookupError:
+                print("The '%s' file extension is unknown for the '%s' catalog." % (checkin_file.extension, self.cwc.name))
+                print("Would you like to add the '%s' file extension to the '%s' catalog?" % (checkin_file.extension, self.cwc.name))
                         
-                            path = None
-                            while os.path.isabs(path):
-                                print("The path must be relative to the content folder. Please try again.")
-                                path = input('content path')
-                           
-                            self.cwc.content_map.add(self.cwf.extension, destination)
-                            continue
-                        elif response == 'n' or response == 'no':
-                            acceptable_answer = True
-                            print("The file was not checked in")
-                        else:
-                            acceptable_answer = False
-                break
+                acceptable_answer = False
+                while not acceptable_answer:
+                    response = self.input_prompt('Y/Yes or N/No').lower()
+                        
+                    if response == 'y' or response == 'yes':
+                        acceptable_answer = True
+                        print("Please specify a folder path relative to the content folder for the '%s' file extension." % checkin_file.extension)
+                        destination = self.input_prompt('content path')
+                            
+                        path = None
+                        while os.path.isabs(path):
+                            print("The path must be relative to the content folder. Please try again.")
+                            path = input('content path')
+                               
+                        self.cwc.content_map.add(self.cwf.extension, destination)
+                        continue
+                    elif response == 'n' or response == 'no':
+                        acceptable_answer = True
+                        print("The file was not checked in")
+                    else:
+                        acceptable_answer = False
+            break
+        
+        return checkin_file
+    
+    def do_checkout(self, line):
+        """ Copies a catalog file to its original path and name in the file system """
+        
+        args = vars(self.parser.parse_args(line.split()))    
+        
+        if args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            self.set_cwc(args[constants.CATALOG_ARGUMENT_LONG_NAME])
+                            
+        if self.cwc is None:
+            self.print_specify_catalog()
+        else:
+            catalog_file_ids = self.get_catalog_file_ids(args)
+                        
+            last_checkout_file = None
+            for catalog_file_id in catalog_file_ids.split(constants.LIST_SEPARATOR):
+                last_checkout_file = self.checkout_file(catalog_file_id)
+            
+            if last_checkout_file is not None:
+                self.set_cwf(last_checkout_file)
+    
+    def checkout_file(self, catalog_file_id):
+        
+        checkout_file = self.cwc.file(catalog_file_id)
+                
+        if checkout_file is None:
+            print("No catalog file found with ID: '%s'" % catalog_file_id)
+        else:
+            self.cwc.checkout(checkout_file)
+            print("The '%s' catalog file successfully checked out!" % checkout_file.title)
+        
+        return checkout_file
+    
+    def do_find(self, line):
+        """ Finds files based on specified tags """
+        
+        pass
     
     def do_list(self, line):
         """ Lists various properties and values for the specified catalog """

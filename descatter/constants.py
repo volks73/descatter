@@ -27,6 +27,7 @@ NAME_COLUMN_NAME = 'name'
 # Command line
 COMMAND_SHORT_PREFIX = '-'
 COMMAND_LONG_PREFIX = '--'
+LIST_SEPARATOR = ','
 CATALOG_ARGUMENT_SHORT_NAME = 'c'
 CATALOG_ARGUMENT_LONG_NAME = 'catalog'
 CATALOG_ARGUMENT_HELP = "Specify the catalog"
@@ -38,7 +39,7 @@ FILE_ARGUMENT_HELP = "Specify the file"
 CHECKIN_ARGUMENT_SHORT_NAME = 'in'
 CHECKIN_ARGUMENT_LONG_NAME = 'checkin'
 CHECKIN_ARGUMENT_HELP = "Check in the specified file into the specified catalog"
-PATH_ARGUMENT_LONG_NAME = 'path'
+PATHS_ARGUMENT_LONG_NAME = 'paths'
 INTERACTIVE_ARGUMENT_SHORT_NAME = 'i'
 INTERACTIVE_ARGUMENT_LONG_NAME = 'interactive'
 INTERACTIVE_ARGUMENT_HELP = "Start a console or interactive mode to execute a series of commands within the descatter application"
