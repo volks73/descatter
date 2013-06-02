@@ -570,7 +570,12 @@ class Console(cmd.Cmd):
         if checkout_file is None:
             print("No catalog file found with ID: '%s'" % catalog_file_id)
         else:
-            self.cwc.checkout(checkout_file)
+            print("Please enter a folder path for: %s" % checkout_file.title)
+            dst_path = self.input_prompt('path')
+            
+            dst_path = os.path.abspath(dst_path)
+            
+            self.cwc.checkout(checkout_file, dst_path)
             print("The '%s' catalog file successfully checked out!" % checkout_file.title)
         
         return checkout_file

@@ -150,6 +150,20 @@ class Catalog(object):
         
         return catalog_file
     
+    def checkout(self, catalog_file, dst_path=None):
+        
+        if dst_path is None:
+            dst_path = catalog_file.original_path
+            
+        checkout_path = os.path.join(dst_path, catalog_file.original_name)
+        file_content_path = os.path.join(catalog_file.content_path, catalog_file.content_name)
+        src_path = os.path.join(self.content_path, file_content_path)
+        
+        if not os.path.isdir(dst_path):
+            os.makedirs(dst_path)
+        
+        shutil.copyfile(src_path, checkout_path)
+    
     def files(self, order_by=database.File.id):
         
         files = tuple(self.session.query(database.File).order_by(order_by))
