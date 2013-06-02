@@ -134,7 +134,7 @@ class Catalog(object):
             file_content_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=file_content_folder_path) # <path to catalog>/content/<schema path>/<temp folder>/
             temp_folder_name = os.path.basename(file_content_folder_path) # <temp folder>/
             catalog_file.content_path = os.path.join(destination, temp_folder_name) # <schema path>/<temp folder>/
-            catalog_file.content_name = catalog_file.original_name.replace(' ', '_').title()
+            catalog_file.content_name = catalog_file.original_name.replace(' ', '_').title().strip()
             
             dst_file_path = os.path.join(file_content_folder_path, catalog_file.content_name) # <path to catalog>/content/<schema path>/<temp folder>/<content name>
             
