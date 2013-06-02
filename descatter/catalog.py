@@ -163,6 +163,8 @@ class Catalog(object):
             os.makedirs(dst_path)
         
         shutil.copyfile(src_path, checkout_path)
+        
+        return catalog_file
     
     def files(self, order_by=database.File.id):
         
@@ -177,6 +179,16 @@ class Catalog(object):
         
         return file
     
+    def remove_file(self, remove_file):
+            
+        self.session.delete(remove_file)
+        self.session.commit()
+            
+        remove_path = os.path.join(self.content_path, remove_file.content_path)
+        shutil.rmtree(remove_path)
+        
+        return remove_file
+            
     def tags(self, order_by=database.Tag.name):
         
         tags = tuple(self.session.query(database.Tag).order_by(order_by))
@@ -202,6 +214,8 @@ class Catalog(object):
         if tag:
             catalog_file.tags.remove(tag)
             self.session.commit()
+        
+        return (catalog_file, tag)
     
     def create_tag(self, tag_name):
         
@@ -213,9 +227,11 @@ class Catalog(object):
     
     def remove_tag(self, tag_name):
         
-        tag = self.session.query(database.Tag).filter_by(name=tag_name).one()
-        self.session.delete(tag)
+        remove_tag = self.session.query(database.Tag).filter_by(name=tag_name).one()
+        self.session.delete(remove_tag)
         self.session.commit()
+        
+        return remove_tag
 
 class ContentMap(object):
     
