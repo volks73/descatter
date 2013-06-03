@@ -134,6 +134,8 @@ class Catalog(object):
             file_content_folder_path = tempfile.mkdtemp(suffix='', prefix='', dir=file_content_folder_path) # <path to catalog>/content/<schema path>/<temp folder>/
             temp_folder_name = os.path.basename(file_content_folder_path) # <temp folder>/
             catalog_file.content_path = os.path.join(destination, temp_folder_name) # <schema path>/<temp folder>/
+            
+            # TODO: Bugfix: The extension is also capitalized. Only the file name should be. Add splitext() call.
             catalog_file.content_name = catalog_file.original_name.replace(' ', '_').title().strip()
             
             dst_file_path = os.path.join(file_content_folder_path, catalog_file.content_name) # <path to catalog>/content/<schema path>/<temp folder>/<content name>
@@ -232,6 +234,17 @@ class Catalog(object):
         self.session.commit()
         
         return remove_tag
+    
+    def get_files_by_tags(self, tag_names):
+        
+        query = self.session.query(database.File)
+        
+        for tag_name in tag_names:
+            query = query.filter(database.File.tags.any(database.Tag.name == tag_name))
+        
+        files = query.all()
+        
+        return tuple(files)
 
 class ContentMap(object):
     

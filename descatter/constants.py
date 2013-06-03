@@ -7,6 +7,7 @@ DATA_FOLDER_NAME = 'data'
 DIALECT = 'sqlite'
 SQLITE_EXTENSION = '.sqlite'
 TAGS_DB_NAME = 'tags' + SQLITE_EXTENSION
+DEBUG_DATABASE = False
 
 # Database table names
 TAGS_TABLE_NAME = 'tags'
