@@ -214,6 +214,7 @@ class Catalog(object):
         tag = self.session.query(database.Tag).filter_by(name=tag_name).first()
         
         if tag:
+            # TODO: Add check if file is tagged by tag_name before removal
             catalog_file.tags.remove(tag)
             self.session.commit()
         

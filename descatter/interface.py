@@ -172,15 +172,17 @@ class Console(cmd.Cmd):
         
         print("Please specify the ID(s) for the catalog file(s)")
         catalog_file_ids = self.generic_input('ID')
+        catalog_file_ids = catalog_file_ids.split(constants.LIST_SEPARATOR)
         
-        return tuple(catalog_file_ids.split(constants.LIST_SEPARATOR))
+        return tuple([catalog_file_id.strip() for catalog_file_id in catalog_file_ids])
 
     def tag_input(self):
         
         print("Please specify the tag(s)")
         tag_names = self.generic_input('tag')
+        tag_names = tag_names.split(constants.LIST_SEPARATOR)
         
-        return tuple(tag_names.split(constants.LIST_SEPARATOR))
+        return tuple([tag_name.strip() for tag_name in tag_names])
 
     def catalog_is_specified(self, args):
         """ Checks if a catalog has been specified. """
@@ -218,11 +220,12 @@ class Console(cmd.Cmd):
         catalog_file_ids = args[constants.PATHS_ARGUMENT_LONG_NAME]
             
         if catalog_file_ids:
-            catalog_file_ids = tuple(catalog_file_ids[0].split(constants.LIST_SEPARATOR))
+            catalog_file_ids = catalog_file_ids[0].split(constants.LIST_SEPARATOR)
+            catalog_file_ids = tuple([catalog_file_id.strip() for catalog_file_id in catalog_file_ids])
         elif self.cwf is None:
             catalog_file_ids = self.catalog_id_input()
         else:
-            catalog_file_ids = tuple(self.cwf.id)
+            catalog_file_ids = (self.cwf.id,)
         
         return catalog_file_ids
 
@@ -231,7 +234,8 @@ class Console(cmd.Cmd):
         tag_names = args[constants.PATHS_ARGUMENT_LONG_NAME]
         
         if tag_names:
-            tag_names = tuple(tag_names[0].split(constants.LIST_SEPARATOR))
+            tag_names = tag_names[0].split(constants.LIST_SEPARATOR)
+            tag_names = tuple([tag_name.strip() for tag_name in tag_names])
         else:
             tag_names = self.tag_input()
         
