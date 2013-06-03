@@ -135,8 +135,9 @@ class Catalog(object):
             temp_folder_name = os.path.basename(file_content_folder_path) # <temp folder>/
             catalog_file.content_path = os.path.join(destination, temp_folder_name) # <schema path>/<temp folder>/
             
-            # TODO: Bugfix: The extension is also capitalized. Only the file name should be. Add splitext() call.
-            catalog_file.content_name = catalog_file.original_name.replace(' ', '_').title().strip()
+            # original_name example = CHANGES LOG.txt
+            # content_name example = Changes_Log.txt
+            catalog_file.content_name = os.path.splitext(catalog_file.original_name)[0].title().strip().replace(' ', '_') + '.' + catalog_file.extension
             
             dst_file_path = os.path.join(file_content_folder_path, catalog_file.content_name) # <path to catalog>/content/<schema path>/<temp folder>/<content name>
             
