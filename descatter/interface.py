@@ -93,20 +93,6 @@ class Console(cmd.Cmd):
                                  
         super(Console, self).__init__()
     
-    def print_specify_catalog(self):
-        """ Prints a message to the console to specify a catalog for the command. """
-        
-        print("No catalog specified!")
-        
-        text = ("Please specify a catalog with the '" + 
-                constants.COMMAND_SHORT_PREFIX + 
-                constants.CATALOG_ARGUMENT_SHORT_NAME + 
-                "' argument or set a current working catalog with the '" + 
-                constants.CATALOG_ARGUMENT_LONG_NAME + 
-                "' command")
-        
-        print(text)
-    
     def print_catalog_files_table(self, catalog_files, verbose=False):
         
         table_headers = [constants.ID_HEADER_NAME,
