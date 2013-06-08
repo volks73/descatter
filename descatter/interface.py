@@ -93,7 +93,7 @@ class Console(cmd.Cmd):
                                  
         super(Console, self).__init__()
     
-    def print_catalog_files_table(self, catalog_files, verbose=False):
+    def create_catalog_files_table(self, catalog_files, verbose=False):
         
         table_headers = [constants.ID_HEADER_NAME,
                          constants.TITLE_HEADER_NAME,
@@ -120,9 +120,9 @@ class Console(cmd.Cmd):
             
             files_table.add_row(row)
         
-        print(files_table)
+        return files_table
     
-    def generic_input(self, value):
+    def prompt_generic(self, value, input_method=input):
         """ Display prompt to input a value after displaying a question """
         
         prompt = (constants.CONSOLE_PROMPT_PREFIX + 
@@ -132,16 +132,16 @@ class Console(cmd.Cmd):
         
         # TODO: Add a cancel option
         
-        return input(prompt).strip()
+        return input_method(prompt).strip()
     
-    def boolean_input(self):
+    def prompt_yes_or_no(self, input_method=input):
         acceptable_answer = False
         response = None
         
         # TODO: Add cancel option
         
         while not acceptable_answer:
-            response = self.generic_input('Y/Yes or N/No').lower()
+            response = self.prompt_generic('Y/Yes or N/No', input).lower()
             
             if response == 'yes' or response == 'y':
                 response = True
@@ -154,41 +154,41 @@ class Console(cmd.Cmd):
 
         return response
 
-    def input_catalog_path(self):
+    def prompt_catalog_path(self, input_method=input):
         
         print("Please specify a path to the catalog")
-        catalog_path = self.generic_input('path')
+        catalog_path = self.prompt_generic('path', input_method)
         
         return self.sanitize_catalog_path(catalog_path)
 
-    def input_file_paths(self):
+    def prompt_file_paths(self, input_method=input):
         
         print("Please specify the path(s) to the file(s)")
-        file_paths = self.generic_input('path')
+        file_paths = self.prompt_generic('path', input_method)
         file_paths = file_paths.split(constants.LIST_SEPARATOR)
         
         return self.sanitize_file_paths(file_paths)
     
-    def input_catalog_file_ids(self):
+    def prompt_catalog_file_ids(self, input_method=input):
         
         print("Please specify the ID(s) for the catalog file(s)")
-        catalog_file_ids = self.generic_input('ID')
+        catalog_file_ids = self.prompt_generic('ID', input_method)
         catalog_file_ids = catalog_file_ids.split(constants.LIST_SEPARATOR)
         
         return self.sanitize_catalog_file_ids(catalog_file_ids)
 
-    def input_tags(self):
+    def prompt_tags(self, input_method=input):
         
         print("Please specify the tag(s)")
-        tag_names = self.generic_input('tag')
+        tag_names = self.prompt_generic('tag', input)
         tag_names = tag_names.split(constants.LIST_SEPARATOR)
         
         return self.sanitize_tags(tag_names)
     
-    def input_file_extensions(self):
+    def prompt_file_extensions(self, input_method=input):
         
         print("Please specify the file extension(s)")
-        file_extensions = self.generic_input('file extension')
+        file_extensions = self.prompt_generic('file extension')
         file_extensions = file_extensions.split(constants.LIST_SEPARATOR)
         
         return self.sanitize_file_extensions(file_extensions)
@@ -234,7 +234,7 @@ class Console(cmd.Cmd):
             catalog_path = self.sanitize_catalog_path(catalog_path)
             catalog = self.set_cwc(catalog_path)
         elif self.cwc is None:
-            catalog_path = self.input_catalog_path()
+            catalog_path = self.prompt_catalog_path()
             catalog = self.set_cwc(catalog_path)
         else:
             catalog = self.cwc
@@ -261,6 +261,8 @@ class Console(cmd.Cmd):
         else:
             self.cwf = catalog_file
             self.do_cwf()
+        
+        return self.cwf
     
     def get_catalog_file_ids(self, args):
         
@@ -270,7 +272,7 @@ class Console(cmd.Cmd):
             catalog_file_ids = catalog_file_ids[0].split(constants.LIST_SEPARATOR)
             catalog_file_ids = self.sanitize_catalog_file_ids(catalog_file_ids)
         elif self.cwf is None:
-            catalog_file_ids = self.input_catalog_file_ids()
+            catalog_file_ids = self.prompt_catalog_file_ids()
         else:
             catalog_file_ids = (self.cwf.id,)
         
@@ -284,7 +286,7 @@ class Console(cmd.Cmd):
             tag_names = tag_names[0].split(constants.LIST_SEPARATOR)
             tag_names = self.sanitize_tags(tag_names)
         else:
-            tag_names = self.input_tags()
+            tag_names = self.prompt_tags()
         
         return tag_names
     
@@ -296,7 +298,7 @@ class Console(cmd.Cmd):
             file_extensions = file_extensions[0].split(constants.LIST_SEPARATOR)
             file_extensions = self.sanitize_file_extensions(file_extensions)
         else:
-            file_extensions = self.input_file_extensions()
+            file_extensions = self.prompt_file_extensions()
         
         return file_extensions
     
@@ -308,7 +310,7 @@ class Console(cmd.Cmd):
             catalog_path = catalog_path[0]
             catalog_path = self.sanitize_catalog_path(catalog_path)
         else:
-            catalog_path = self.input_catalog_path()
+            catalog_path = self.prompt_catalog_path()
         
         return catalog_path
 
@@ -320,7 +322,7 @@ class Console(cmd.Cmd):
             file_paths = file_paths[0].split(constants.LIST_SEPARATOR)
             file_paths = self.sanitize_file_paths(file_paths)
         else:
-            file_paths = self.input_file_paths()
+            file_paths = self.prompt_file_paths()
         
         return file_paths
         
@@ -333,15 +335,20 @@ class Console(cmd.Cmd):
         
         args = self.get_args(line)
         
+        output = ''
         if self.cwc is None:
-            print("No current working catalog has been set!")
+            output = "No current working catalog has been set!"
         else:
             display = self.cwc.name
             
             if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
                 display = self.cwc.path
                 
-            print("Current working catalog: '%s'" % display)
+            output = "Current working catalog: '%s'" % display
+        
+        print(output)
+        
+        return output
         
     def do_cwf(self, line=''):
         """ Display the current working file. """
@@ -350,7 +357,7 @@ class Console(cmd.Cmd):
             print("No current working file has been set!")
         else:    
             print("Current working file:")
-            self.print_catalog_files_table((self.cwf,))    
+            print(self.create_catalog_files_table((self.cwf,)))    
     
     def do_cwd(self, line):
         """ Display the current working directory. """
@@ -377,7 +384,7 @@ class Console(cmd.Cmd):
                 catalog_file_id = catalog_file_id.strip()
             else:
                 print("Please specify the ID for a catalog file")
-                catalog_file_id = self.generic_input('ID')
+                catalog_file_id = self.prompt_generic('ID')
             
             self.set_cwf(self.cwc.file(catalog_file_id))
             
@@ -406,7 +413,7 @@ class Console(cmd.Cmd):
         else:    
             print("Tagging catalog file: '%s'" % tagged_file.title)   
                     
-            for tag_name in self.input_tags():
+            for tag_name in self.prompt_tags():
                 self.cwc.tag(tagged_file, tag_name)
                         
             print("The '%s' catalog file successfully tagged!" % tagged_file.title)
@@ -436,7 +443,7 @@ class Console(cmd.Cmd):
         else:
             print("Detagging catalog file: '%s'" % detagged_file.title)
                                 
-            for tag_name in self.input_tags():
+            for tag_name in self.prompt_tags():
                 self.cwc.detag(detagged_file, tag_name)
                     
             print("The '%s' catalog file successfully detagged!" % detagged_file.title)
@@ -463,7 +470,7 @@ class Console(cmd.Cmd):
         
         for file_extension in file_extensions:
             print("Please specify a content path for the '%s' file extension." % file_extension)
-            destination = self.generic_input("content folder path")
+            destination = self.prompt_generic("content folder path")
                 
             self.cwc.content_map.add(file_extension, destination)
             
@@ -524,7 +531,7 @@ class Console(cmd.Cmd):
             else:
                 print("Are you sure you want to remove the '%s' file from the '%s' catalog?" % (remove_file.title, self.cwc.name))
                 
-                if self.boolean_input():
+                if self.prompt_yes_or_no():
                     self.cwc.remove_file(remove_file)
                     print("The '%s' catalog file successfully removed!" % remove_file.title)
                 else:
@@ -563,7 +570,7 @@ class Console(cmd.Cmd):
             print("All files will be lost and this cannot be undone!")
             print("Are you sure you want to destroy the '%s' catalog?" % destroy_catalog.name)
             
-            if self.boolean_input():
+            if self.prompt_yes_or_no():
                 catalog.destroy(destroy_catalog)
                     
                 if self.cwc is not None:
@@ -591,7 +598,7 @@ class Console(cmd.Cmd):
     def checkin_file(self, file_path):
         
         print("Please enter a title for: %s" % os.path.basename(file_path))
-        title = self.generic_input('title')
+        title = self.prompt_generic('title')
         checkin_file = None        
         
         while True:
@@ -602,9 +609,9 @@ class Console(cmd.Cmd):
                 print("The '%s' file extension is unknown for the '%s' catalog." % (checkin_file.extension, self.cwc.name))
                 print("Would you like to add the '%s' file extension to the '%s' catalog?" % (checkin_file.extension, self.cwc.name))
                 
-                if self.boolean_input():                       
+                if self.prompt_yes_or_no():                       
                     print("Please specify a content path for the '%s' file extension." % checkin_file.extension)
-                    destination = self.generic_input('content path')
+                    destination = self.prompt_generic('content path')
                             
                     path = None
                     while os.path.isabs(path):
@@ -641,7 +648,7 @@ class Console(cmd.Cmd):
             print("No catalog file found with ID: '%s'" % catalog_file_id)
         else:
             print("Please enter a folder path for: %s" % checkout_file.title)
-            dst_path = self.generic_input('path')
+            dst_path = self.prompt_generic('path')
             
             dst_path = os.path.abspath(dst_path)
             
@@ -659,7 +666,7 @@ class Console(cmd.Cmd):
             tag_names = self.get_tag_names(args)
                 
             files = self.cwc.get_files_by_tags(tag_names)
-            self.print_catalog_files_table(files, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+            print(self.create_catalog_files_table(files, args[constants.VERBOSE_ARGUMENT_LONG_NAME]))
     
     def do_list(self, line):
         """ Lists various properties and values for the specified catalog """
@@ -722,7 +729,7 @@ class Console(cmd.Cmd):
     def list_files(self, args):
         """ Shows all of the files in an ASCII table sorted in descending alphabetical order """
                                   
-        self.print_catalog_files_table(self.cwc.files(), args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+        print(self.create_catalog_files_table(self.cwc.files(), args[constants.VERBOSE_ARGUMENT_LONG_NAME]))
     
     def do_exit(self, line):
         """ Safely exits the console or interactive mode. """
