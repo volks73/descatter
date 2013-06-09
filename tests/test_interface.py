@@ -5,6 +5,8 @@ import unittest
 
 import constants
 
+# TODO: Module level setup of a test catalog
+
 class TestPromptYesOrNo(unittest.TestCase):
     
     def test_yes_input(self):
@@ -100,6 +102,18 @@ class TestPromptYesOrNo(unittest.TestCase):
         self.assertRaises(ValueError, console.prompt_yes_or_no, lambda input: "maybe")
 
 class TestPromptCatalogPath(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        # TODO: Create a test catalog
+        print("setUpClass")
+        pass
+    
+    @classmethod
+    def tearDownClass(cls):
+        print("tearDownClass")
+        # TODO: Destroy the test catalog
+        pass
     
     def test_relative_path_input(self):
         console = Console()
