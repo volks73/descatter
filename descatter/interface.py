@@ -35,10 +35,7 @@ class CommandLine(object):
 
 class Console(cmd.Cmd):
     
-    prompt = constants.CONSOLE_PROMPT
-    
     def __init__(self, cwc=None, cwf=None):
-        """ Initializes the console. """
         
         self.cwc = cwc # Current Working Catalog
         self.cwf = cwf # Current Working File
@@ -104,9 +101,9 @@ class Console(cmd.Cmd):
             table_headers.append(constants.ORIGINAL_PATH_HEADER_NAME)
             table_headers.append(constants.ORIGINAL_NAME_HEADER_NAME) 
         
-        files_table = PrettyTable(table_headers)
-        files_table.align[constants.TITLE_HEADER_NAME] = constants.TITLE_HEADER_ALIGNMENT
-        files_table.align[constants.CONTENT_PATH_HEADER_NAME] = constants.CONTENT_PATH_HEADER_ALIGNMENT
+        catalog_files_table = PrettyTable(table_headers)
+        catalog_files_table.align[constants.TITLE_HEADER_NAME] = constants.TITLE_HEADER_ALIGNMENT
+        catalog_files_table.align[constants.CONTENT_PATH_HEADER_NAME] = constants.CONTENT_PATH_HEADER_ALIGNMENT
         
         for catalog_file in catalog_files:
             row = [catalog_file.id,
@@ -118,12 +115,11 @@ class Console(cmd.Cmd):
                 row.append(catalog_file.original_path)
                 row.append(catalog_file.original_name)
             
-            files_table.add_row(row)
+            catalog_files_table.add_row(row)
         
-        return files_table
+        return catalog_files_table
     
     def prompt_generic(self, value, input_method=input):
-        """ Display prompt to input a value after displaying a question """
         
         prompt = (constants.CONSOLE_PROMPT_PREFIX + 
                   value + 
@@ -135,22 +131,15 @@ class Console(cmd.Cmd):
         return input_method(prompt).strip()
     
     def prompt_yes_or_no(self, input_method=input):
-        acceptable_answer = False
-        response = None
-        
-        # TODO: Add cancel option
-        
-        while not acceptable_answer:
-            response = self.prompt_generic('Y/Yes or N/No', input).lower()
+               
+        response = self.prompt_generic('Y/Yes or N/No', input_method).lower()
             
-            if response == 'yes' or response == 'y':
-                response = True
-                acceptable_answer = True
-            elif response == 'no' or response == 'n':
-                response = False
-                acceptable_answer = True                                 
-            else:
-                acceptable_answer = False
+        if response == 'yes' or response == 'y':
+            response = True
+        elif response == 'no' or response == 'n':
+            response = False                                 
+        else:
+            raise ValueError("Not Y/Yes or N/No")
 
         return response
 
@@ -167,8 +156,8 @@ class Console(cmd.Cmd):
         file_paths = self.prompt_generic('path', input_method)
         file_paths = file_paths.split(constants.LIST_SEPARATOR)
         
-        return self.sanitize_file_paths(file_paths)
-    
+        return tuple([self.sanitize_file_path(file_path) for file_path in file_paths])
+        
     def prompt_catalog_file_ids(self, input_method=input):
         
         print("Please specify the ID(s) for the catalog file(s)")
@@ -180,7 +169,7 @@ class Console(cmd.Cmd):
     def prompt_tags(self, input_method=input):
         
         print("Please specify the tag(s)")
-        tag_names = self.prompt_generic('tag', input)
+        tag_names = self.prompt_generic('tag', input_method)
         tag_names = tag_names.split(constants.LIST_SEPARATOR)
         
         return self.sanitize_tags(tag_names)
@@ -188,18 +177,31 @@ class Console(cmd.Cmd):
     def prompt_file_extensions(self, input_method=input):
         
         print("Please specify the file extension(s)")
-        file_extensions = self.prompt_generic('file extension')
+        file_extensions = self.prompt_generic('file extension', input_method)
         file_extensions = file_extensions.split(constants.LIST_SEPARATOR)
         
         return self.sanitize_file_extensions(file_extensions)
-
+    
     def sanitize_catalog_path(self, catalog_path):
         
-        return os.path.abspath(catalog_path)
+        catalog_path = os.path.abspath(catalog_path)
+        
+        if os.path.isdir(catalog_path):
+            if catalog.is_catalog(catalog_path):
+                return catalog_path
+            else:
+                # TODO Change from ValueError to CatalogError
+                raise ValueError("Not a catalog path: '%s'" % catalog_path)
+        else:
+            raise ValueError("Not a folder path: '%s'" % catalog_path)
 
-    def sanitize_file_paths(self, file_paths):
-               
-        return tuple([os.path.abspath(file_path) for file_path in file_paths])
+    def sanitize_file_path(self, file_path):
+             
+        file_path = os.path.abspath(file_path.strip())
+        if os.path.isfile(file_path):
+            return file_path
+        else:
+            raise ValueError("Not a file path: '%s'" % file_path)
     
     def sanitize_catalog_file_ids(self, catalog_file_ids):
         
@@ -223,8 +225,26 @@ class Console(cmd.Cmd):
         
         return tuple(extensions)
 
+    def set_cwc(self, catalog_path):
+    
+        if catalog.is_catalog(catalog_path):           
+            self.cwc = catalog.Catalog(catalog_path)
+            self.do_cwc()
+        else:
+            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
+            self.cwc = None
+        
+        return self.cwc
+    
+    def set_cwf(self, catalog_file):
+        
+        if catalog_file is None:
+            print("Failed to set current working file")
+        else:
+            self.cwf = catalog_file
+            self.do_cwf()
+
     def get_catalog(self, args):
-        """ Checks if a catalog has been specified. """
         
         catalog = None
         catalog_path = args[constants.CATALOG_ARGUMENT_LONG_NAME]
@@ -240,29 +260,6 @@ class Console(cmd.Cmd):
             catalog = self.cwc
         
         return catalog
-    
-    def set_cwc(self, catalog_path):
-        """ Sets the current working catalog """
-    
-        if catalog.is_catalog(catalog_path):           
-            self.cwc = catalog.Catalog(catalog_path)
-            self.do_cwc()
-        else:
-            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
-            self.cwc = None
-    
-        return self.cwc
-    
-    def set_cwf(self, catalog_file):
-        """ Sets the current working file """
-        
-        if catalog_file is None:
-            print("Failed to set current working file")
-        else:
-            self.cwf = catalog_file
-            self.do_cwf()
-        
-        return self.cwf
     
     def get_catalog_file_ids(self, args):
         
@@ -339,16 +336,14 @@ class Console(cmd.Cmd):
         if self.cwc is None:
             output = "No current working catalog has been set!"
         else:
-            display = self.cwc.name
+            output = "Current working catalog: '%s'"
             
             if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
-                display = self.cwc.path
-                
-            output = "Current working catalog: '%s'" % display
+                output = output % self.cwc.path
+            else:
+                output = output % self.cwc.name
         
         print(output)
-        
-        return output
         
     def do_cwf(self, line=''):
         """ Display the current working file. """
@@ -384,7 +379,7 @@ class Console(cmd.Cmd):
                 catalog_file_id = catalog_file_id.strip()
             else:
                 print("Please specify the ID for a catalog file")
-                catalog_file_id = self.prompt_generic('ID')
+                catalog_file_id = self.prompt_generic('ID', input)
             
             self.set_cwf(self.cwc.file(catalog_file_id))
             
