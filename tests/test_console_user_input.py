@@ -168,24 +168,31 @@ class TestSanitizeYesOrNoInput(unittest.TestCase):
 
 class TestSanitizeCatalogPathInput(unittest.TestCase):
     
-    @classmethod
-    def setUpClass(cls):
-        cls.test_temp_folder = tempfile.mkdtemp()
-        cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Test_Catalog")
-        cls.test_catalog = establish(cls.test_catalog_path)
-    
-    @classmethod
-    def tearDownClass(cls):             
-        destroy(cls.test_catalog_path, True)
-        shutil.rmtree(cls.test_temp_folder)
-    
-    def test_input_catalog_path(self):
+    def test_input(self):
         console = Console()
         
-        output = console.sanitize_catalog_path_input(self.test_catalog_path)
-        self.assertEqual(output, self.test_catalog_path)
+        expected_value = os.getcwd()
+        output = console.sanitize_catalog_path_input(expected_value)
+        self.assertEqual(output, expected_value)
         
-    def test_input_not_catalog_path(self):
+    def test_padded_input(self):
+        console = Console()
+        
+        expected_value = os.getcwd()
+        
+        input_value = ' ' + expected_value
+        output = console.sanitize_catalog_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = expected_value + ' '
+        output = console.sanitize_catalog_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = ' ' + expected_value + ' '
+        output = console.sanitize_catalog_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+    def test_not_folder_path(self):
         console = Console()
         
         self.assertRaises(InputError, console.sanitize_catalog_path_input, "test_not_catalog_path")
