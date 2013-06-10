@@ -121,7 +121,7 @@ class Console(cmd.Cmd):
         
         return catalog_files_table
     
-    def create_catlog_table(self, catalog, verbose):
+    def create_catalog_table(self, catalog, verbose):
         
         table_headers = [constants.NAME_HEADER_NAME]
         
