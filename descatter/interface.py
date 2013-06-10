@@ -7,7 +7,7 @@ import os
 import constants
 import catalog
 
-# TODO: Create ConsoleError class
+class InputError(ValueError): pass
 
 class CommandLine(object):
     
@@ -39,8 +39,8 @@ class Console(cmd.Cmd):
     
     def __init__(self, catalog=None, file=None):
         
-        self.previous_working_catalog = catalog
-        self.previous_working_file = file
+        self.current_working_catalog = catalog
+        self.current_working_file = file
         
         self.parser = argparse.ArgumentParser(description=constants.CONSOLE_DESCRIPTION)
         
@@ -121,7 +121,41 @@ class Console(cmd.Cmd):
         
         return catalog_files_table
     
-    def prompt_generic(self, value):
+    def create_catlog_table(self, catalog, verbose):
+        
+        table_headers = [constants.NAME_HEADER_NAME]
+        
+        if verbose:
+            table_headers.append(constants.PATH_HEADER_NAME)
+        
+        catalog_table = PrettyTable(table_headers)
+        
+        row = [catalog.name]
+        
+        if verbose:
+            row.append(catalog.path)
+        
+        catalog_table.add_row(row)
+        
+        return catalog_table
+    
+    def print_current_working_catalog(self, verbose=False):
+        
+        if self.current_working_catalog is None:
+            print("No current working catalog has been set!")
+        else:
+            print("Current working catalog set to:")
+            print(self.create_catalog_table(self.current_working_catalog, verbose))
+            
+    def print_current_working_file(self, verbose=False):
+        
+        if self.current_working_file is None:
+            print("No current working file has been set!")
+        else:
+            print("Current working file set to:")
+            print(self.create_catalog_files_table((self.current_working_file,), verbose))    
+    
+    def prompt_generic(self, value, input_method):
         
         prompt = (constants.CONSOLE_PROMPT_PREFIX + 
                   value + 
@@ -130,55 +164,62 @@ class Console(cmd.Cmd):
         
         # TODO: Add a cancel option
         
-        return input(prompt)
+        return input_method(prompt)
     
-    def prompt_yes_or_no(self, input_method=input):
+    def prompt_yes_or_no(self, input_method):
                
-        return self.sanitize_yes_or_no_input(self.prompt_generic('Y/Yes or N/No', input_method))
+        return self.sanitize_yes_or_no_input(self.prompt_generic('(Y)es or (N)o', input_method))
 
-    def prompt_catalog_path(self):
+    def prompt_catalog_path(self, input_method):
         
         print("Please specify a path to the catalog")
-        user_input = self.prompt_generic('path')
+        user_input = self.prompt_generic('path', input_method)
         
         return self.sanitize_catalog_path_input(user_input)
 
-    def prompt_file_paths(self):
+    def prompt_file_paths(self, input_method):
         
         print("Please specify the path(s) to the file(s)")
-        user_input = self.prompt_generic('path')
+        user_input = self.prompt_generic('path', input_method)
         
         return self.sanitize_file_paths_input(user_input)
+    
+    def prompt_catalog_file_id(self, input_method):
         
-    def prompt_catalog_file_ids(self):
+        print("Please specify the ID for the catalog file")
+        user_input = self.prompt_generic('ID', input_method)
+        
+        return self.sanitize_catalog_file_id(user_input)
+        
+    def prompt_catalog_file_ids(self, input_method):
         
         print("Please specify the ID(s) for the catalog file(s)")
-        user_input = self.prompt_generic('ID')
+        user_input = self.prompt_generic('ID(s)', input_method)
     
         return self.sanitize_catalog_file_ids(user_input)
 
-    def prompt_tags(self):
+    def prompt_tags(self, input_method):
         
         print("Please specify the tag(s)")
-        user_input = self.prompt_generic('tag')
+        user_input = self.prompt_generic('tag(s)', input_method)
         
         return self.sanitize_tags_input(user_input)
     
-    def prompt_file_extensions(self):
+    def prompt_file_extensions(self, input_method):
         
         print("Please specify the file extension(s)")
-        user_input = self.prompt_generic('file extension')
+        user_input = self.prompt_generic('file extension', input_method)
         
         return self.sanitize_file_extensions_input(user_input)
     
     def sanitize_user_input(self, user_input):
         
         if user_input is None:
-            raise ValueError("User input is 'None'")
+            raise InputError("User input is 'None'")
         elif user_input:
             return user_input.strip()
         else:
-            raise ValueError("No user input")
+            raise InputError("No user input")
     
     def sanitize_yes_or_no_input(self, user_input):
         
@@ -189,7 +230,7 @@ class Console(cmd.Cmd):
         elif response == 'no' or response == 'n':
             return False                                 
         else:
-            raise ValueError("Not Y/Yes or N/No")
+            raise InputError("Not (Y)es or (N)o")
     
     def sanitize_catalog_path_input(self, user_input):
         
@@ -199,10 +240,10 @@ class Console(cmd.Cmd):
             if catalog.is_catalog(catalog_path):
                 return catalog_path
             else:
-                # TODO Change from ValueError to CatalogError
-                raise ValueError("User input is not a catalog path: '%s'" % catalog_path)
+                # TODO Change from ValueError to InputError
+                raise InputError("User input is not a catalog path")
         else:
-            raise ValueError("User input is not a folder path: '%s'" % catalog_path)
+            raise InputError("User input is not a folder path")
 
     def sanitize_file_paths_input(self, user_input):
         
@@ -216,7 +257,7 @@ class Console(cmd.Cmd):
         if os.path.isfile(file_path):
             return file_path
         else:
-            raise ValueError("Not a file path: '%s'" % file_path)
+            raise InputError("Not a file path: '%s'" % file_path)
     
     def sanitize_catalog_file_ids_input(self, user_input):
         
@@ -250,22 +291,22 @@ class Console(cmd.Cmd):
         
         return tuple(extensions)
 
-    def get_current_working_catalog(self, args):
+    def get_working_catalog(self, args):
         
-        current_working_catalog = None
+        working_catalog = None
         catalog_path = args[constants.CATALOG_ARGUMENT_LONG_NAME]
         
         if catalog_path:
             catalog_path = catalog_path[0]
             catalog_path = self.sanitize_catalog_path_input(catalog_path)
-            current_working_catalog = current_working_catalog.Catalog(catalog_path)
-        elif self.previous_working_catalog is None:
+            working_catalog = catalog.Catalog(catalog_path)
+        elif self.current_working_catalog is None:
             catalog_path = self.prompt_catalog_path()
-            current_working_catalog = current_working_catalog.Catalog(catalog_path)
+            working_catalog = catalog.Catalog(catalog_path)
         else:
-            current_working_catalog = self.previous_working_catalog
+            working_catalog = self.current_working_catalog
         
-        return current_working_catalog
+        return working_catalog
     
     def get_catalog_file_ids(self, args):
         
@@ -274,10 +315,10 @@ class Console(cmd.Cmd):
         if catalog_file_ids:
             catalog_file_ids = catalog_file_ids[0]
             catalog_file_ids = self.sanitize_catalog_file_ids_input(catalog_file_ids)
-        elif self.previous_working_file is None:
+        elif self.current_working_file is None:
             catalog_file_ids = self.prompt_catalog_file_ids()
         else:
-            catalog_file_ids = (self.previous_working_file.id,)
+            catalog_file_ids = (self.current_working_file.id,)
         
         return catalog_file_ids
 
@@ -305,17 +346,31 @@ class Console(cmd.Cmd):
         
         return file_extensions
     
-    def get_catalog_path(self, args):
+    def get_catalog_path(self, args, input_method):
         
         catalog_path = args[constants.FIRST_ARGUMENT_LONG_NAME]
         
         if catalog_path:
             catalog_path = catalog_path[0]
             catalog_path = self.sanitize_catalog_path_input(catalog_path)
+        elif args[constants.CATALOG_ARGUMENT_LONG_NAME]:
+            catalog_path = self.sanitize_catalog_path_input(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         else:
-            catalog_path = self.prompt_catalog_path()
+            catalog_path = self.prompt_catalog_path(input_method)
         
         return catalog_path
+
+    def get_catalog_file_id(self, args, input_method):
+        
+        catalog_file_id = args[constants.FIRST_ARGUMENT_LONG_NAME]
+        
+        if catalog_file_id:
+            catalog_file_id = catalog_file_id[0]
+            catalog_file_id = self.sanitize_catalog_file_id_input(catalog_file_id)
+        else:
+            catalog_file_id = self.prompt_catalog_file_id(input_method)
+        
+        return catalog_file_id
 
     def get_file_paths(self, args):
         
@@ -333,83 +388,19 @@ class Console(cmd.Cmd):
         
         return vars(self.parser.parse_args(line.split()))
     
-    def do_cwc(self, line=''):
-        """ Display the current working catalog. """
+    def set_current_working_catalog(self, catalog, verbose=False):
         
-        args = self.get_args(line)
-        
-        output = ''
-        if self.previous_working_catalog is None:
-            output = "No current working catalog has been set!"
-        else:
-            output = "Current working catalog: '%s'"
-            
-            if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
-                output = output % self.previous_working_catalog.path
-            else:
-                output = output % self.previous_working_catalog.name
-        
-        print(output)
-        
-    def do_cwf(self, line=''):
-        """ Display the current working file. """
-        
-        if self.previous_working_file is None:
-            print("No current working file has been set!")
-        else:    
-            print("Current working file:")
-            print(self.create_catalog_files_table((self.previous_working_file,)))    
+        self.current_working_catalog = catalog
+        self.print_current_working_catalog(verbose)
     
-    def do_cwd(self, line):
-        """ Display the current working directory. """
+    def set_current_working_file(self, catalog_file, verbose=False):
         
-        print("Current working directory: %s" % os.getcwd())
-    
-    def do_catalog(self, line):
-        """ Sets the current working catalog. """
-               
-        self.set_cwc(self.get_catalog_path(self.get_args(line)))
-            
-        # TODO: Add saving a history of catalogs used in User home directory installation of descatter
-    
-    def do_file(self, line):
-        """ Sets the current working file. """
-        
-        args = self.get_args(line)
-        catalog = self.get_current_working_catalog(args)
-        
-        if catalog:        
-            catalog_file_id = args[constants.FIRST_ARGUMENT_LONG_NAME]
-            
-            if catalog_file_id:
-                catalog_file_id = catalog_file_id[0]
-                catalog_file_id = catalog_file_id.strip()
-            else:
-                print("Please specify the ID for a catalog file")
-                catalog_file_id = self.prompt_generic('ID', input)
-            
-            self.set_cwf(self.previous_working_catalog.file(catalog_file_id))
-            
-            # TODO: Add history of recently used files
+        self.current_working_file = catalog_file
+        self.print_current_working_file(verbose)
 
-    def do_tag(self, line):
-        """ Tags one or more files """
-        
-        args = self.get_args(line)
-        catalog = self.get_current_working_catalog(args)
-        
-        if catalog:
-            last_tagged_file = None    
-            
-            for catalog_file_id in self.get_catalog_file_ids(args):
-                last_tagged_file = self.tag_file(catalog_file_id)
-            
-            if last_tagged_file is not None:
-                self.set_cwf(last_tagged_file)
-    
     def tag_file(self, catalog_file_id):
         
-        tagged_file = self.previous_working_catalog.file(catalog_file_id)
+        tagged_file = self.current_working_catalog.file(catalog_file_id)
                 
         if tagged_file is None:
             print("No catalog file found with ID: '%s'" % catalog_file_id)
@@ -417,29 +408,15 @@ class Console(cmd.Cmd):
             print("Tagging catalog file: '%s'" % tagged_file.title)   
                     
             for tag_name in self.prompt_tags():
-                self.previous_working_catalog.tag(tagged_file, tag_name)
+                self.current_working_catalog.tag(tagged_file, tag_name)
                         
             print("The '%s' catalog file successfully tagged!" % tagged_file.title)
             
         return tagged_file
     
-    def do_detag(self, line):
-        """ Detags one or more files """
-        
-        args = self.get_args(line)
-                        
-        if self.get_current_working_catalog(args):
-            last_detagged_file = None
-            
-            for catalog_file_id in self.get_catalog_file_ids(args):
-                last_detagged_file = self.detag_file(catalog_file_id)
-            
-            if last_detagged_file is not None:
-                self.set_cwf(last_detagged_file)
-    
     def detag_file(self, catalog_file_id):
         
-        detagged_file = self.previous_working_catalog.file(catalog_file_id)
+        detagged_file = self.current_working_catalog.file(catalog_file_id)
                
         if detagged_file is None:
             print("No catalog file found with ID: '%s'" % catalog_file_id)
@@ -447,25 +424,12 @@ class Console(cmd.Cmd):
             print("Detagging catalog file: '%s'" % detagged_file.title)
                                 
             for tag_name in self.prompt_tags():
-                self.previous_working_catalog.detag(detagged_file, tag_name)
+                self.current_working_catalog.detag(detagged_file, tag_name)
                     
             print("The '%s' catalog file successfully detagged!" % detagged_file.title)
         
         return detagged_file
     
-    def do_create(self, line):
-        """ Sub-command to create file extension maps and tags. """
-        
-        args = self.get_args(line)
-        
-        if self.get_current_working_catalog(args):
-            if args[constants.MAP_ARGUMENT_LONG_NAME]:
-                self.create_map(args)
-            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
-                self.create_tag(args)
-            else:
-                print("Nothing to create")
-
     def create_map(self, args):
         """ Creates a file extension map for the specified catalog. """
         
@@ -475,33 +439,18 @@ class Console(cmd.Cmd):
             print("Please specify a content path for the '%s' file extension." % file_extension)
             destination = self.prompt_generic("content folder path")
                 
-            self.previous_working_catalog.content_map.add(file_extension, destination)
+            self.current_working_catalog.content_map.add(file_extension, destination)
             
-            catalog_destination = self.previous_working_catalog.content_map.get_destination(file_extension)
+            catalog_destination = self.current_working_catalog.content_map.get_destination(file_extension)
             print("The '%s' file extension is mapped to the '%s' content folder" % (file_extension, catalog_destination))
     
     def create_tag(self, args):
         """ Creates a tag to attach to files checked into the specified catalog. """
                        
         for tag_name in self.get_tag_names(args):
-            self.previous_working_catalog.create_tag(tag_name)
+            self.current_working_catalog.create_tag(tag_name)
             print("The '%s' tag created" % tag_name)
-
-    def do_remove(self, line):
-        """ Sub-command to remove file extension maps, tags, and files from a catalog. """
-        
-        args = self.get_args(line)
-               
-        if self.get_current_working_catalog(args):
-            if args[constants.MAP_ARGUMENT_LONG_NAME]:
-                self.remove_map(args)
-            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
-                self.remove_tag(args)
-            elif args[constants.FILE_ARGUMENT_LONG_NAME]:
-                self.remove_file(args)
-            else:
-                print("Nothing to remove!")    
-        
+    
     def remove_map(self, args):
         """ Removes a file extension map from a catalog. """
         
@@ -509,16 +458,16 @@ class Console(cmd.Cmd):
            
         for file_extension in file_extensions: 
             try:
-                self.previous_working_catalog.content_map.remove(file_extension)
+                self.current_working_catalog.content_map.remove(file_extension)
                 print("File extension map successfully removed!")
             except KeyError:
-                print("The '%s' file extension is not mapped in the '%s' catalog" % (file_extension, self.previous_working_catalog.name))
+                print("The '%s' file extension is not mapped in the '%s' catalog" % (file_extension, self.current_working_catalog.name))
 
     def remove_tag(self, args):
         """ Removes a tag from a catalog. """
                
         for tag_name in self.get_tag_names(args):
-            self.previous_working_catalog.remove_tag(tag_name)
+            self.current_working_catalog.remove_tag(tag_name)
             print("The '%s' tag successfully removed!" % tag_name)
     
     def remove_file(self, args):
@@ -527,77 +476,19 @@ class Console(cmd.Cmd):
         print("Removing files from a catalog cannot be undone!")
            
         for catalog_file_id in self.get_catalog_file_ids(args):
-            remove_file = self.previous_working_catalog.file(catalog_file_id)
+            remove_file = self.current_working_catalog.file(catalog_file_id)
                 
             if remove_file is None:
                 print("No catalog file found with ID: '%s'" % catalog_file_id)
             else:
-                print("Are you sure you want to remove the '%s' file from the '%s' catalog?" % (remove_file.title, self.previous_working_catalog.name))
+                print("Are you sure you want to remove the '%s' file from the '%s' catalog?" % (remove_file.title, self.current_working_catalog.name))
                 
                 if self.prompt_yes_or_no():
-                    self.previous_working_catalog.remove_file(remove_file)
+                    self.current_working_catalog.remove_file(remove_file)
                     print("The '%s' catalog file successfully removed!" % remove_file.title)
                 else:
                     print("Good choice!")
-
-    def do_establish(self, line):
-        """ Establishes a new catalog at the specified path. """
-        
-        args = self.get_args(line)
-        
-        catalog_path = self.get_catalog_path(args)
-        
-        valid_path = True
-        if os.path.isdir(catalog_path):
-            if os.listdir(catalog_path):
-                print("The folder is not empty!")
-                valid_path = False
-            else:
-                valid_path = True
-            
-        if valid_path:
-            self.previous_working_catalog = catalog.establish(catalog_path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
-            print("The '%s' catalog established!" % self.previous_working_catalog.name)
-            print("The current working catalog set to: '%s'" % self.previous_working_catalog.name)
-
-    def do_destroy(self, line):
-        """ Destroys or deletes a catalog at the specified path. This will delete all of the files as well. """
-        
-        args = self.get_args(line)
-        
-        catalog_path = self.get_catalog_path(args)
-        
-        if catalog.is_catalog(catalog_path):
-            destroy_catalog = catalog.Catalog(catalog_path)
-            
-            print("All files will be lost and this cannot be undone!")
-            print("Are you sure you want to destroy the '%s' catalog?" % destroy_catalog.name)
-            
-            if self.prompt_yes_or_no():
-                catalog.destroy(destroy_catalog.path)
                     
-                if self.previous_working_catalog is not None:
-                    if self.previous_working_catalog.path == destroy_catalog.path:
-                        self.previous_working_catalog = None
-            else:
-                print("Good choice!")
-        else:
-            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
-    
-    def do_checkin(self, line):
-        """ Checks in the current working file into the current working catalog """
-    
-        args = self.get_args(line)    
-                                    
-        if self.get_current_working_catalog(args):            
-            last_checkin_file = None
-            
-            for file_path in self.get_file_paths(args):            
-                last_checkin_file = self.checkin_file(file_path)
-                
-            if last_checkin_file is not None:
-                self.set_cwf(last_checkin_file)
-    
     def checkin_file(self, file_path):
         
         print("Please enter a title for: %s" % os.path.basename(file_path))
@@ -606,11 +497,11 @@ class Console(cmd.Cmd):
         
         while True:
             try: 
-                checkin_file = self.previous_working_catalog.checkin(file_path, title)
+                checkin_file = self.current_working_catalog.checkin(file_path, title)
                 print("The '%s' file successfully checked in!" % checkin_file.original_name)    
             except LookupError:
-                print("The '%s' file extension is unknown for the '%s' catalog." % (checkin_file.extension, self.previous_working_catalog.name))
-                print("Would you like to add the '%s' file extension to the '%s' catalog?" % (checkin_file.extension, self.previous_working_catalog.name))
+                print("The '%s' file extension is unknown for the '%s' catalog." % (checkin_file.extension, self.current_working_catalog.name))
+                print("Would you like to add the '%s' file extension to the '%s' catalog?" % (checkin_file.extension, self.current_working_catalog.name))
                 
                 if self.prompt_yes_or_no():                       
                     print("Please specify a content path for the '%s' file extension." % checkin_file.extension)
@@ -621,31 +512,17 @@ class Console(cmd.Cmd):
                         print("The path must be relative to the content folder. Please try again.")
                         path = input('content path')
                                
-                    self.previous_working_catalog.content_map.add(self.previous_working_file.extension, destination)
+                    self.current_working_catalog.content_map.add(self.current_working_file.extension, destination)
                     continue
                 else:
                     print("The file was not checked in")
             break
         
         return checkin_file
-    
-    def do_checkout(self, line):
-        """ Copies a catalog file to its original path and name in the file system """
-        
-        args = self.get_args(line)    
-                                    
-        if self.get_current_working_catalog(args):
-            last_checkout_file = None
-            
-            for catalog_file_id in self.get_catalog_file_ids(args):
-                last_checkout_file = self.checkout_file(catalog_file_id)
-            
-            if last_checkout_file is not None:
-                self.set_cwf(last_checkout_file)
-    
+
     def checkout_file(self, catalog_file_id):
         
-        checkout_file = self.previous_working_catalog.file(catalog_file_id)
+        checkout_file = self.current_working_catalog.file(catalog_file_id)
                 
         if checkout_file is None:
             print("No catalog file found with ID: '%s'" % catalog_file_id)
@@ -655,36 +532,10 @@ class Console(cmd.Cmd):
             
             dst_path = os.path.abspath(dst_path)
             
-            self.previous_working_catalog.checkout(checkout_file, dst_path)
+            self.current_working_catalog.checkout(checkout_file, dst_path)
             print("The '%s' catalog file successfully checked out!" % checkout_file.title)
         
         return checkout_file
-    
-    def do_find(self, line):
-        """ Finds files based on specified tags. """
-        
-        args = self.get_args(line)
-        
-        if self.get_current_working_catalog(args):
-            tag_names = self.get_tag_names(args)
-                
-            files = self.previous_working_catalog.get_files_by_tags(tag_names)
-            print(self.create_catalog_files_table(files, args[constants.VERBOSE_ARGUMENT_LONG_NAME]))
-    
-    def do_list(self, line):
-        """ Lists various properties and values for the specified catalog """
-        
-        args = self.get_args(line)
-        
-        if self.get_current_working_catalog(args):
-            if args[constants.MAP_ARGUMENT_LONG_NAME]:
-                self.list_maps(args)
-            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
-                self.list_tags(args)
-            elif args[constants.FILE_ARGUMENT_LONG_NAME]:
-                self.list_files(args)
-            else:
-                print("Nothing to list!")
     
     def list_maps(self, args):
         """ Shows the file extension maps in an ASCII table sorted in descending alphabetical order """
@@ -692,10 +543,10 @@ class Console(cmd.Cmd):
         map_table = PrettyTable([constants.FILE_EXTENSION_HEADER_NAME, constants.CONTENT_FOLDER_HEADER_NAME])
         map_table.align[constants.CONTENT_FOLDER_HEADER_NAME] = constants.CONTENT_FOLDER_HEADER_ALIGNMENT
         parent_path = None
-        file_map = self.previous_working_catalog.content_map.map
+        file_map = self.current_working_catalog.content_map.map
                 
         if args[constants.VERBOSE_ARGUMENT_LONG_NAME]:
-            parent_path = os.path.join(self.previous_working_catalog.path, constants.CONTENT_FOLDER_NAME)
+            parent_path = os.path.join(self.current_working_catalog.path, constants.CONTENT_FOLDER_NAME)
                 
         for file_extension in sorted(file_map):
             row = [file_extension, os.path.join(parent_path, file_map[file_extension])]
@@ -715,7 +566,7 @@ class Console(cmd.Cmd):
         
         tags_table = PrettyTable(table_headers)
         
-        tags = self.previous_working_catalog.tags()
+        tags = self.current_working_catalog.tags()
         
         for tag in tags:
             row = None
@@ -732,7 +583,202 @@ class Console(cmd.Cmd):
     def list_files(self, args):
         """ Shows all of the files in an ASCII table sorted in descending alphabetical order """
                                   
-        print(self.create_catalog_files_table(self.previous_working_catalog.files(), args[constants.VERBOSE_ARGUMENT_LONG_NAME]))
+        print(self.create_catalog_files_table(self.current_working_catalog.files(), args[constants.VERBOSE_ARGUMENT_LONG_NAME]))
+    
+    def do_catalog(self, line, input_method=input):
+        """ Sets the current working catalog. """
+        
+        args = self.get_args(line)
+        catalog_path = self.get_catalog_path(args, input_method)
+        
+        self.set_current_working_catalog(catalog.Catalog(catalog_path), args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+            
+        # TODO: Add saving a history of catalogs used in User home directory installation of descatter
+    
+    def do_file(self, line, input_method=input):
+        """ Sets the current working file. """
+        
+        args = self.get_args(line)
+        catalog = self.get_working_catalog(args)
+        
+        if catalog:
+            catalog_file = catalog.file(self.get_catalog_file_id(input_method))   
+            self.set_current_working_file(catalog_file, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+            self.set_current_working_catalog(catalog, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+            
+        # TODO: Add history of recently used files
+    
+    def do_cwc(self, line=''):
+        """ Display the current working catalog. """
+        
+        args = self.get_args(line)
+        self.print_current_working_catalog(args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+        
+    def do_cwf(self, line=''):
+        """ Display the current working file. """
+        
+        args = self.get_args(line)
+        self.print_current_working_file(args[constants.VERBOSE_ARGUMENT_LONG_NAME])    
+    
+    def do_cwd(self, line):
+        """ Display the current working directory. """
+        
+        print("Current working directory is: %s" % os.getcwd())
+
+    def do_tag(self, line):
+        """ Tags one or more files """
+        
+        args = self.get_args(line)
+        catalog = self.get_working_catalog(args)
+        
+        if catalog:
+            last_tagged_file = None    
+            
+            for catalog_file_id in self.get_catalog_file_ids(args):
+                last_tagged_file = self.tag_file(catalog_file_id)
+            
+            if last_tagged_file is not None:
+                self.set_cwf(last_tagged_file)
+    
+    def do_detag(self, line):
+        """ Detags one or more files """
+        
+        args = self.get_args(line)
+                        
+        if self.get_working_catalog(args):
+            last_detagged_file = None
+            
+            for catalog_file_id in self.get_catalog_file_ids(args):
+                last_detagged_file = self.detag_file(catalog_file_id)
+            
+            if last_detagged_file is not None:
+                self.set_cwf(last_detagged_file)
+    
+    def do_create(self, line):
+        """ Sub-command to create file extension maps and tags. """
+        
+        args = self.get_args(line)
+        
+        if self.get_working_catalog(args):
+            if args[constants.MAP_ARGUMENT_LONG_NAME]:
+                self.create_map(args)
+            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
+                self.create_tag(args)
+            else:
+                print("Nothing to create")
+
+    def do_remove(self, line):
+        """ Sub-command to remove file extension maps, tags, and files from a catalog. """
+        
+        args = self.get_args(line)
+               
+        if self.get_working_catalog(args):
+            if args[constants.MAP_ARGUMENT_LONG_NAME]:
+                self.remove_map(args)
+            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
+                self.remove_tag(args)
+            elif args[constants.FILE_ARGUMENT_LONG_NAME]:
+                self.remove_file(args)
+            else:
+                print("Nothing to remove!")    
+
+    def do_establish(self, line):
+        """ Establishes a new catalog at the specified path. """
+        
+        args = self.get_args(line)
+        
+        catalog_path = self.get_catalog_path(args)
+        
+        valid_path = True
+        if os.path.isdir(catalog_path):
+            if os.listdir(catalog_path):
+                print("The folder is not empty!")
+                valid_path = False
+            else:
+                valid_path = True
+            
+        if valid_path:
+            self.current_working_catalog = catalog.establish(catalog_path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
+            print("The '%s' catalog established!" % self.current_working_catalog.name)
+            print("The current working catalog set to: '%s'" % self.current_working_catalog.name)
+
+    def do_destroy(self, line):
+        """ Destroys or deletes a catalog at the specified path. This will delete all of the files as well. """
+        
+        args = self.get_args(line)
+        
+        catalog_path = self.get_catalog_path(args)
+        
+        if catalog.is_catalog(catalog_path):
+            destroy_catalog = catalog.Catalog(catalog_path)
+            
+            print("All files will be lost and this cannot be undone!")
+            print("Are you sure you want to destroy the '%s' catalog?" % destroy_catalog.name)
+            
+            if self.prompt_yes_or_no():
+                catalog.destroy(destroy_catalog.path)
+                    
+                if self.current_working_catalog is not None:
+                    if self.current_working_catalog.path == destroy_catalog.path:
+                        self.current_working_catalog = None
+            else:
+                print("Good choice!")
+        else:
+            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
+    
+    def do_checkin(self, line):
+        """ Checks in the current working file into the current working catalog """
+    
+        args = self.get_args(line)    
+                                    
+        if self.get_working_catalog(args):            
+            last_checkin_file = None
+            
+            for file_path in self.get_file_paths(args):            
+                last_checkin_file = self.checkin_file(file_path)
+                
+            if last_checkin_file is not None:
+                self.set_cwf(last_checkin_file)
+    
+    def do_checkout(self, line):
+        """ Copies a catalog file to its original path and name in the file system """
+        
+        args = self.get_args(line)    
+                                    
+        if self.get_working_catalog(args):
+            last_checkout_file = None
+            
+            for catalog_file_id in self.get_catalog_file_ids(args):
+                last_checkout_file = self.checkout_file(catalog_file_id)
+            
+            if last_checkout_file is not None:
+                self.set_cwf(last_checkout_file)
+    
+    def do_find(self, line):
+        """ Finds files based on specified tags. """
+        
+        args = self.get_args(line)
+        
+        if self.get_working_catalog(args):
+            tag_names = self.get_tag_names(args)
+                
+            files = self.current_working_catalog.get_files_by_tags(tag_names)
+            print(self.create_catalog_files_table(files, args[constants.VERBOSE_ARGUMENT_LONG_NAME]))
+    
+    def do_list(self, line):
+        """ Lists various properties and values for the specified catalog """
+        
+        args = self.get_args(line)
+        
+        if self.get_working_catalog(args):
+            if args[constants.MAP_ARGUMENT_LONG_NAME]:
+                self.list_maps(args)
+            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
+                self.list_tags(args)
+            elif args[constants.FILE_ARGUMENT_LONG_NAME]:
+                self.list_files(args)
+            else:
+                print("Nothing to list!")
     
     def do_exit(self, line):
         """ Safely exits the console or interactive mode. """

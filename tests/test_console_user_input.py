@@ -1,4 +1,5 @@
 from interface import Console
+from interface import InputError
 from catalog import establish
 from catalog import destroy
 
@@ -54,12 +55,12 @@ class TestSanitizeUserInput(unittest.TestCase):
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_user_input, None)
+        self.assertRaises(InputError, console.sanitize_user_input, None)
         
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_user_input, '')
+        self.assertRaises(InputError, console.sanitize_user_input, '')
 
 class TestSanitizeYesOrNoInput(unittest.TestCase):
     
@@ -153,17 +154,17 @@ class TestSanitizeYesOrNoInput(unittest.TestCase):
     def test_unacceptable(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_yes_or_no_input, "maybe")
+        self.assertRaises(InputError, console.sanitize_yes_or_no_input, "maybe")
         
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_yes_or_no_input, '')
+        self.assertRaises(InputError, console.sanitize_yes_or_no_input, '')
         
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_yes_or_no_input, None)
+        self.assertRaises(InputError, console.sanitize_yes_or_no_input, None)
 
 class TestSanitizeCatalogPathInput(unittest.TestCase):
     
@@ -187,17 +188,17 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
     def test_input_not_catalog_path(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_catalog_path_input, "test_not_catalog_path")
+        self.assertRaises(InputError, console.sanitize_catalog_path_input, "test_not_catalog_path")
     
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_catalog_path_input, '')
+        self.assertRaises(InputError, console.sanitize_catalog_path_input, '')
         
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_catalog_path_input, None)
+        self.assertRaises(InputError, console.sanitize_catalog_path_input, None)
 
 class TestSanitizeFilePathsInput(unittest.TestCase):
         
@@ -301,7 +302,7 @@ class TestSanitizeFilePathsInput(unittest.TestCase):
     def test_not_file_path(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_file_paths_input, "NotAFile.txt")
+        self.assertRaises(InputError, console.sanitize_file_paths_input, "NotAFile.txt")
     
     def test_not_file_path_list(self):
         console = Console()
@@ -312,17 +313,17 @@ class TestSanitizeFilePathsInput(unittest.TestCase):
                             constants.LIST_SEPARATOR +
                             "NotAFile3.txt")
         
-        self.assertRaises(ValueError, console.sanitize_file_paths_input, input_values)
+        self.assertRaises(InputError, console.sanitize_file_paths_input, input_values)
     
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_file_paths_input, '')
+        self.assertRaises(InputError, console.sanitize_file_paths_input, '')
         
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_file_paths_input, None)
+        self.assertRaises(InputError, console.sanitize_file_paths_input, None)
 
 class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
     
@@ -373,12 +374,12 @@ class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_catalog_file_ids_input, '')
+        self.assertRaises(InputError, console.sanitize_catalog_file_ids_input, '')
     
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_catalog_file_ids_input, None)
+        self.assertRaises(InputError, console.sanitize_catalog_file_ids_input, None)
 
 class TestSanitizeTagsInput(unittest.TestCase):
     
@@ -429,12 +430,12 @@ class TestSanitizeTagsInput(unittest.TestCase):
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_tags_input, '')
+        self.assertRaises(InputError, console.sanitize_tags_input, '')
     
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_tags_input, None)
+        self.assertRaises(InputError, console.sanitize_tags_input, None)
         
 class TestSanitizeFileExtensionsInput(unittest.TestCase):
     
@@ -501,9 +502,9 @@ class TestSanitizeFileExtensionsInput(unittest.TestCase):
     def test_empty(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_file_extensions_input, '')
+        self.assertRaises(InputError, console.sanitize_file_extensions_input, '')
     
     def test_none(self):
         console = Console()
         
-        self.assertRaises(ValueError, console.sanitize_file_extensions_input, None)
+        self.assertRaises(InputError, console.sanitize_file_extensions_input, None)
