@@ -49,39 +49,39 @@ def establish(catalog_path, schema_path=None):
     create_folder_structure(catalog_path)
     
     return Catalog(catalog_path)
-    
-def destroy(catalog, content=True):
+
+def destroy(catalog_path, content=True):
 
     if content:
-        content_path = os.path.join(catalog.path, constants.CONTENT_FOLDER_NAME)
+        content_path = os.path.join(catalog_path, constants.CONTENT_FOLDER_NAME)
         shutil.rmtree(content_path)
 
-    templates_path = os.path.join(catalog.path, constants.TEMPLATES_FOLDER_NAME)
+    templates_path = os.path.join(catalog_path, constants.TEMPLATES_FOLDER_NAME)
     shutil.rmtree(templates_path)
         
-    hooks_path = os.path.join(catalog.path, constants.HOOKS_FOLDER_NAME)
+    hooks_path = os.path.join(catalog_path, constants.HOOKS_FOLDER_NAME)
     shutil.rmtree(hooks_path)
         
-    log_path = os.path.join(catalog.path, constants.LOG_FOLDER_NAME) 
+    log_path = os.path.join(catalog_path, constants.LOG_FOLDER_NAME) 
     shutil.rmtree(log_path) 
         
-    content_schema_path = os.path.join(catalog.path, constants.CONTENT_SCHEMA_FILE_NAME)
+    content_schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
     os.remove(content_schema_path)
         
-    readme_path = os.path.join(catalog.path, constants.CATALOG_README_FILE_NAME)
+    readme_path = os.path.join(catalog_path, constants.CATALOG_README_FILE_NAME)
     os.remove(readme_path)
      
     try:
-        catalog.session.close_all()
-        db_path = os.path.join(catalog.path, constants.TAGS_DB_NAME)
+        destroy_catalog = Catalog(catalog_path)
+        destroy_catalog.session.close_all()
+        db_path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
         os.remove(db_path)
             
-        os.rmdir(catalog.path)
+        os.rmdir(catalog_path)
     except IOError:
         pass
     except PermissionError:
-        pass
-    
+        pass    
 
 def is_catalog(catalog_path):
     
