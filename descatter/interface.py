@@ -7,7 +7,11 @@ import os
 import constants
 import catalog
 
-class InputError(ValueError): pass
+class InputError(ValueError):
+    
+    def __init__(self, message, input_value):
+        self.message = message
+        self.input_value = input_value
 
 class CommandLine(object):
     
@@ -212,14 +216,21 @@ class Console(cmd.Cmd):
         
         return self.sanitize_file_extensions_input(user_input)
     
+    def prompt_title(self, file_path, input_method):
+        
+        print("Please enter a title for: %s" % os.path.basename(file_path))
+        user_input = self.prompt_generic('title', input_method)
+        
+        return self.sanitize_title_input(user_input)
+    
     def sanitize_user_input(self, user_input):
         
         if user_input is None:
-            raise InputError("User input is 'None'")
+            raise InputError("User input is 'None'", user_input)
         elif user_input:
             return user_input.strip()
         else:
-            raise InputError("No user input")
+            raise InputError("No user input", user_input)
     
     def sanitize_yes_or_no_input(self, user_input):
         
@@ -230,16 +241,16 @@ class Console(cmd.Cmd):
         elif response == 'no' or response == 'n':
             return False                                 
         else:
-            raise InputError("Not (Y)es or (N)o")
+            raise InputError("Not (Y)es or (N)o", user_input)
     
     def sanitize_catalog_path_input(self, user_input):
         
         catalog_path = os.path.abspath(self.sanitize_user_input(user_input))
-            
+           
         if os.path.isdir(catalog_path):
             return catalog_path
         else:
-            raise InputError("User input is not a folder path")
+            raise InputError("User input is not a folder path", user_input)
 
     def sanitize_file_paths_input(self, user_input):
         
@@ -247,13 +258,13 @@ class Console(cmd.Cmd):
         
         return tuple([self.sanitize_file_path_input(file_path) for file_path in file_paths])
 
-    def sanitize_file_path_input(self, input_file_path):
+    def sanitize_file_path_input(self, user_input):
              
-        file_path = os.path.abspath(input_file_path.strip())
+        file_path = os.path.abspath(user_input.strip())
         if os.path.isfile(file_path):
             return file_path
         else:
-            raise InputError("Not a file path: '%s'" % file_path)
+            raise InputError("Not a file path", user_input)
     
     def sanitize_catalog_file_ids_input(self, user_input):
         
@@ -286,18 +297,21 @@ class Console(cmd.Cmd):
             extensions.append(file_extension)
         
         return tuple(extensions)
+    
+    def sanitize_title_input(self, user_input):
+        
+        return self.sanitize_user_input(user_input)
 
-    def get_working_catalog(self, args):
+    def get_working_catalog(self, args, input_method):
         
         working_catalog = None
         catalog_path = args[constants.CATALOG_ARGUMENT_LONG_NAME]
         
         if catalog_path:
-            catalog_path = catalog_path[0]
             catalog_path = self.sanitize_catalog_path_input(catalog_path)
             working_catalog = catalog.Catalog(catalog_path)
         elif self.current_working_catalog is None:
-            catalog_path = self.prompt_catalog_path()
+            catalog_path = self.prompt_catalog_path(input_method)
             working_catalog = catalog.Catalog(catalog_path)
         else:
             working_catalog = self.current_working_catalog
@@ -368,15 +382,15 @@ class Console(cmd.Cmd):
         
         return catalog_file_id
 
-    def get_file_paths(self, args):
+    def get_file_paths(self, args, input_method):
         
         file_paths = args[constants.FIRST_ARGUMENT_LONG_NAME]
             
         if file_paths:
-            file_paths = file_paths[0]
+            file_paths = file_paths[0]    
             file_paths = self.sanitize_file_paths_input(file_paths)
         else:
-            file_paths = self.prompt_file_paths()
+            file_paths = self.prompt_file_paths(input_method)
         
         return file_paths
         
@@ -484,37 +498,6 @@ class Console(cmd.Cmd):
                     print("The '%s' catalog file successfully removed!" % remove_file.title)
                 else:
                     print("Good choice!")
-                    
-    def checkin_file(self, file_path):
-        
-        print("Please enter a title for: %s" % os.path.basename(file_path))
-        title = self.prompt_generic('title')
-        checkin_file = None        
-        
-        while True:
-            try: 
-                checkin_file = self.current_working_catalog.checkin(file_path, title)
-                print("The '%s' file successfully checked in!" % checkin_file.original_name)    
-            except LookupError:
-                print("The '%s' file extension is unknown for the '%s' catalog." % (checkin_file.extension, self.current_working_catalog.name))
-                print("Would you like to add the '%s' file extension to the '%s' catalog?" % (checkin_file.extension, self.current_working_catalog.name))
-                
-                if self.prompt_yes_or_no():                       
-                    print("Please specify a content path for the '%s' file extension." % checkin_file.extension)
-                    destination = self.prompt_generic('content path')
-                            
-                    path = None
-                    while os.path.isabs(path):
-                        print("The path must be relative to the content folder. Please try again.")
-                        path = input('content path')
-                               
-                    self.current_working_catalog.content_map.add(self.current_working_file.extension, destination)
-                    continue
-                else:
-                    print("The file was not checked in")
-            break
-        
-        return checkin_file
 
     def checkout_file(self, catalog_file_id):
         
@@ -611,21 +594,31 @@ class Console(cmd.Cmd):
             
         # TODO: Add saving a history of catalogs used in User home directory installation of descatter
     
-    def do_checkin(self, line):
+    def do_checkin(self, line, input_method=(input,input)):
         """ Checks in the current working file into the current working catalog """
     
-        args = self.get_args(line)    
-        catalog = self.get_working_catalog(args)
+        args = self.get_args(line)
+        catalog = self.get_working_catalog(args, input_method)
                                     
         if catalog:
             self.set_current_working_catalog(catalog)            
-            last_checkin_file = None
+            checked_in_files = []
             
-            for file_path in self.get_file_paths(args):            
-                last_checkin_file = self.checkin_file(file_path)
+            for file_path in self.get_file_paths(args, input_method[0]):
+                title = self.prompt_title(file_path, input_method[1])
+                checked_in_file = catalog.checkin(file_path, title)
                 
-            if last_checkin_file is not None:
-                self.set_current_working_file(last_checkin_file)
+                if checked_in_file is not None:
+                    checked_in_files.append(checked_in_file)    
+                
+            if checked_in_files:
+                verbose = args[constants.VERBOSE_ARGUMENT_LONG_NAME]
+                
+                print("Files successfully checked in to '%s' as:" % catalog.name)    
+                print(self.create_catalog_files_table(checked_in_files, verbose))
+                self.set_current_working_file(checked_in_files[-1])
+        else:
+            raise InputError("No catalog specified", catalog)
     
     def do_file(self, line, input_method=input):
         """ Sets the current working file. """
@@ -641,6 +634,8 @@ class Console(cmd.Cmd):
                 self.set_current_working_catalog(catalog, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
             else:
                 print("The ID is not to a catalog file in the '%s' catalog" % catalog.name)
+        else:
+            raise InputError("No catalog specified", catalog) 
             
         # TODO: Add history of recently used files
 
@@ -659,6 +654,8 @@ class Console(cmd.Cmd):
             
             if last_tagged_file is not None:
                 self.set_current_working_file(last_tagged_file)
+        else:
+            raise InputError("No catalog specified", catalog)
     
     def do_detag(self, line):
         """ Detags one or more files """
@@ -675,6 +672,8 @@ class Console(cmd.Cmd):
             
             if last_detagged_file is not None:
                 self.set_current_working_file(last_detagged_file)
+        else:
+            raise InputError("No catalog specified", catalog)
     
     def do_create(self, line):
         """ Sub-command to create file extension maps and tags. """
@@ -692,6 +691,8 @@ class Console(cmd.Cmd):
             else:
                 # TODO: Change to prompt for (M)ap or (T)ag
                 print("Nothing to create!")
+        else:
+            raise InputError("No catalog specified", catalog)
 
     def do_remove(self, line):
         """ Sub-command to remove file extension maps, tags, and files from a catalog. """
@@ -710,7 +711,9 @@ class Console(cmd.Cmd):
                 self.remove_file(args)
             else:
                 # TODO: Change to prompt for (M)ap or (T)ag or (F)ile
-                print("Nothing to remove!")    
+                print("Nothing to remove!")
+        else:
+            raise InputError("No catalog specified", catalog)  
 
     def do_establish(self, line):
         """ Establishes a new catalog at the specified path. """

@@ -515,3 +515,41 @@ class TestSanitizeFileExtensionsInput(unittest.TestCase):
         console = Console()
         
         self.assertRaises(InputError, console.sanitize_file_extensions_input, None)
+
+class TestSanitizeTitleInput(unittest.TestCase):
+    
+    def test_title(self):
+        console = Console()
+        
+        expected_value = 'Title'
+        input_value = 'Title'
+        
+        output = console.sanitize_title_input(input_value)
+        self.assertEqual(output, expected_value)
+    
+    def test_padded_title(self):
+        console = Console()
+        
+        expected_value = 'Title'
+        
+        input_value = ' Title'
+        output = console.sanitize_title_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = 'Title '
+        output = console.sanitize_title_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = ' Title '
+        output = console.sanitize_title_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+    def test_empty(self):
+        console = Console()
+        
+        self.assertRaises(InputError, console.sanitize_title_input, '')
+    
+    def test_none(self):
+        console = Console()
+        
+        self.assertRaises(InputError, console.sanitize_title_input, None)

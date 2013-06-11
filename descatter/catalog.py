@@ -7,6 +7,8 @@ import shutil
 import constants
 import database
 
+class CatalogError(Exception): pass
+
 def create_folder_structure(catalog_path):        
     
     for folder_name in constants.CATALOG_FOLDER_NAMES:
@@ -247,6 +249,9 @@ class Catalog(object):
         files = query.all()
         
         return tuple(files)
+    
+    # TODO: Add file_count method
+    # TODO: Add tag_count method
 
 class ContentMap(object):
     
