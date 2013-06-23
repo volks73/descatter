@@ -166,19 +166,103 @@ class TestSanitizeYesOrNoInput(unittest.TestCase):
         
         self.assertRaises(InputError, console.sanitize_yes_or_no_input, None)
 
+class TestSanitizePathInput(unittest.TestCase):
+    
+    def test_absolute_path(self):
+        console = Console()
+        
+        expected_value = os.getcwd()
+        output = console.sanitize_path_input(expected_value)
+        self.assertEqual(output, expected_value)
+        
+    def test_relative_path(self):
+        console = Console()
+        
+        input_value = 'tests'
+        expected_value = os.path.join(os.getcwd(), input_value)
+        output = console.sanitize_path_input(expected_value)
+        self.assertEqual(output, expected_value)
+    
+    def test_invalid_path(self):
+        console = Console()
+        
+        input_value = 'test!@#$%^&*()+=[]{}|?<>.tmp'
+        self.assertRaises(InputError, console.sanitize_path_input, input_value)
+    
+    def test_trailing_forward_slash(self):
+        console = Console()
+        
+        test_folder_name = 'test_trailing_foward_slash'
+        input_value = test_folder_name + '\\'
+        expected_value = os.path.join(os.getcwd(), test_folder_name) 
+        output = console.sanitize_path_input(input_value)
+        self.assertEqual(output, expected_value)
+    
+    def test_trailing_back_slash(self):
+        console = Console()
+        
+        test_folder_name = 'test_trailing_back_slash'
+        input_value = test_folder_name + '/'
+        expected_value = os.path.join(os.getcwd(), test_folder_name)
+        output = console.sanitize_path_input(input_value)
+        self.assertEqual(output, expected_value)
+    
+    def test_padded_path(self):
+        console = Console()
+        
+        expected_value = os.getcwd()
+        input_value = ' ' + expected_value
+        output = console.sanitize_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = expected_value + ' '
+        output = console.sanitize_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = ' ' + expected_value + ' '
+        output = console.sanitize_path_input(input_value)
+        self.assertEqual(output, expected_value)
+    
+    def test_empty(self):
+        console = Console()
+        
+        self.assertRaises(InputError, console.sanitize_path_input, '')
+    
+    def test_none(self):
+        console = Console()
+        
+        self.assertRaises(InputError, console.sanitize_path_input, None)
+
 class TestSanitizeCatalogPathInput(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        cls.test_temp_folder = tempfile.mkdtemp()
+        cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Sanitize_Catalog_Path_Input_Test_Catalog")
+        cls.test_catalog = establish(cls.test_catalog_path)
+    
+    @classmethod
+    def tearDownClass(cls):
+        destroy(cls.test_catalog_path, True)
+        
+        try:
+            shutil.rmtree(cls.test_temp_folder)
+        except IOError:
+            pass
+        except PermissionError:
+            pass
     
     def test_input(self):
         console = Console()
         
-        expected_value = os.getcwd()
+        expected_value = self.test_catalog_path
         output = console.sanitize_catalog_path_input(expected_value)
         self.assertEqual(output, expected_value)
         
     def test_padded_input(self):
         console = Console()
         
-        expected_value = os.getcwd()
+        expected_value = self.test_catalog_path
         
         input_value = ' ' + expected_value
         output = console.sanitize_catalog_path_input(input_value)
@@ -196,6 +280,9 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
         console = Console()
         
         self.assertRaises(InputError, console.sanitize_catalog_path_input, "test_not_catalog_path")
+        
+    def test_not_catalog_path(self):
+        pass
     
     def test_empty(self):
         console = Console()

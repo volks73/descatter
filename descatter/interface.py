@@ -3,6 +3,7 @@ from prettytable import PrettyTable
 import argparse
 import cmd
 import os 
+import re
 
 import constants
 import catalog
@@ -40,6 +41,9 @@ class CommandLine(object):
             Console(self.catalog).cmdloop()
 
 class Console(cmd.Cmd):
+    
+    # TODO: Add introduction
+    prompt = constants.CONSOLE_PROMPT
     
     def __init__(self, catalog=None, file=None):
         
@@ -174,17 +178,24 @@ class Console(cmd.Cmd):
                
         return self.sanitize_yes_or_no_input(self.prompt_generic('(Y)es or (N)o', input_method))
 
+    def prompt_path(self, input_method):
+        
+        print("Please specify a path")
+        user_input = self.prompt_generic('path', input_method)
+        
+        return self.sanitize_path_input(user_input)
+
     def prompt_catalog_path(self, input_method):
         
         print("Please specify a path to the catalog")
-        user_input = self.prompt_generic('path', input_method)
+        user_input = self.prompt_generic('catalog path', input_method)
         
         return self.sanitize_catalog_path_input(user_input)
 
     def prompt_file_paths(self, input_method):
         
         print("Please specify the path(s) to the file(s)")
-        user_input = self.prompt_generic('path', input_method)
+        user_input = self.prompt_generic('file path(s)', input_method)
         
         return self.sanitize_file_paths_input(user_input)
     
@@ -243,14 +254,28 @@ class Console(cmd.Cmd):
         else:
             raise InputError("Not (Y)es or (N)o", user_input)
     
+    def sanitize_path_input(self, user_input):
+        
+        path = os.path.abspath(self.sanitize_user_input(user_input))
+        basename = os.path.basename(path)
+        
+        if re.search(r'[^A-Za-z0-9_\-\\]', basename):
+            raise InputError("Invalid path", user_input)
+        else:
+            return path
+    
     def sanitize_catalog_path_input(self, user_input):
         
-        catalog_path = os.path.abspath(self.sanitize_user_input(user_input))
+        catalog_path = self.sanitize_path_input(user_input)
            
         if os.path.isdir(catalog_path):
-            return catalog_path
+            
+            if catalog.is_catalog(catalog_path):
+                return catalog_path
+            else:
+                raise InputError("Path is not to a %s catalog" % constants.APPLICATION_NAME, user_input)
         else:
-            raise InputError("User input is not a folder path", user_input)
+            raise InputError("Path is not to a folder", user_input)
 
     def sanitize_file_paths_input(self, user_input):
         
@@ -356,13 +381,23 @@ class Console(cmd.Cmd):
         
         return file_extensions
     
+    def get_path(self, args, input_method):
+        
+        path = args[constants.FIRST_ARGUMENT_LONG_NAME]
+        
+        if path:
+            path = self.sanitize_path_input(path[0])
+        else:
+            path = self.prompt_path(input_method)
+        
+        return path            
+    
     def get_catalog_path(self, args, input_method):
         
         catalog_path = args[constants.FIRST_ARGUMENT_LONG_NAME]
         
         if catalog_path:
-            catalog_path = catalog_path[0]
-            catalog_path = self.sanitize_catalog_path_input(catalog_path)
+            catalog_path = self.sanitize_catalog_path_input(catalog_path[0])
         elif args[constants.CATALOG_ARGUMENT_LONG_NAME]:
             catalog_path = self.sanitize_catalog_path_input(args[constants.CATALOG_ARGUMENT_LONG_NAME])
         else:
@@ -678,21 +713,24 @@ class Console(cmd.Cmd):
     def do_create(self, line):
         """ Sub-command to create file extension maps and tags. """
         
-        args = self.get_args(line)
-        catalog = self.get_working_catalog(args) 
-
-        if catalog:
-            self.set_current_working_catalog(catalog)
-            
-            if args[constants.MAP_ARGUMENT_LONG_NAME]:
-                self.create_map(args)
-            elif args[constants.TAG_ARGUMENT_LONG_NAME]:
-                self.create_tag(args)
+        try:
+            args = self.get_args(line)
+            catalog = self.get_working_catalog(args, input) 
+    
+            if catalog:
+                self.set_current_working_catalog(catalog)
+                
+                if args[constants.MAP_ARGUMENT_LONG_NAME]:
+                    self.create_map(args)
+                elif args[constants.TAG_ARGUMENT_LONG_NAME]:
+                    self.create_tag(args)
+                else:
+                    # TODO: Change to prompt for (M)ap or (T)ag
+                    print("Nothing to create!")
             else:
-                # TODO: Change to prompt for (M)ap or (T)ag
-                print("Nothing to create!")
-        else:
-            raise InputError("No catalog specified", catalog)
+                raise InputError("No catalog specified", catalog)
+        except InputError as error:
+            print(error.message)
 
     def do_remove(self, line):
         """ Sub-command to remove file extension maps, tags, and files from a catalog. """
@@ -719,24 +757,20 @@ class Console(cmd.Cmd):
         """ Establishes a new catalog at the specified path. """
         
         args = self.get_args(line)
-        catalog_path = self.get_catalog_path(args)
+        path = self.get_path(args, input)
         
         valid_path = True
-        if os.path.isdir(catalog_path):
-            if os.listdir(catalog_path):
+        if os.path.isdir(path):
+            if os.listdir(path):
                 print("The folder is not empty!")
                 valid_path = False
             else:
                 valid_path = True
             
         if valid_path:
-            established_catalog = catalog.establish(catalog_path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
-            
-            if established_catalog:
-                print("Catalog established!")
-                self.set_current_working_catalog(established_catalog, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
-            else:
-                print("Failed to establish catalog!")
+            established_catalog = catalog.establish(path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
+            print("Catalog established!")
+            self.set_current_working_catalog(established_catalog, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
 
     def do_destroy(self, line):
         """ Destroys or deletes a catalog at the specified path. This will delete all of the files as well. """

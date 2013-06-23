@@ -200,70 +200,34 @@ class TestCheckinCommand(unittest.TestCase):
         self.assertIsNotNone(output_catalog_file.content_path)
         self.assertTrue(output_catalog_file.content_name)
         self.assertTrue(output_catalog_file.content_path)
+
+class TestEstablishCommand(unittest.TestCase):
     
-    def test_left_padded_checkin_file_list(self):
-        console = Console()
-        
-        console.do_catalog(self.test_catalog_path)
-        
-        input_value = (' %s' + constants.LIST_SEPARATOR + ' %s' + constants.LIST_SEPARATOR + ' %s') % (self.test_temp_file1.name, self.test_temp_file2.name, self.test_temp_file3.name)
-        expected_original_path = os.path.dirname(self.test_temp_file3.name)
-        expected_original_name = os.path.basename(self.test_temp_file3.name)
-        expected_title = "Test Title"
-         
-        console.do_checkin(input_value, (input, lambda title_input: "Test Title"))
-        output_catalog_file = console.current_working_file
-        
-        self.assertEqual(output_catalog_file.original_path, expected_original_path)
-        self.assertEqual(output_catalog_file.original_name, expected_original_name)
-        self.assertEqual(output_catalog_file.title, expected_title)
-        self.assertIsNotNone(output_catalog_file.id)
-        self.assertIsNotNone(output_catalog_file.content_name)
-        self.assertIsNotNone(output_catalog_file.content_path)
-        self.assertTrue(output_catalog_file.content_name)
-        self.assertTrue(output_catalog_file.content_path)
+    @classmethod
+    def setUpClass(cls):
+        cls.test_temp_folder = tempfile.mkdtemp()
+        cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Establish_Test_Catalog")
     
-    def test_right_padded_checkin_file_list(self):
-        console = Console()
-        
-        console.do_catalog(self.test_catalog_path)
-        
-        input_value = ('%s ' + constants.LIST_SEPARATOR + '%s ' + constants.LIST_SEPARATOR + '%s ') % (self.test_temp_file1.name, self.test_temp_file2.name, self.test_temp_file3.name)
-        expected_original_path = os.path.dirname(self.test_temp_file3.name)
-        expected_original_name = os.path.basename(self.test_temp_file3.name)
-        expected_title = "Test Title"
-         
-        console.do_checkin(input_value, (input, lambda title_input: "Test Title"))
-        output_catalog_file = console.current_working_file
-        
-        self.assertEqual(output_catalog_file.original_path, expected_original_path)
-        self.assertEqual(output_catalog_file.original_name, expected_original_name)
-        self.assertEqual(output_catalog_file.title, expected_title)
-        self.assertIsNotNone(output_catalog_file.id)
-        self.assertIsNotNone(output_catalog_file.content_name)
-        self.assertIsNotNone(output_catalog_file.content_path)
-        self.assertTrue(output_catalog_file.content_name)
-        self.assertTrue(output_catalog_file.content_path)
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            shutil.rmtree(cls.test_temp_folder)
+        except IOError:
+            pass
+        except PermissionError:
+            pass
     
-    def test_padded_checkin_file_list(self):
-        console = Console()
-        
-        console.do_catalog(self.test_catalog_path)
-        
-        input_value = (' %s ' + constants.LIST_SEPARATOR + ' %s ' + constants.LIST_SEPARATOR + ' %s ') % (self.test_temp_file1.name, self.test_temp_file2.name, self.test_temp_file3.name)
-        expected_original_path = os.path.dirname(self.test_temp_file3.name)
-        expected_original_name = os.path.basename(self.test_temp_file3.name)
-        expected_title = "Test Title"
-         
-        console.do_checkin(input_value, (input, lambda title_input: "Test Title"))
-        output_catalog_file = console.current_working_file
-        
-        self.assertEqual(output_catalog_file.original_path, expected_original_path)
-        self.assertEqual(output_catalog_file.original_name, expected_original_name)
-        self.assertEqual(output_catalog_file.title, expected_title)
-        self.assertIsNotNone(output_catalog_file.id)
-        self.assertIsNotNone(output_catalog_file.content_name)
-        self.assertIsNotNone(output_catalog_file.content_path)
-        self.assertTrue(output_catalog_file.content_name)
-        self.assertTrue(output_catalog_file.content_path)
-        
+    def test_establish_no_arguments(self):
+        pass
+    
+    def test_establish_path_argument(self):
+        pass
+    
+    def test_establish_path_argument_with_forward_slashes(self):
+        pass
+    
+    def test_establish_path_argument_with_back_slashes(self):
+        pass
+    
+    def test_establish_with_schema_argument(self):
+        pass
