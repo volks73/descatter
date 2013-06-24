@@ -1,7 +1,5 @@
 from interface import Console
 from interface import InputError
-from catalog import establish
-from catalog import destroy
 
 import os
 import tempfile
@@ -9,6 +7,7 @@ import shutil
 import unittest
 
 import constants
+import catalog
 
 class TestSanitizeUserInput(unittest.TestCase):
     
@@ -51,16 +50,14 @@ class TestSanitizeUserInput(unittest.TestCase):
         
         output = console.sanitize_user_input("Test INPUT")
         self.assertEqual(output, expected_value)
-    
-    def test_none(self):
-        console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_user_input, None)
         
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_user_input, '')
+        
+    def test_none(self):
+        console = Console()
+        self.assertRaises(ValueError, console.sanitize_user_input, None)
 
 class TestSanitizeYesOrNoInput(unittest.TestCase):
     
@@ -153,26 +150,23 @@ class TestSanitizeYesOrNoInput(unittest.TestCase):
     
     def test_unacceptable(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_yes_or_no_input, "maybe")
         
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_yes_or_no_input, '')
         
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_yes_or_no_input, None)
+        self.assertRaises(ValueError, console.sanitize_yes_or_no_input, None)
 
-class TestSanitizePathInput(unittest.TestCase):
+class TestSanitizeFolderPathInput(unittest.TestCase):
     
     def test_absolute_path(self):
         console = Console()
         
         expected_value = os.getcwd()
-        output = console.sanitize_path_input(expected_value)
+        output = console.sanitize_folder_path_input(expected_value)
         self.assertEqual(output, expected_value)
         
     def test_relative_path(self):
@@ -180,14 +174,14 @@ class TestSanitizePathInput(unittest.TestCase):
         
         input_value = 'tests'
         expected_value = os.path.join(os.getcwd(), input_value)
-        output = console.sanitize_path_input(expected_value)
+        output = console.sanitize_folder_path_input(expected_value)
         self.assertEqual(output, expected_value)
     
     def test_invalid_path(self):
         console = Console()
         
         input_value = 'test!@#$%^&*()+=[]{}|?<>.tmp'
-        self.assertRaises(InputError, console.sanitize_path_input, input_value)
+        self.assertRaises(InputError, console.sanitize_folder_path_input, input_value)
     
     def test_trailing_forward_slash(self):
         console = Console()
@@ -195,7 +189,7 @@ class TestSanitizePathInput(unittest.TestCase):
         test_folder_name = 'test_trailing_foward_slash'
         input_value = test_folder_name + '\\'
         expected_value = os.path.join(os.getcwd(), test_folder_name) 
-        output = console.sanitize_path_input(input_value)
+        output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_trailing_back_slash(self):
@@ -204,7 +198,7 @@ class TestSanitizePathInput(unittest.TestCase):
         test_folder_name = 'test_trailing_back_slash'
         input_value = test_folder_name + '/'
         expected_value = os.path.join(os.getcwd(), test_folder_name)
-        output = console.sanitize_path_input(input_value)
+        output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_padded_path(self):
@@ -212,26 +206,24 @@ class TestSanitizePathInput(unittest.TestCase):
         
         expected_value = os.getcwd()
         input_value = ' ' + expected_value
-        output = console.sanitize_path_input(input_value)
+        output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
         
         input_value = expected_value + ' '
-        output = console.sanitize_path_input(input_value)
+        output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
         
         input_value = ' ' + expected_value + ' '
-        output = console.sanitize_path_input(input_value)
+        output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_empty(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_path_input, '')
+        self.assertRaises(InputError, console.sanitize_folder_path_input, '')
     
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_path_input, None)
+        self.assertRaises(ValueError, console.sanitize_folder_path_input, None)
 
 class TestSanitizeCatalogPathInput(unittest.TestCase):
     
@@ -239,18 +231,12 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
     def setUpClass(cls):
         cls.test_temp_folder = tempfile.mkdtemp()
         cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Sanitize_Catalog_Path_Input_Test_Catalog")
-        cls.test_catalog = establish(cls.test_catalog_path)
+        cls.test_catalog = catalog.create(cls.test_catalog_path)
     
     @classmethod
     def tearDownClass(cls):
-        destroy(cls.test_catalog_path, True)
-        
-        try:
-            shutil.rmtree(cls.test_temp_folder)
-        except IOError:
-            pass
-        except PermissionError:
-            pass
+        cls.test_catalog.session.close_all()
+        shutil.rmtree(cls.test_temp_folder)
     
     def test_input(self):
         console = Console()
@@ -278,21 +264,38 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
         
     def test_not_folder_path(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_catalog_path_input, "test_not_catalog_path")
         
     def test_not_catalog_path(self):
-        pass
+        console = Console()
+        self.assertRaises(InputError, console.sanitize_catalog_path_input, "test_not_catalog_path")
     
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_catalog_path_input, '')
         
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_catalog_path_input, None)
+        self.assertRaises(ValueError, console.sanitize_catalog_path_input, None)
+
+class TestSanitizeFilePathInput(unittest.TestCase):
+    
+    def test_absolute_path(self):
+        pass
+    
+    def test_relative_path(self):
+        pass
+    
+    def test_padded_path(self):
+        pass
+    
+    def test_empty(self):
+        console = Console()
+        self.assertRaises(InputError, console.sanitize_file_path_input, '')
+    
+    def test_none(self):
+        console = Console()
+        self.assertRaises(ValueError, console.sanitize_file_path_input, None)
 
 class TestSanitizeFilePathsInput(unittest.TestCase):
         
@@ -411,13 +414,11 @@ class TestSanitizeFilePathsInput(unittest.TestCase):
     
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_file_paths_input, '')
         
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_file_paths_input, None)
+        self.assertRaises(ValueError, console.sanitize_file_paths_input, None)
 
 class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
     
@@ -467,13 +468,11 @@ class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
     
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_catalog_file_ids_input, '')
     
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_catalog_file_ids_input, None)
+        self.assertRaises(ValueError, console.sanitize_catalog_file_ids_input, None)
 
 class TestSanitizeTagsInput(unittest.TestCase):
     
@@ -523,13 +522,11 @@ class TestSanitizeTagsInput(unittest.TestCase):
     
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_tags_input, '')
     
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_tags_input, None)
+        self.assertRaises(ValueError, console.sanitize_tags_input, None)
         
 class TestSanitizeFileExtensionsInput(unittest.TestCase):
     
@@ -595,13 +592,11 @@ class TestSanitizeFileExtensionsInput(unittest.TestCase):
     
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_file_extensions_input, '')
     
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_file_extensions_input, None)
+        self.assertRaises(ValueError, console.sanitize_file_extensions_input, None)
 
 class TestSanitizeTitleInput(unittest.TestCase):
     
@@ -633,10 +628,8 @@ class TestSanitizeTitleInput(unittest.TestCase):
         
     def test_empty(self):
         console = Console()
-        
         self.assertRaises(InputError, console.sanitize_title_input, '')
     
     def test_none(self):
         console = Console()
-        
-        self.assertRaises(InputError, console.sanitize_title_input, None)
+        self.assertRaises(ValueError, console.sanitize_title_input, None)

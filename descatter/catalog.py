@@ -29,9 +29,15 @@ def create_hook_folders(catalog_path):
             trigger_path = os.path.join(hook_path, trigger_name)
             os.mkdir(trigger_path)
 
-def establish(catalog_path, schema_path=None):
+def create(catalog_path, schema_path=None):
 
-    if not os.path.isdir(catalog_path):
+    if os.path.exists(catalog_path):
+        if os.path.isdir(catalog_path):
+            if os.listdir(catalog_path):
+                raise CatalogError("Folder must be empty to establish catalog")
+        else:
+            raise CatalogError("Catalog path is not a folder")
+    else:
         os.mkdir(catalog_path)
 
     data_path = os.path.join(os.getcwd(), constants.APPLICATION_NAME)
@@ -52,38 +58,34 @@ def establish(catalog_path, schema_path=None):
     
     return Catalog(catalog_path)
 
-def destroy(catalog_path, content=True):
+def destroy(catalog_path, remove_content=True):
 
-    if content:
-        content_path = os.path.join(catalog_path, constants.CONTENT_FOLDER_NAME)
-        shutil.rmtree(content_path)
+    destroy_catalog = Catalog(catalog_path)
+    destroy_catalog.session.close_all()
+    destroy_catalog.session.bind.dispose()
 
-    templates_path = os.path.join(catalog_path, constants.TEMPLATES_FOLDER_NAME)
-    shutil.rmtree(templates_path)
+    if remove_content:
+        shutil.rmtree(catalog_path)
+    else:
+        templates_path = os.path.join(catalog_path, constants.TEMPLATES_FOLDER_NAME)
+        shutil.rmtree(templates_path)
         
-    hooks_path = os.path.join(catalog_path, constants.HOOKS_FOLDER_NAME)
-    shutil.rmtree(hooks_path)
+        hooks_path = os.path.join(catalog_path, constants.HOOKS_FOLDER_NAME)
+        shutil.rmtree(hooks_path)
         
-    log_path = os.path.join(catalog_path, constants.LOG_FOLDER_NAME) 
-    shutil.rmtree(log_path) 
+        log_path = os.path.join(catalog_path, constants.LOG_FOLDER_NAME) 
+        shutil.rmtree(log_path) 
         
-    content_schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
-    os.remove(content_schema_path)
+        content_schema_path = os.path.join(catalog_path, constants.CONTENT_SCHEMA_FILE_NAME)
+        os.remove(content_schema_path)
         
-    readme_path = os.path.join(catalog_path, constants.CATALOG_README_FILE_NAME)
-    os.remove(readme_path)
+        readme_path = os.path.join(catalog_path, constants.CATALOG_README_FILE_NAME)
+        os.remove(readme_path)
      
-    try:
-        destroy_catalog = Catalog(catalog_path)
-        destroy_catalog.session.close_all()
         db_path = os.path.join(catalog_path, constants.TAGS_DB_NAME)
         os.remove(db_path)
             
-        os.rmdir(catalog_path)
-    except IOError:
-        pass
-    except PermissionError:
-        pass    
+        os.rmdir(catalog_path)    
 
 def is_catalog(catalog_path):
     

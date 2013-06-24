@@ -8,11 +8,7 @@ import re
 import constants
 import catalog
 
-class InputError(ValueError):
-    
-    def __init__(self, message, input_value):
-        self.message = message
-        self.input_value = input_value
+class InputError(ValueError): pass
 
 class CommandLine(object):
     
@@ -42,7 +38,7 @@ class CommandLine(object):
 
 class Console(cmd.Cmd):
     
-    # TODO: Add introduction
+    intro = constants.CONSOLE_INTRODUCTION
     prompt = constants.CONSOLE_PROMPT
     
     def __init__(self, catalog=None, file=None):
@@ -183,7 +179,7 @@ class Console(cmd.Cmd):
         print("Please specify a path")
         user_input = self.prompt_generic('path', input_method)
         
-        return self.sanitize_path_input(user_input)
+        return self.sanitize_folder_path_input(user_input)
 
     def prompt_catalog_path(self, input_method):
         
@@ -237,11 +233,11 @@ class Console(cmd.Cmd):
     def sanitize_user_input(self, user_input):
         
         if user_input is None:
-            raise InputError("User input is 'None'", user_input)
+            raise ValueError("User input is 'None'")
         elif user_input:
             return user_input.strip()
         else:
-            raise InputError("No user input", user_input)
+            raise InputError("No user input")
     
     def sanitize_yes_or_no_input(self, user_input):
         
@@ -252,30 +248,41 @@ class Console(cmd.Cmd):
         elif response == 'no' or response == 'n':
             return False                                 
         else:
-            raise InputError("Not (Y)es or (N)o", user_input)
+            raise InputError("Not (Y)es or (N)o")
     
-    def sanitize_path_input(self, user_input):
+    def sanitize_folder_path_input(self, user_input):
         
-        path = os.path.abspath(self.sanitize_user_input(user_input))
-        basename = os.path.basename(path)
+        folder_path = os.path.abspath(self.sanitize_user_input(user_input))
+        basename = os.path.basename(folder_path)
         
-        if re.search(r'[^A-Za-z0-9_\-\\]', basename):
-            raise InputError("Invalid path", user_input)
+        if not basename:
+            basename = os.path.basename(os.path.dirname(folder_path))
+        
+        if re.search(r'[^A-Za-z0-9_\-\\]', basename) or os.path.isfile(folder_path): 
+            raise InputError("Invalid folder path")
         else:
-            return path
+            return folder_path
     
     def sanitize_catalog_path_input(self, user_input):
         
-        catalog_path = self.sanitize_path_input(user_input)
+        catalog_path = self.sanitize_folder_path_input(user_input)
            
         if os.path.isdir(catalog_path):
             
             if catalog.is_catalog(catalog_path):
                 return catalog_path
             else:
-                raise InputError("Path is not to a %s catalog" % constants.APPLICATION_NAME, user_input)
+                raise InputError("Path is not to a %s catalog" % constants.APPLICATION_NAME)
         else:
-            raise InputError("Path is not to a folder", user_input)
+            raise InputError("Path is not to a folder")
+
+    def sanitize_file_path_input(self, user_input):
+        
+        file_path = os.path.abspath(self.sanitize_user_input(user_input))
+        if os.path.isfile(file_path):
+            return file_path
+        else:
+            raise InputError("Not a file path")
 
     def sanitize_file_paths_input(self, user_input):
         
@@ -283,14 +290,6 @@ class Console(cmd.Cmd):
         
         return tuple([self.sanitize_file_path_input(file_path) for file_path in file_paths])
 
-    def sanitize_file_path_input(self, user_input):
-             
-        file_path = os.path.abspath(user_input.strip())
-        if os.path.isfile(file_path):
-            return file_path
-        else:
-            raise InputError("Not a file path", user_input)
-    
     def sanitize_catalog_file_ids_input(self, user_input):
         
         catalog_file_ids = self.sanitize_user_input(user_input).split(constants.LIST_SEPARATOR)
@@ -374,23 +373,22 @@ class Console(cmd.Cmd):
         file_extensions = args[constants.FIRST_ARGUMENT_LONG_NAME]
         
         if file_extensions:
-            file_extensions = file_extensions[0]
-            file_extensions = self.sanitize_file_extensions_input(file_extensions)
+            file_extensions = self.sanitize_file_extensions_input(file_extensions[0])
         else:
             file_extensions = self.prompt_file_extensions()
         
         return file_extensions
     
-    def get_path(self, args, input_method):
+    def get_folder_path(self, args, input_method):
         
-        path = args[constants.FIRST_ARGUMENT_LONG_NAME]
+        folder_path = args[constants.FIRST_ARGUMENT_LONG_NAME]
         
-        if path:
-            path = self.sanitize_path_input(path[0])
+        if folder_path:
+            folder_path = self.sanitize_folder_path_input(folder_path[0])
         else:
-            path = self.prompt_path(input_method)
+            folder_path = self.prompt_path(input_method)
         
-        return path            
+        return folder_path            
     
     def get_catalog_path(self, args, input_method):
         
@@ -410,8 +408,7 @@ class Console(cmd.Cmd):
         catalog_file_id = args[constants.FIRST_ARGUMENT_LONG_NAME]
         
         if catalog_file_id:
-            catalog_file_id = catalog_file_id[0]
-            catalog_file_id = self.sanitize_catalog_file_id_input(catalog_file_id)
+            catalog_file_id = self.sanitize_catalog_file_id_input(catalog_file_id[0])
         else:
             catalog_file_id = self.prompt_catalog_file_id(input_method)
         
@@ -422,8 +419,7 @@ class Console(cmd.Cmd):
         file_paths = args[constants.FIRST_ARGUMENT_LONG_NAME]
             
         if file_paths:
-            file_paths = file_paths[0]    
-            file_paths = self.sanitize_file_paths_input(file_paths)
+            file_paths = self.sanitize_file_paths_input(file_paths[0])
         else:
             file_paths = self.prompt_file_paths(input_method)
         
@@ -629,18 +625,17 @@ class Console(cmd.Cmd):
             
         # TODO: Add saving a history of catalogs used in User home directory installation of descatter
     
-    def do_checkin(self, line, input_method=(input,input)):
+    def do_checkin(self, line, catalog_input=input, file_paths_input=input, title_input=input):
         """ Checks in the current working file into the current working catalog """
     
-        args = self.get_args(line)
-        catalog = self.get_working_catalog(args, input_method)
-                                    
-        if catalog:
+        try:
+            args = self.get_args(line)
+            catalog = self.get_working_catalog(args, catalog_input)
             self.set_current_working_catalog(catalog)            
             checked_in_files = []
             
-            for file_path in self.get_file_paths(args, input_method[0]):
-                title = self.prompt_title(file_path, input_method[1])
+            for file_path in self.get_file_paths(args, file_paths_input):
+                title = self.prompt_title(file_path, title_input)
                 checked_in_file = catalog.checkin(file_path, title)
                 
                 if checked_in_file is not None:
@@ -652,8 +647,8 @@ class Console(cmd.Cmd):
                 print("Files successfully checked in to '%s' as:" % catalog.name)    
                 print(self.create_catalog_files_table(checked_in_files, verbose))
                 self.set_current_working_file(checked_in_files[-1])
-        else:
-            raise InputError("No catalog specified", catalog)
+        except InputError as error:
+            print(str(error))
     
     def do_file(self, line, input_method=input):
         """ Sets the current working file. """
@@ -753,47 +748,43 @@ class Console(cmd.Cmd):
         else:
             raise InputError("No catalog specified", catalog)  
 
-    def do_establish(self, line):
+    def do_establish(self, line, input_method=input):
         """ Establishes a new catalog at the specified path. """
         
-        args = self.get_args(line)
-        path = self.get_path(args, input)
-        
-        valid_path = True
-        if os.path.isdir(path):
-            if os.listdir(path):
-                print("The folder is not empty!")
-                valid_path = False
-            else:
-                valid_path = True
+        try:
+            args = self.get_args(line)
+            folder_path = self.get_folder_path(args, input_method)
             
-        if valid_path:
-            established_catalog = catalog.establish(path, args[constants.SCHEMA_ARGUMENT_LONG_NAME])
+            schema_path = None
+            if args[constants.SCHEMA_ARGUMENT_LONG_NAME] is not None:
+                schema_path = self.sanitize_file_path_input(args[constants.SCHEMA_ARGUMENT_LONG_NAME])
+                        
+            established_catalog = catalog.create(folder_path, schema_path)
             print("Catalog established!")
             self.set_current_working_catalog(established_catalog, args[constants.VERBOSE_ARGUMENT_LONG_NAME])
+        except InputError as error:
+            print(str(error))
 
-    def do_destroy(self, line):
+    def do_destroy(self, line, catalog_path_input=input, yes_or_no_input=input):
         """ Destroys or deletes a catalog at the specified path. This will delete all of the files as well. """
-        
-        args = self.get_args(line)
-        catalog_path = self.get_catalog_path(args)
-        
-        if catalog.is_catalog(catalog_path):
-            destroy_catalog = catalog.Catalog(catalog_path)
+                
+        try:
+            args = self.get_args(line)
+            catalog_path = self.get_catalog_path(args, catalog_path_input)
             
             print("All files will be lost and this cannot be undone!")
-            print("Are you sure you want to destroy the '%s' catalog?" % destroy_catalog.name)
+            print("Are you sure you want to destroy the catalog?")
             
-            if self.prompt_yes_or_no():
-                catalog.destroy(destroy_catalog.path)
+            if self.prompt_yes_or_no(yes_or_no_input):
+                catalog.destroy(catalog_path)
                     
                 if self.current_working_catalog is not None:
-                    if self.current_working_catalog.path == destroy_catalog.path:
+                    if self.current_working_catalog.path == catalog_path:
                         self.current_working_catalog = None
             else:
                 print("Good choice!")
-        else:
-            print("The path is not to a " + constants.APPLICATION_NAME + " catalog")
+        except InputError as error:
+            print(str(error))
     
     def do_checkout(self, line):
         """ Copies a catalog file to its original path and name in the file system """
