@@ -278,7 +278,7 @@ class Console(cmd.Cmd):
 
     def sanitize_file_path_input(self, user_input):
         
-        file_path = os.path.abspath(self.sanitize_user_input(user_input))
+        file_path = os.path.normcase(os.path.abspath(self.sanitize_user_input(user_input)))
         if os.path.isfile(file_path):
             return file_path
         else:
@@ -296,31 +296,36 @@ class Console(cmd.Cmd):
             
         return tuple([self.sanitize_catalog_file_id_input(catalog_file) for catalog_file in catalog_file_ids])
     
-    def sanitize_catalog_file_id_input(self, input_catalog_id):
+    def sanitize_catalog_file_id_input(self, user_input):
         
-        return input_catalog_id.strip()
+        # TODO: Add check for id in database
+        
+        return self.sanitize_user_input(user_input)
+
+    def sanitize_tag_input(self, user_input):
+        
+        return self.sanitize_user_input(user_input)
 
     def sanitize_tags_input(self, user_input):
         
-        tag_names = self.sanitize_user_input(user_input).split(constants.LIST_SEPARATOR)
+        tags = self.sanitize_user_input(user_input).split(constants.LIST_SEPARATOR)
             
-        return tuple([tag_name.strip() for tag_name in tag_names])
+        return tuple([self.sanitize_tag_input(tag) for tag in tags])
+
+    def sanitize_file_extension_input(self, user_input):
+        
+        file_extension = self.sanitize_user_input(user_input)
+        
+        if file_extension[0] == '.':
+            file_extension = file_extension[1:]
+            
+        return file_extension
 
     def sanitize_file_extensions_input(self, user_input):
         
         file_extensions = self.sanitize_user_input(user_input).split(constants.LIST_SEPARATOR)
-        
-        extensions = []
-        
-        for file_extension in file_extensions:
-            file_extension = file_extension.strip()
-            
-            if file_extension[0] == '.':
-                file_extension = file_extension[1:]
                 
-            extensions.append(file_extension)
-        
-        return tuple(extensions)
+        return tuple([self.sanitize_file_extension_input(file_extension) for file_extension in file_extensions])
     
     def sanitize_title_input(self, user_input):
         

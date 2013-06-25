@@ -162,18 +162,25 @@ class TestSanitizeYesOrNoInput(unittest.TestCase):
 
 class TestSanitizeFolderPathInput(unittest.TestCase):
     
+    def setUp(self):
+        self.test_temp_folder_path = tempfile.mkdtemp()
+    
+    def tearDown(self):
+        shutil.rmtree(self.test_temp_folder_path)
+    
     def test_absolute_path(self):
         console = Console()
         
-        expected_value = os.getcwd()
-        output = console.sanitize_folder_path_input(expected_value)
+        expected_value = self.test_temp_folder_path
+        input_value = '%s' % os.path.abspath(self.test_temp_folder_path)
+        output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
         
     def test_relative_path(self):
         console = Console()
         
-        input_value = 'tests'
-        expected_value = os.path.join(os.getcwd(), input_value)
+        expected_value = self.test_temp_folder_path
+        input_value = '%s' % os.path.relpath(self.test_temp_folder_path)
         output = console.sanitize_folder_path_input(expected_value)
         self.assertEqual(output, expected_value)
     
@@ -186,34 +193,33 @@ class TestSanitizeFolderPathInput(unittest.TestCase):
     def test_trailing_forward_slash(self):
         console = Console()
         
-        test_folder_name = 'test_trailing_foward_slash'
-        input_value = test_folder_name + '\\'
-        expected_value = os.path.join(os.getcwd(), test_folder_name) 
+        expected_value = self.test_temp_folder_path 
+        input_value = '%s' % os.path.abspath(self.test_temp_folder_path) + '\\'
         output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_trailing_back_slash(self):
         console = Console()
         
-        test_folder_name = 'test_trailing_back_slash'
-        input_value = test_folder_name + '/'
-        expected_value = os.path.join(os.getcwd(), test_folder_name)
+        expected_value = self.test_temp_folder_path
+        input_value = '%s' % os.path.abspath(self.test_temp_folder_path) + '/'
         output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_padded_path(self):
         console = Console()
         
-        expected_value = os.getcwd()
-        input_value = ' ' + expected_value
+        expected_value = self.test_temp_folder_path
+        
+        input_value = ' %s' % os.path.abspath(self.test_temp_folder_path)
         output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
         
-        input_value = expected_value + ' '
+        input_value = '%s ' % os.path.abspath(self.test_temp_folder_path)
         output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
         
-        input_value = ' ' + expected_value + ' '
+        input_value = ' %s ' % os.path.abspath(self.test_temp_folder_path)
         output = console.sanitize_folder_path_input(input_value)
         self.assertEqual(output, expected_value)
     
@@ -241,8 +247,9 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
     def test_input(self):
         console = Console()
         
+        input_value = '%s' % self.test_catalog_path
         expected_value = self.test_catalog_path
-        output = console.sanitize_catalog_path_input(expected_value)
+        output = console.sanitize_catalog_path_input(input_value)
         self.assertEqual(output, expected_value)
         
     def test_padded_input(self):
@@ -250,15 +257,15 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
         
         expected_value = self.test_catalog_path
         
-        input_value = ' ' + expected_value
+        input_value = ' %s' % expected_value
         output = console.sanitize_catalog_path_input(input_value)
         self.assertEqual(output, expected_value)
         
-        input_value = expected_value + ' '
+        input_value = '%s ' % expected_value
         output = console.sanitize_catalog_path_input(input_value)
         self.assertEqual(output, expected_value)
         
-        input_value = ' ' + expected_value + ' '
+        input_value = ' %s ' % expected_value
         output = console.sanitize_catalog_path_input(input_value)
         self.assertEqual(output, expected_value)
         
@@ -280,14 +287,45 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
 
 class TestSanitizeFilePathInput(unittest.TestCase):
     
+    def setUp(self):
+        self.test_temp_file, self.test_temp_file_path = tempfile.mkstemp(suffix='.txt', text=True)
+        os.close(self.test_temp_file)
+    
+    def tearDown(self):
+        os.remove(self.test_temp_file_path)
+    
     def test_absolute_path(self):
-        pass
+        console = Console()
+        
+        expected_value = self.test_temp_file_path
+        input_value = '%s' % os.path.abspath(self.test_temp_file_path)
+        output = console.sanitize_file_path_input(input_value)
+        self.assertEqual(output, expected_value)
     
     def test_relative_path(self):
-        pass
+        console = Console()
+        
+        expected_value = self.test_temp_file_path
+        input_value = '%s' % os.path.relpath(self.test_temp_file_path)
+        output = console.sanitize_file_path_input(input_value)
+        self.assertEqual(output, expected_value)
     
     def test_padded_path(self):
-        pass
+        console = Console()
+        
+        expected_value = self.test_temp_file_path
+        
+        input_value = ' %s' % os.path.abspath(self.test_temp_file_path)
+        output = console.sanitize_file_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = '%s ' % os.path.abspath(self.test_temp_file_path)
+        output = console.sanitize_file_path_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = ' %s ' % os.path.abspath(self.test_temp_file_path)
+        output = console.sanitize_file_path_input(input_value)
+        self.assertEqual(output, expected_value)
     
     def test_empty(self):
         console = Console()
@@ -298,117 +336,95 @@ class TestSanitizeFilePathInput(unittest.TestCase):
         self.assertRaises(ValueError, console.sanitize_file_path_input, None)
 
 class TestSanitizeFilePathsInput(unittest.TestCase):
-        
-    def test_relative_path(self):
-        console = Console()
-        
-        expected_value = (os.path.join(os.getcwd(), "CHANGES.txt"),)
-        
-        output = console.sanitize_file_paths_input("CHANGES.txt")
-        self.assertEqual(output, expected_value)
     
-    def test_padded_relative_path(self):
-        console = Console()
+    def setUp(self):
+        self.test_temp_file1, self.test_temp_file1_path = tempfile.mkstemp(suffix='.txt', text=True)
+        self.test_temp_file2, self.test_temp_file2_path = tempfile.mkstemp(suffix='.txt', text=True)
+        self.test_temp_file3, self.test_temp_file3_path = tempfile.mkstemp(suffix='.txt', text=True)
         
-        expected_value = (os.path.join(os.getcwd(), "CHANGES.txt"),)
-        
-        output = console.sanitize_file_paths_input(" CHANGES.txt")
-        self.assertEqual(output, expected_value)
-        
-        output = console.sanitize_file_paths_input("CHANGES.txt ")
-        self.assertEqual(output, expected_value)
-        
-        output = console.sanitize_file_paths_input(" CHANGES.txt ")
-        self.assertEqual(output, expected_value)
+        os.close(self.test_temp_file1)
+        os.close(self.test_temp_file2)
+        os.close(self.test_temp_file3)
     
-    def test_relative_path_lists(self):
-        console = Console()
-        
-        expected_value = (os.path.join(os.getcwd(), "CHANGES.txt"),
-                           os.path.join(os.getcwd(), "LICENSE.txt"),
-                           os.path.join(os.getcwd(), "README.md"))
-        
-        input_value = ("CHANGES.txt" + 
-                            constants.LIST_SEPARATOR + 
-                            " LICENSE.txt" +
-                            constants.LIST_SEPARATOR +
-                            " README.md")
-                
-        output = console.sanitize_file_paths_input(input_value)
-        self.assertEqual(output, expected_value)
+    def tearDown(self):
+        os.remove(self.test_temp_file1_path)
+        os.remove(self.test_temp_file2_path)
+        os.remove(self.test_temp_file3_path)
     
-    def test_padded_relative_path_list(self):
+    def test_absolute_paths(self):
         console = Console()
         
-        expected_value = (os.path.join(os.getcwd(), "CHANGES.txt"),
-                           os.path.join(os.getcwd(), "LICENSE.txt"),
-                           os.path.join(os.getcwd(), "README.md"))
+        expected_value = (self.test_temp_file1_path,
+                          self.test_temp_file2_path,
+                          self.test_temp_file3_path)
         
-        input_value = (" CHANGES.txt" + 
-                            constants.LIST_SEPARATOR + 
-                            " LICENSE.txt" +
-                            constants.LIST_SEPARATOR +
-                            " README.md")
-                
+        input_value = ('%s' % os.path.abspath(self.test_temp_file1_path) + 
+                       constants.LIST_SEPARATOR + 
+                       '%s' % os.path.abspath(self.test_temp_file2_path) + 
+                       constants.LIST_SEPARATOR + 
+                       '%s' % os.path.abspath(self.test_temp_file3_path))
+        
         output = console.sanitize_file_paths_input(input_value)
         self.assertEqual(output, expected_value)
         
-        input_value = ("CHANGES.txt " + 
-                            constants.LIST_SEPARATOR + 
-                            "LICENSE.txt " +
-                            constants.LIST_SEPARATOR +
-                            "README.md ")
-                
-        output = console.sanitize_file_paths_input(input_value)
-        self.assertEqual(output, expected_value)
-
-        input_value = (" CHANGES.txt " + 
-                            constants.LIST_SEPARATOR + 
-                            " LICENSE.txt " +
-                            constants.LIST_SEPARATOR +
-                            " README.md ")
-                
-        output = console.sanitize_file_paths_input(input_value)
-        self.assertEqual(output, expected_value)
-
-    def test_absolute_path(self):
+    def test_relative_paths(self):
         console = Console()
         
-        expected_value = (os.path.join(os.getcwd(), "CHANGES.txt"), )
-        input_value = os.path.join(os.getcwd(), "CHANGES.txt")
+        expected_value = (self.test_temp_file1_path,
+                          self.test_temp_file2_path,
+                          self.test_temp_file3_path)
+        
+        input_value = ('%s' % os.path.relpath(self.test_temp_file1_path) + 
+                       constants.LIST_SEPARATOR + 
+                       '%s' % os.path.relpath(self.test_temp_file2_path) + 
+                       constants.LIST_SEPARATOR + 
+                       '%s' % os.path.relpath(self.test_temp_file3_path))
         
         output = console.sanitize_file_paths_input(input_value)
         self.assertEqual(output, expected_value)
     
-    def test_absolute_path_list(self):
+    def test_padded_paths(self):
         console = Console()
         
-        expected_value = (os.path.join(os.getcwd(), "CHANGES.txt"),
-                           os.path.join(os.getcwd(), "LICENSE.txt"),
-                           os.path.join(os.getcwd(), "README.md"))
+        expected_value = (self.test_temp_file1_path,
+                          self.test_temp_file2_path,
+                          self.test_temp_file3_path)
         
-        input_value = (os.path.join(os.getcwd(), "CHANGES.txt") + 
-                            constants.LIST_SEPARATOR +
-                            os.path.join(os.getcwd(), "LICENSE.txt") + 
-                            constants.LIST_SEPARATOR +
-                            os.path.join(os.getcwd(), "README.md"))
+        input_value = (' %s' % os.path.abspath(self.test_temp_file1_path) + 
+                       constants.LIST_SEPARATOR + 
+                       ' %s' % os.path.abspath(self.test_temp_file2_path) + 
+                       constants.LIST_SEPARATOR + 
+                       ' %s' % os.path.abspath(self.test_temp_file3_path))
         
         output = console.sanitize_file_paths_input(input_value)
         self.assertEqual(output, expected_value)
-    
-    def test_not_file_path(self):
-        console = Console()
         
-        self.assertRaises(InputError, console.sanitize_file_paths_input, "NotAFile.txt")
-    
+        input_value = ('%s ' % os.path.abspath(self.test_temp_file1_path) + 
+                       constants.LIST_SEPARATOR + 
+                       '%s ' % os.path.abspath(self.test_temp_file2_path) + 
+                       constants.LIST_SEPARATOR + 
+                       '%s ' % os.path.abspath(self.test_temp_file3_path))
+        
+        output = console.sanitize_file_paths_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+        input_value = (' %s ' % os.path.abspath(self.test_temp_file1_path) + 
+                       constants.LIST_SEPARATOR + 
+                       ' %s ' % os.path.abspath(self.test_temp_file2_path) + 
+                       constants.LIST_SEPARATOR + 
+                       ' %s ' % os.path.abspath(self.test_temp_file3_path))
+        
+        output = console.sanitize_file_paths_input(input_value)
+        self.assertEqual(output, expected_value)
+        
     def test_not_file_path_list(self):
         console = Console()
         
         input_values = ("NotAFile1.txt" +
-                            constants.LIST_SEPARATOR +
-                            "NotAFile2.txt" +
-                            constants.LIST_SEPARATOR +
-                            "NotAFile3.txt")
+                        constants.LIST_SEPARATOR +
+                        "NotAFile2.txt" +
+                        constants.LIST_SEPARATOR +
+                        "NotAFile3.txt")
         
         self.assertRaises(InputError, console.sanitize_file_paths_input, input_values)
     
@@ -420,50 +436,66 @@ class TestSanitizeFilePathsInput(unittest.TestCase):
         console = Console()
         self.assertRaises(ValueError, console.sanitize_file_paths_input, None)
 
-class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
+class TestSanitizeCatalogFileIdInput(unittest.TestCase):
     
     def test_catalog_file_id(self):
         console = Console()
         
-        expected_value = ('1',)
-        
-        output = console.sanitize_catalog_file_ids_input('1')
+        expected_value = '1'
+        input_value = '1'
+        output = console.sanitize_catalog_file_id_input(input_value)
         self.assertEqual(output, expected_value)
     
-    def test_padded_catalog_file_id(self):
+    def test_padded(self):
         console = Console()
         
-        expected_value = ('1',)
+        expected_value = '1'
         
-        output = console.sanitize_catalog_file_ids_input('1 ')
+        input_value = '1 '
+        output = console.sanitize_catalog_file_id_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_catalog_file_ids_input(' 1')
+        input_value = ' 1'
+        output = console.sanitize_catalog_file_id_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_catalog_file_ids_input(' 1 ')
+        input_value = ' 1 '
+        output = console.sanitize_catalog_file_id_input(input_value)
         self.assertEqual(output, expected_value)
+
+    def test_empty(self):
+        console = Console()
+        self.assertRaises(InputError, console.sanitize_catalog_file_id_input, '')
+        
+    def test_none(self):
+        console = Console()
+        self.assertRaises(ValueError, console.sanitize_catalog_file_id_input, None)
+
+class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
     
-    def test_catalog_file_id_list(self):
+    def test_catalog_file_ids(self):
+        console = Console()
+        
+        expected_value = ('1', '2', '3')
+        input_value = '1' + constants.LIST_SEPARATOR + '2' + constants.LIST_SEPARATOR + '3'
+        output = console.sanitize_catalog_file_ids_input(input_value)
+        self.assertEqual(output, expected_value)
+        
+    def test_padded(self):
         console = Console()
         
         expected_value = ('1', '2', '3')
         
-        output = console.sanitize_catalog_file_ids_input('1,2,3')
+        input_value = ' 1' + constants.LIST_SEPARATOR + ' 2' + constants.LIST_SEPARATOR + ' 3'
+        output = console.sanitize_catalog_file_ids_input(input_value)
         self.assertEqual(output, expected_value)
         
-    def test_padded_catalog_file_id_list(self):
-        console = Console()
-        
-        expected_value = ('1', '2', '3')
-        
-        output = console.sanitize_catalog_file_ids_input(' 1, 2, 3')
+        input_value = '1 ' + constants.LIST_SEPARATOR + '2 ' + constants.LIST_SEPARATOR + '3 '
+        output = console.sanitize_catalog_file_ids_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_catalog_file_ids_input('1 ,2 ,3 ')
-        self.assertEqual(output, expected_value)
-        
-        output = console.sanitize_catalog_file_ids_input(' 1 , 2 , 3 ')
+        input_value = ' 1 ' + constants.LIST_SEPARATOR + ' 2 ' + constants.LIST_SEPARATOR + ' 3 '
+        output = console.sanitize_catalog_file_ids_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_empty(self):
@@ -474,50 +506,93 @@ class TestSanitizeCatalogFileIdsInput(unittest.TestCase):
         console = Console()
         self.assertRaises(ValueError, console.sanitize_catalog_file_ids_input, None)
 
-class TestSanitizeTagsInput(unittest.TestCase):
+class TestSanitizeTagInput(unittest.TestCase):
     
     def test_tag(self):
         console = Console()
         
-        expected_value = ('test',)
+        expected_value = 'test'
+        input_value = 'test'
+        output = console.sanitize_tag_input(input_value)
+        self.assertEqual(output, expected_value)
+    
+    def test_tag_with_spaces(self):
+        console = Console()
         
-        output = console.sanitize_tags_input('test')
+        expected_value = 'test 1'
+        input_value = 'test 1'
+        output = console.sanitize_tag_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_padded_tag(self):
         console = Console()
         
-        expected_value = ('test',)
+        expected_value = 'test'
         
-        output = console.sanitize_tags_input('test ')
+        input_value = 'test '
+        output = console.sanitize_tag_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_tags_input(' test')
+        input_value = ' test'
+        output = console.sanitize_tag_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_tags_input(' test ')
+        input_value = ' test '
+        output = console.sanitize_tag_input(input_value)
         self.assertEqual(output, expected_value)
     
-    def test_tag_list(self):
+    def test_empty(self):
+        console = Console()
+        self.assertRaises(InputError, console.sanitize_tag_input, '')
+    
+    def test_none(self):
+        console = Console()
+        self.assertRaises(ValueError, console.sanitize_tag_input, None)
+
+class TestSanitizeTagsInput(unittest.TestCase):
+    
+    def test_tags(self):
         console = Console()
         
-        expected_value = ('test1', 'test2', 'test3')
-        
-        output = console.sanitize_tags_input('test1,test2,test3')
+        expected_value = ('test_tag1','test_tag2','test_tag3')
+        input_value = ('test_tag1' +
+                       constants.LIST_SEPARATOR +
+                       'test_tag2' +
+                       constants.LIST_SEPARATOR +
+                       'test_tag3')
+        output = console.sanitize_tags_input(input_value)
         self.assertEqual(output, expected_value)
-        
-    def test_padded_tag_list(self):
+    
+    def test_padded_tag(self):
         console = Console()
         
-        expected_value = ('test1', 'test2', 'test3')
+        expected_value = ('test_tag1','test_tag2','test_tag3')
         
-        output = console.sanitize_tags_input(' test1, test2, test3')
+        input_value = (' test_tag1' +
+                       constants.LIST_SEPARATOR +
+                       ' test_tag2' +
+                       constants.LIST_SEPARATOR +
+                       ' test_tag3')
+        
+        output = console.sanitize_tags_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_tags_input('test1 ,test2 ,test3 ')
+        input_value = ('test_tag1 ' +
+                       constants.LIST_SEPARATOR +
+                       'test_tag2 ' +
+                       constants.LIST_SEPARATOR +
+                       'test_tag3 ')
+        
+        output = console.sanitize_tags_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_tags_input(' test1 , test2 , test3 ')
+        input_value = (' test_tag1 ' +
+                       constants.LIST_SEPARATOR +
+                       ' test_tag2 ' +
+                       constants.LIST_SEPARATOR +
+                       ' test_tag3 ')
+        
+        output = console.sanitize_tags_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_empty(self):
@@ -527,53 +602,66 @@ class TestSanitizeTagsInput(unittest.TestCase):
     def test_none(self):
         console = Console()
         self.assertRaises(ValueError, console.sanitize_tags_input, None)
-        
-class TestSanitizeFileExtensionsInput(unittest.TestCase):
+
+class TestSanitizeFileExtensionInput(unittest.TestCase):
     
     def test_file_extension(self):
         console = Console()
         
-        expected_value = ('ext',)
-        
-        output = console.sanitize_file_extensions_input('ext')
+        expected_value = 'ext'
+        input_value = 'ext'
+        output = console.sanitize_file_extension_input(input_value)
         self.assertEqual(output, expected_value)
     
-    def test_file_extension_leading_period(self):
+    def test_leading_period(self):
         console = Console()
         
-        expected_value = ('ext',)
-        
-        output = console.sanitize_file_extensions_input('.ext')
+        expected_value = 'ext'
+        input_value = '.ext'
+        output = console.sanitize_file_extension_input(input_value)
         self.assertEqual(output, expected_value)
     
-    def test_padded_file_extension(self):
+    def test_padded(self):
         console = Console()
         
-        expected_value = ('ext',)
+        expected_value = 'ext'
         
-        output = console.sanitize_file_extensions_input('ext ')
+        input_value = 'ext '
+        output = console.sanitize_file_extension_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_file_extensions_input(' ext')
+        input_value = ' ext'
+        output = console.sanitize_file_extension_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_file_extensions_input(' ext ')
+        input_value = ' ext '
+        output = console.sanitize_file_extension_input(input_value)
         self.assertEqual(output, expected_value)
+        
+    def test_empty(self):
+        console = Console()
+        self.assertRaises(InputError, console.sanitize_file_extension_input, '')
+    
+    def test_none(self):
+        console = Console()
+        self.assertRaises(ValueError, console.sanitize_file_extension_input, None)
+        
+class TestSanitizeFileExtensionsInput(unittest.TestCase):
     
     def test_file_extension_list(self):
         console = Console()
         
         expected_value = ('ext1', 'ext2', 'ext3')
-        
-        output = console.sanitize_file_extensions_input('ext1,ext2,ext3')
+        input_value = 'ext1' + constants.LIST_SEPARATOR + 'ext2' + constants.LIST_SEPARATOR + 'ext3'
+        output = console.sanitize_file_extensions_input(input_value)
         self.assertEqual(output, expected_value)
         
     def test_file_extension_list_leading_period(self):
         console = Console()
         
         expected_value = ('ext1', 'ext2', 'ext3')
-        
-        output = console.sanitize_file_extensions_input('.ext1,.ext2,.ext3')
+        input_value = '.ext1' + constants.LIST_SEPARATOR + '.ext2' + constants.LIST_SEPARATOR + '.ext3'
+        output = console.sanitize_file_extensions_input(input_value)
         self.assertEqual(output, expected_value)
         
     def test_padded_file_extension_list(self):
@@ -581,13 +669,16 @@ class TestSanitizeFileExtensionsInput(unittest.TestCase):
         
         expected_value = ('ext1', 'ext2', 'ext3')
         
-        output = console.sanitize_file_extensions_input(' ext1, ext2, ext3')
+        input_value = ' ext1' + constants.LIST_SEPARATOR + ' ext2' + constants.LIST_SEPARATOR + ' ext3'
+        output = console.sanitize_file_extensions_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_file_extensions_input('ext1 ,ext2 ,ext3 ')
+        input_value = 'ext1 ' + constants.LIST_SEPARATOR + 'ext2 ' + constants.LIST_SEPARATOR + 'ext3 '
+        output = console.sanitize_file_extensions_input(input_value)
         self.assertEqual(output, expected_value)
         
-        output = console.sanitize_file_extensions_input(' ext1 , ext2 , ext3 ')
+        input_value = ' ext1 ' + constants.LIST_SEPARATOR + ' ext2 ' + constants.LIST_SEPARATOR + ' ext3 '
+        output = console.sanitize_file_extensions_input(input_value)
         self.assertEqual(output, expected_value)
     
     def test_empty(self):
@@ -609,7 +700,7 @@ class TestSanitizeTitleInput(unittest.TestCase):
         output = console.sanitize_title_input(input_value)
         self.assertEqual(output, expected_value)
     
-    def test_padded_title(self):
+    def test_padded(self):
         console = Console()
         
         expected_value = 'Title'
