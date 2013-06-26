@@ -143,30 +143,30 @@ class TestCheckinCommand(unittest.TestCase):
         shutil.rmtree(cls.test_temp_folder)
     
     def setUp(self):
-        self.test_temp_file1 = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
-        self.test_temp_file2 = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
-        self.test_temp_file3 = tempfile.NamedTemporaryFile(suffix='.txt', delete=False)
+        test_temp_file1, self.test_temp_file1_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file2, self.test_temp_file2_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file3, self.test_temp_file3_path = tempfile.mkstemp(suffix='.txt', text=True)
         
-        self.test_temp_file1.close()
-        self.test_temp_file2.close()
-        self.test_temp_file3.close()
+        os.close(test_temp_file1)
+        os.close(test_temp_file2)
+        os.close(test_temp_file3)
     
     def tearDown(self):
-        os.remove(self.test_temp_file1.name)
-        os.remove(self.test_temp_file2.name)
-        os.remove(self.test_temp_file3.name)
+        os.remove(self.test_temp_file1_path)
+        os.remove(self.test_temp_file2_path)
+        os.remove(self.test_temp_file3_path)
         
     def test_preset_catalog(self):
         console = Console()
            
         console.do_catalog(self.test_catalog_path)
            
-        input_value = ('%s') % self.test_temp_file1.name
+        input_value = ('%s') % self.test_temp_file1_path
         catalog_input = input
         file_paths_input = input
         title_input = lambda title_input: "Test Temp File1"
-        expected_original_path = os.path.dirname(self.test_temp_file1.name)
-        expected_original_name = os.path.basename(self.test_temp_file1.name)
+        expected_original_path = os.path.dirname(self.test_temp_file1_path)
+        expected_original_name = os.path.basename(self.test_temp_file1_path)
         expected_title = "Test Temp File1"
            
         console.do_checkin(input_value, catalog_input, file_paths_input, title_input)
@@ -184,12 +184,15 @@ class TestCheckinCommand(unittest.TestCase):
     def test_catalog_argument(self):
         console = Console()
           
-        input_value = ('%s ' + constants.COMMAND_SHORT_PREFIX + constants.CATALOG_ARGUMENT_SHORT_NAME + ' %s') % (self.test_temp_file1.name, self.test_catalog_path)
+        input_value = ('%s ' + 
+                       constants.COMMAND_SHORT_PREFIX + 
+                       constants.CATALOG_ARGUMENT_SHORT_NAME + 
+                       ' %s') % (self.test_temp_file1_path, self.test_catalog_path)
         catalog_input = input
         file_paths_input = input
         title_input = lambda title_input: "Test Temp File1"
-        expected_original_path = os.path.dirname(self.test_temp_file1.name)
-        expected_original_name = os.path.basename(self.test_temp_file1.name)
+        expected_original_path = os.path.dirname(self.test_temp_file1_path)
+        expected_original_name = os.path.basename(self.test_temp_file1_path)
         expected_title = "Test Temp File1"
           
         console.do_checkin(input_value, catalog_input, file_paths_input, title_input)
@@ -211,10 +214,10 @@ class TestCheckinCommand(unittest.TestCase):
           
         input_value = ''
         catalog_input = input
-        file_paths_input = lambda file_path_input: self.test_temp_file1.name
+        file_paths_input = lambda file_path_input: self.test_temp_file1_path
         title_input = lambda title_input: "Test Temp File1"
-        expected_original_path = os.path.dirname(self.test_temp_file1.name)
-        expected_original_name = os.path.basename(self.test_temp_file1.name)
+        expected_original_path = os.path.dirname(self.test_temp_file1_path)
+        expected_original_name = os.path.basename(self.test_temp_file1_path)
         expected_title = "Test Temp File1"
           
         console.do_checkin(input_value, catalog_input, file_paths_input, title_input)
@@ -234,12 +237,19 @@ class TestCheckinCommand(unittest.TestCase):
         
         console.do_catalog(self.test_catalog_path)
         
-        input_value = ('%s' + constants.LIST_SEPARATOR + '%s' + constants.LIST_SEPARATOR + '%s') % (self.test_temp_file1.name, self.test_temp_file2.name, self.test_temp_file3.name)
+        input_value = ('%s' + 
+                       constants.LIST_SEPARATOR + 
+                       '%s' + 
+                       constants.LIST_SEPARATOR + 
+                       '%s') % (
+                                self.test_temp_file1_path, 
+                                self.test_temp_file2_path, 
+                                self.test_temp_file3_path)
         catalog_input = input
-        file_paths_input = lambda file_path_input: self.test_temp_file1.name
+        file_paths_input = lambda file_path_input: self.test_temp_file1_path
         title_input = lambda title_input: "Test Title"
-        expected_original_path = os.path.dirname(self.test_temp_file3.name)
-        expected_original_name = os.path.basename(self.test_temp_file3.name)
+        expected_original_path = os.path.dirname(self.test_temp_file3_path)
+        expected_original_name = os.path.basename(self.test_temp_file3_path)
         expected_title = "Test Title"
          
         console.do_checkin(input_value, catalog_input, file_paths_input, title_input)

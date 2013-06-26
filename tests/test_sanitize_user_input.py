@@ -288,8 +288,8 @@ class TestSanitizeCatalogPathInput(unittest.TestCase):
 class TestSanitizeFilePathInput(unittest.TestCase):
     
     def setUp(self):
-        self.test_temp_file, self.test_temp_file_path = tempfile.mkstemp(suffix='.txt', text=True)
-        os.close(self.test_temp_file)
+        test_temp_file, self.test_temp_file_path = tempfile.mkstemp(suffix='.txt', text=True)
+        os.close(test_temp_file)
     
     def tearDown(self):
         os.remove(self.test_temp_file_path)
@@ -338,13 +338,13 @@ class TestSanitizeFilePathInput(unittest.TestCase):
 class TestSanitizeFilePathsInput(unittest.TestCase):
     
     def setUp(self):
-        self.test_temp_file1, self.test_temp_file1_path = tempfile.mkstemp(suffix='.txt', text=True)
-        self.test_temp_file2, self.test_temp_file2_path = tempfile.mkstemp(suffix='.txt', text=True)
-        self.test_temp_file3, self.test_temp_file3_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file1, self.test_temp_file1_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file2, self.test_temp_file2_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file3, self.test_temp_file3_path = tempfile.mkstemp(suffix='.txt', text=True)
         
-        os.close(self.test_temp_file1)
-        os.close(self.test_temp_file2)
-        os.close(self.test_temp_file3)
+        os.close(test_temp_file1)
+        os.close(test_temp_file2)
+        os.close(test_temp_file3)
     
     def tearDown(self):
         os.remove(self.test_temp_file1_path)
