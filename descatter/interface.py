@@ -1,5 +1,7 @@
 from prettytable import PrettyTable
 
+from catalog import CatalogError
+
 import argparse
 import cmd
 import os 
@@ -200,14 +202,14 @@ class Console(cmd.Cmd):
         print("Please specify the ID for the catalog file")
         user_input = self.prompt_generic('ID', input_method)
         
-        return self.sanitize_catalog_file_id(user_input)
+        return self.sanitize_catalog_file_id_input(user_input)
         
     def prompt_catalog_file_ids(self, input_method):
         
         print("Please specify the ID(s) for the catalog file(s)")
         user_input = self.prompt_generic('ID(s)', input_method)
     
-        return self.sanitize_catalog_file_ids(user_input)
+        return self.sanitize_catalog_file_ids_input(user_input)
 
     def prompt_tags(self, input_method):
         
@@ -347,15 +349,14 @@ class Console(cmd.Cmd):
         
         return working_catalog
     
-    def get_catalog_file_ids(self, args):
+    def get_catalog_file_ids(self, args, input_method):
         
         catalog_file_ids = args[constants.FIRST_ARGUMENT_LONG_NAME]
             
         if catalog_file_ids:
-            catalog_file_ids = catalog_file_ids[0]
-            catalog_file_ids = self.sanitize_catalog_file_ids_input(catalog_file_ids)
+            catalog_file_ids = self.sanitize_catalog_file_ids_input(catalog_file_ids[0])
         elif self.current_working_file is None:
-            catalog_file_ids = self.prompt_catalog_file_ids()
+            catalog_file_ids = self.prompt_catalog_file_ids(input_method)
         else:
             catalog_file_ids = (self.current_working_file.id,)
         
@@ -791,19 +792,30 @@ class Console(cmd.Cmd):
         except InputError as error:
             print(str(error))
     
-    def do_checkout(self, line):
+    def do_checkout(self, line, catalog_input=input, file_ids_input=input):
         """ Copies a catalog file to its original path and name in the file system """
         
-        args = self.get_args(line)    
-                                    
-        if self.get_working_catalog(args):
-            last_checkout_file = None
+        try:
+            args = self.get_args(line)                      
+            catalog = self.get_working_catalog(args, catalog_input)
+            checked_out_files = []
+                
+            for catalog_file_id in self.get_catalog_file_ids(args, file_ids_input):
+                checked_out_file = catalog.checkout(catalog_file_id)
+                    
+                if checked_out_file is not None:
+                    checked_out_files.append(checked_out_file)
             
-            for catalog_file_id in self.get_catalog_file_ids(args):
-                last_checkout_file = self.checkout_file(catalog_file_id)
-            
-            if last_checkout_file is not None:
-                self.set_cwf(last_checkout_file)
+            if checked_out_files:
+                verbose = args[constants.VERBOSE_ARGUMENT_LONG_NAME]
+                    
+                print("Files successfully checked in to '%s' as:" % catalog.name)    
+                print(self.create_catalog_files_table(checked_out_files, verbose))
+                self.set_current_working_file(checked_out_files[-1])
+        except InputError as error:
+            print(str(error))
+        except CatalogError as error:
+            print(str(error))
     
     def do_find(self, line):
         """ Finds files based on specified tags. """

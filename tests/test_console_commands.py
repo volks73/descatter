@@ -1,4 +1,6 @@
 from interface import Console
+from interface import InputError
+from catalog import CatalogError
 
 import unittest
 import tempfile
@@ -263,3 +265,129 @@ class TestCheckinCommand(unittest.TestCase):
         self.assertIsNotNone(output_catalog_file.content_path)
         self.assertTrue(output_catalog_file.content_name)
         self.assertTrue(output_catalog_file.content_path)
+
+class TestCheckoutCommand(unittest.TestCase):             
+    
+    def setUp(self):
+        self.test_temp_folder = tempfile.mkdtemp()
+        self.test_catalog_path = os.path.join(self.test_temp_folder, "Checkout_Test_Catalog")
+        self.test_catalog = catalog.create(self.test_catalog_path)
+        
+        test_temp_file1, self.test_temp_file1_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file2, self.test_temp_file2_path = tempfile.mkstemp(suffix='.txt', text=True)
+        test_temp_file3, self.test_temp_file3_path = tempfile.mkstemp(suffix='.txt', text=True)
+        
+        os.close(test_temp_file1)
+        os.close(test_temp_file2)
+        os.close(test_temp_file3)
+        
+        self.test_temp_file1 = self.test_catalog.checkin(self.test_temp_file1_path)
+        self.test_temp_file2 = self.test_catalog.checkin(self.test_temp_file2_path)
+        self.test_temp_file3 = self.test_catalog.checkin(self.test_temp_file3_path)
+        
+        os.remove(self.test_temp_file1_path)
+        os.remove(self.test_temp_file2_path)
+        os.remove(self.test_temp_file3_path)
+    
+    def tearDown(self):
+        self.test_catalog.session.close_all()
+        shutil.rmtree(self.test_temp_folder)
+        
+    def test_preset_catalog(self):
+        console = Console()
+           
+        console.do_catalog(self.test_catalog_path)
+           
+        input_value = '1'
+        catalog_input = input
+        file_ids_input = input
+           
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))
+         
+    def test_catalog_argument(self):
+        console = Console()
+          
+        input_value = ('1 ' + 
+                       constants.COMMAND_SHORT_PREFIX + 
+                       constants.CATALOG_ARGUMENT_SHORT_NAME + 
+                       ' %s') % self.test_catalog_path
+        catalog_input = input
+        file_ids_input = input
+          
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))
+    
+    def test_file_id(self):
+        console = Console()
+         
+        console.do_catalog(self.test_catalog_path) 
+          
+        input_value = '1'
+        catalog_input = input
+        file_ids_input = lambda file_path_input: self.test_temp_file1_path
+          
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))
+        
+    def test_padded_file_id(self):
+        console = Console()
+         
+        console.do_catalog(self.test_catalog_path) 
+          
+        input_value = ' 1 '
+        catalog_input = input
+        file_ids_input = lambda file_path_input: self.test_temp_file1_path
+          
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))        
+        
+    def test_empty(self):
+        console = Console()
+         
+        console.do_catalog(self.test_catalog_path) 
+          
+        input_value = ''
+        catalog_input = input
+        file_ids_input = lambda file_path_input: self.test_temp_file1_path
+          
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))
+    
+    def test_no_file_found(self):
+        console = Console()
+        
+        console.do_catalog(self.test_catalog_path) 
+          
+        input_value = '123456789'
+        catalog_input = input
+        file_ids_input = input
+        self.assertRaises(CatalogError, console.do_checkout, input_value)
+    
+    def test_file_id_list(self):
+        console = Console()
+        
+        console.do_catalog(self.test_catalog_path)
+        
+        input_value = '1' + constants.LIST_SEPARATOR + '2' + constants.LIST_SEPARATOR + '3'
+        catalog_input = input
+        file_ids_input = input
+        
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))
+        self.assertTrue(os.path.exists(self.test_temp_file2_path))
+        self.assertTrue(os.path.exists(self.test_temp_file3_path))
+        
+    def test_padded_file_id_list(self):
+        console = Console()
+        
+        console.do_catalog(self.test_catalog_path)
+        
+        input_value = ' 1 ' + constants.LIST_SEPARATOR + ' 2 ' + constants.LIST_SEPARATOR + ' 3 '
+        catalog_input = input
+        file_ids_input = input
+        
+        console.do_checkout(input_value, catalog_input, file_ids_input)
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))
+        self.assertTrue(os.path.exists(self.test_temp_file2_path))
+        self.assertTrue(os.path.exists(self.test_temp_file3_path))

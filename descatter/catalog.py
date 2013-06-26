@@ -157,21 +157,26 @@ class Catalog(object):
         
         return catalog_file
     
-    def checkout(self, catalog_file, dst_path=None):
+    def checkout(self, catalog_file_id, dst_path=None):
         
-        if dst_path is None:
-            dst_path = catalog_file.original_path
+        catalog_file = self.file(catalog_file_id)
+        
+        if catalog_file:
+            if dst_path is None:
+                dst_path = catalog_file.original_path
+                
+            checkout_path = os.path.join(dst_path, catalog_file.original_name)
+            file_content_path = os.path.join(catalog_file.content_path, catalog_file.content_name)
+            src_path = os.path.join(self.content_path, file_content_path)
             
-        checkout_path = os.path.join(dst_path, catalog_file.original_name)
-        file_content_path = os.path.join(catalog_file.content_path, catalog_file.content_name)
-        src_path = os.path.join(self.content_path, file_content_path)
-        
-        if not os.path.isdir(dst_path):
-            os.makedirs(dst_path)
-        
-        shutil.copyfile(src_path, checkout_path)
-        
-        return catalog_file
+            if not os.path.isdir(dst_path):
+                os.makedirs(dst_path)
+            
+            shutil.copyfile(src_path, checkout_path)
+            
+            return catalog_file
+        else:
+            raise CatalogError("No file exists with the specified ID")
     
     def files(self, order_by=database.File.id):
         
