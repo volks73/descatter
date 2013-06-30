@@ -270,7 +270,6 @@ class Console(cmd.Cmd):
         catalog_path = self.sanitize_folder_path_input(user_input)
            
         if os.path.isdir(catalog_path):
-            
             if catalog.is_catalog(catalog_path):
                 return catalog_path
             else:
@@ -295,14 +294,17 @@ class Console(cmd.Cmd):
     def sanitize_catalog_file_ids_input(self, user_input):
         
         catalog_file_ids = self.sanitize_user_input(user_input).split(constants.LIST_SEPARATOR)
-            
-        return tuple([self.sanitize_catalog_file_id_input(catalog_file) for catalog_file in catalog_file_ids])
+        
+        return tuple([self.sanitize_catalog_file_id_input(catalog_file_id) for catalog_file_id in catalog_file_ids])
     
     def sanitize_catalog_file_id_input(self, user_input):
         
-        # TODO: Add check for id in database
+        catalog_file_id = self.sanitize_user_input(user_input)
         
-        return self.sanitize_user_input(user_input)
+        if re.search('\D', catalog_file_id):
+            raise InputError("Catalog file ID must contain only integers")
+        else:
+            return catalog_file_id
 
     def sanitize_tag_input(self, user_input):
         
@@ -812,8 +814,6 @@ class Console(cmd.Cmd):
                 print("Files successfully checked in to '%s' as:" % catalog.name)    
                 print(self.create_catalog_files_table(checked_out_files, verbose))
                 self.set_current_working_file(checked_out_files[-1])
-        except InputError as error:
-            print(str(error))
         except CatalogError as error:
             print(str(error))
     

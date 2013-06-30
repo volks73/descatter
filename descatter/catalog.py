@@ -150,7 +150,7 @@ class Catalog(object):
             # TODO: Update file checkin log. The checkin log will be a csv file with checkin date/time, original path, and content path located in the logs folder of the catalog.
             # TODO: Add metadata file creation
         else:
-            raise KeyError("Mapping does not exist")
+            raise CatalogError("Unknown File extension, cannot checkin file")
         
         self.session.add(catalog_file) 
         self.session.commit()
@@ -176,7 +176,7 @@ class Catalog(object):
             
             return catalog_file
         else:
-            raise CatalogError("No file exists with the specified ID")
+            raise CatalogError("No file exists with the specified ID exists within the catalog")
     
     def files(self, order_by=database.File.id):
         

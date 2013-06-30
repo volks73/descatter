@@ -12,16 +12,14 @@ import catalog
 
 class TestCatalogCommand(unittest.TestCase):
     
-    @classmethod
-    def setUpClass(cls):
-        cls.test_temp_folder = tempfile.mkdtemp()
-        cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Catalog_Test_Catalog")
-        cls.test_catalog = catalog.create(cls.test_catalog_path)
+    def setUp(self):
+        self.test_temp_folder = tempfile.mkdtemp()
+        self.test_catalog_path = os.path.join(self.test_temp_folder, "Catalog_Test_Catalog")
+        self.test_catalog = catalog.create(self.test_catalog_path)
     
-    @classmethod
-    def tearDownClass(cls):             
-        cls.test_catalog.session.close_all()
-        shutil.rmtree(cls.test_temp_folder)
+    def tearDown(self):             
+        self.test_catalog.session.close_all()
+        shutil.rmtree(self.test_temp_folder)
     
     def test_input(self):
         console = Console()
@@ -132,19 +130,12 @@ class TestDestroyCommand(unittest.TestCase):
         self.assertFalse(os.path.exists(self.test_catalog_path))
 
 class TestCheckinCommand(unittest.TestCase):
-    
-    @classmethod
-    def setUpClass(cls):
-        cls.test_temp_folder = tempfile.mkdtemp()
-        cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Checkin_Test_Catalog")
-        cls.test_catalog = catalog.create(cls.test_catalog_path)
-    
-    @classmethod
-    def tearDownClass(cls):
-        cls.test_catalog.session.close_all()
-        shutil.rmtree(cls.test_temp_folder)
-    
+        
     def setUp(self):
+        self.test_temp_folder = tempfile.mkdtemp()
+        self.test_catalog_path = os.path.join(self.test_temp_folder, "Checkin_Test_Catalog")
+        self.test_catalog = catalog.create(self.test_catalog_path)
+        
         test_temp_file1, self.test_temp_file1_path = tempfile.mkstemp(suffix='.txt', text=True)
         test_temp_file2, self.test_temp_file2_path = tempfile.mkstemp(suffix='.txt', text=True)
         test_temp_file3, self.test_temp_file3_path = tempfile.mkstemp(suffix='.txt', text=True)
@@ -154,6 +145,9 @@ class TestCheckinCommand(unittest.TestCase):
         os.close(test_temp_file3)
     
     def tearDown(self):
+        self.test_catalog.session.close_all()
+        shutil.rmtree(self.test_temp_folder)
+        
         os.remove(self.test_temp_file1_path)
         os.remove(self.test_temp_file2_path)
         os.remove(self.test_temp_file3_path)
@@ -293,12 +287,21 @@ class TestCheckoutCommand(unittest.TestCase):
         self.test_catalog.session.close_all()
         shutil.rmtree(self.test_temp_folder)
         
+        if os.path.exists(self.test_temp_file1_path):
+            os.remove(self.test_temp_file1_path)
+        
+        if os.path.exists(self.test_temp_file2_path):
+            os.remove(self.test_temp_file2_path)
+            
+        if os.path.exists(self.test_temp_file3_path):
+            os.remove(self.test_temp_file3_path)
+        
     def test_preset_catalog(self):
         console = Console()
            
         console.do_catalog(self.test_catalog_path)
            
-        input_value = '1'
+        input_value = '%s' % self.test_temp_file1.id
         catalog_input = input
         file_ids_input = input
            
@@ -308,10 +311,10 @@ class TestCheckoutCommand(unittest.TestCase):
     def test_catalog_argument(self):
         console = Console()
           
-        input_value = ('1 ' + 
+        input_value = ('%s ' + 
                        constants.COMMAND_SHORT_PREFIX + 
                        constants.CATALOG_ARGUMENT_SHORT_NAME + 
-                       ' %s') % self.test_catalog_path
+                       ' %s') % (self.test_temp_file1.id, self.test_catalog_path)
         catalog_input = input
         file_ids_input = input
           
@@ -323,9 +326,9 @@ class TestCheckoutCommand(unittest.TestCase):
          
         console.do_catalog(self.test_catalog_path) 
           
-        input_value = '1'
+        input_value = '%s' % self.test_temp_file1.id
         catalog_input = input
-        file_ids_input = lambda file_path_input: self.test_temp_file1_path
+        file_ids_input = lambda file_path_input: "%s" % self.test_temp_file1_path
           
         console.do_checkout(input_value, catalog_input, file_ids_input)
         self.assertTrue(os.path.exists(self.test_temp_file1_path))
@@ -335,13 +338,22 @@ class TestCheckoutCommand(unittest.TestCase):
          
         console.do_catalog(self.test_catalog_path) 
           
-        input_value = ' 1 '
+        input_value = ' %s ' % self.test_temp_file1.id
         catalog_input = input
-        file_ids_input = lambda file_path_input: self.test_temp_file1_path
+        file_ids_input = input
           
         console.do_checkout(input_value, catalog_input, file_ids_input)
-        self.assertTrue(os.path.exists(self.test_temp_file1_path))        
+        self.assertTrue(os.path.exists(self.test_temp_file1_path))    
+    
+    def test_no_file_found(self):
+        console = Console()
         
+        console.do_catalog(self.test_catalog_path)
+        
+        input_value = '123456789'
+        catalog_input = input
+        file_ids_input = input
+    
     def test_empty(self):
         console = Console()
          
@@ -349,41 +361,21 @@ class TestCheckoutCommand(unittest.TestCase):
           
         input_value = ''
         catalog_input = input
-        file_ids_input = lambda file_path_input: self.test_temp_file1_path
+        file_ids_input = lambda file_path_input: '%s' % self.test_temp_file1.id
           
         console.do_checkout(input_value, catalog_input, file_ids_input)
         self.assertTrue(os.path.exists(self.test_temp_file1_path))
-    
-    def test_no_file_found(self):
-        console = Console()
-        
-        console.do_catalog(self.test_catalog_path) 
-          
-        input_value = '123456789'
-        catalog_input = input
-        file_ids_input = input
-        self.assertRaises(CatalogError, console.do_checkout, input_value)
     
     def test_file_id_list(self):
         console = Console()
         
         console.do_catalog(self.test_catalog_path)
         
-        input_value = '1' + constants.LIST_SEPARATOR + '2' + constants.LIST_SEPARATOR + '3'
-        catalog_input = input
-        file_ids_input = input
-        
-        console.do_checkout(input_value, catalog_input, file_ids_input)
-        self.assertTrue(os.path.exists(self.test_temp_file1_path))
-        self.assertTrue(os.path.exists(self.test_temp_file2_path))
-        self.assertTrue(os.path.exists(self.test_temp_file3_path))
-        
-    def test_padded_file_id_list(self):
-        console = Console()
-        
-        console.do_catalog(self.test_catalog_path)
-        
-        input_value = ' 1 ' + constants.LIST_SEPARATOR + ' 2 ' + constants.LIST_SEPARATOR + ' 3 '
+        input_value = ('%s' + 
+                       constants.LIST_SEPARATOR + 
+                       '%s' + 
+                       constants.LIST_SEPARATOR + 
+                       '%s') % (self.test_temp_file1.id, self.test_temp_file2.id, self.test_temp_file3.id)
         catalog_input = input
         file_ids_input = input
         

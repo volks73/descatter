@@ -233,16 +233,14 @@ class TestSanitizeFolderPathInput(unittest.TestCase):
 
 class TestSanitizeCatalogPathInput(unittest.TestCase):
     
-    @classmethod
-    def setUpClass(cls):
-        cls.test_temp_folder = tempfile.mkdtemp()
-        cls.test_catalog_path = os.path.join(cls.test_temp_folder, "Sanitize_Catalog_Path_Input_Test_Catalog")
-        cls.test_catalog = catalog.create(cls.test_catalog_path)
+    def setUp(self):
+        self.test_temp_folder = tempfile.mkdtemp()
+        self.test_catalog_path = os.path.join(self.test_temp_folder, "Sanitize_Catalog_Path_Input_Test_Catalog")
+        self.test_catalog = catalog.create(self.test_catalog_path)
     
-    @classmethod
-    def tearDownClass(cls):
-        cls.test_catalog.session.close_all()
-        shutil.rmtree(cls.test_temp_folder)
+    def tearDown(self):
+        self.test_catalog.session.close_all()
+        shutil.rmtree(self.test_temp_folder)
     
     def test_input(self):
         console = Console()
@@ -462,6 +460,12 @@ class TestSanitizeCatalogFileIdInput(unittest.TestCase):
         input_value = ' 1 '
         output = console.sanitize_catalog_file_id_input(input_value)
         self.assertEqual(output, expected_value)
+
+    def test_non_integer(self):
+        console = Console()
+        
+        input_value = "test value"
+        self.assertRaises(InputError, console.sanitize_catalog_file_id_input, input_value)
 
     def test_empty(self):
         console = Console()
