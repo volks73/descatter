@@ -260,6 +260,62 @@ class Catalog(object):
     # TODO: Add file_count method
     # TODO: Add tag_count method
 
+class ContentSchema(object):                       
+    
+    def __init__(self, catalog):
+        
+        self.base_path = os.path.join(catalog.path, constants.CONTENT_SCHEMA_FILE_NAME)
+    
+    def read(self):
+        pass
+    
+    # TODO: Add simplified element walk with XPath for recursive find of 'content-name'
+    
+    def _content_path(self, catalog_file, element, content_path):
+        
+        folder_element = element.find(constants.FOLDER_TAG_NAME)       
+        folder_name = folder_element.get(constants.NAME_ATTRIBUTE_NAME)
+        content_path = os.path.join(content_path, folder_name)
+        content_name_element = folder_element.find(constants.CONTENT_NAME_TAG_NAME)
+        
+        # TODO: Add check for folder element prior to recursive call to find content-name
+        
+        if content_name_element is None:
+            content_path = self._content_path(catalog_file, folder_element, content_path)
+        else:
+            variable_attribute_value = content_name_element.get(constants.VARIABLE_ATTRIBUTE_NAME)
+            content_name = getattr(catalog_file, constants.CONTENT_SCHEMA_VARIABLES[variable_attribute_value])
+            content_path = os.path.join(content_path, content_name)
+            
+        return content_path
+    
+    def get_destination(self, catalog_file):
+        
+        destination_path = None
+        schema_document = etree.parse(self.schema_path)
+        destinations_element = schema_document.find(constants.DESTINATIONS_TAG_NAME)
+        use_attribute_value = destinations_element.get(constants.USE_ATTRIBUTE_NAME)
+        case_sensitive_attribute_value = destinations_element.get(constants.CASE_SENSITIVE_ATTRIBUTE_NAME)
+          
+        catalog_file_use_value = getattr(catalog_file, constants.CONTENT_SCHEMA_VARIABLES[use_attribute_value])
+            
+        if case_sensitive_attribute_value.lower() == 'false':
+            catalog_file_use_value = catalog_file_use_value.lower()
+            
+        destination_elements = destinations_element.findall(constants.DESTINATION_TAG_NAME)
+            
+        for destination_element in destination_elements:
+            match_attribute_value = destination_element.get(constants.MATCH_ATTRIBUTE_NAME)
+                
+            if match_attribute_value == '*' or match_attribute_value == catalog_file_use_value:
+                destination_path = self._content_path(catalog_file, destination_element, self.base_path)
+                break
+            
+        if destination_path is None:
+            raise CatalogError("A destination in the content folder could not be determined")
+        
+        return destination_path
+    
 class ContentMap(object):
     
     def __init__(self, catalog_path):   

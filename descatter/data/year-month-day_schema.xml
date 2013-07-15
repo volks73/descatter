@@ -1,33 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<content xmlns="descatter/2013/content_schema">
+<contentFolder xmlns="descatter/2013/content_schema">
 	<macros>
 		<macro name="checkin-year">
-			<date variable="checkin-timestamp">
+			<date variable="checkin-datestamp">
 				<date-part name="year"/>
 			</date>
 		</macro>
 		<macro name="checkin-month">
-			<date variable="checkin-timestamp">
+			<date variable="checkin-datestamp">
 				<date-part name="month" form="numeric-leading-zeros"/>
 			</date>
 		</macro>
 		<macro name="checkin-day">
-			<date variable="checkin-timestamp">
+			<date variable="checkin-datestamp">
 				<date-part name="day" form="numeric-leading-zeros"/>
 			</date>
 		</macro>
 	</macros>
-	<structure>
-		<folder name="checkin-year">
-			<folder name="checkin-month">
-				<folder name="checkin-day">
-					<extensions>
-						<extension name="*">
-							<file name="original-file-name"/>
-						</extension>
-					</extensions>
+	<destinations use="current-datetime" case-sensitive="false">
+		<desintation match="*">
+			<folder macro="checkin-year">
+				<folder macro="checkin-month">
+					<folder macro="checkin-day">
+						<file-name variable="original-file-name"/>
+					</folder>
 				</folder>
 			</folder>
-		</folder>
-	</structure>
-</content>
+		</desintation>
+	</destinations>
+</contentFolder>

@@ -81,7 +81,7 @@ CONTENT_NAME_HEADER_NAME = 'Content Name'
 ORIGINAL_PATH_HEADER_NAME = 'Original Path'
 ORIGINAL_NAME_HEADER_NAME = 'Original Name'
 
-# XML
+# Content Schema
 CONTENT_SCHEMA_FILE_NAME = 'content_schema.xml'
 DEFAULT_CONTENT_SCHEMA_FILE_NAME = 'content_type_schema.xml'
 CONTENT_SCHEMA_NAMESPACE = APPLICATION_NAME + '/2013/content_schema'
@@ -89,12 +89,33 @@ CONTENT_SCHEMA = '{%s}' % CONTENT_SCHEMA_NAMESPACE
 NAMESPACE_MAP = {None : CONTENT_SCHEMA_NAMESPACE}
 XML_ENCODING = 'UTF-8'
 CONTENT_FOLDER_TAG_NAME = CONTENT_SCHEMA + 'contentFolder'
+DESTINATIONS_TAG_NAME = CONTENT_SCHEMA + 'destinations'
+USE_ATTRIBUTE_NAME = 'use'
+CASE_SENSITIVE_ATTRIBUTE_NAME = 'case-sensitive'
+DESTINATION_TAG_NAME = CONTENT_SCHEMA + 'destination'
+MATCH_ATTRIBUTE_NAME = 'match'
 FOLDER_TAG_NAME = CONTENT_SCHEMA + 'folder'
+CONTENT_NAME_TAG_NAME = 'content-name'
+VARIABLE_ATTRIBUTE_NAME = 'variable'
 XMLNS_ATTRIBUTE_NAME = 'xmlns'
 NAME_ATTRIBUTE_NAME = 'name'
 ID_ATTRIBUTE_NAME = 'id'
 EXTENSIONS_TAG_NAME = CONTENT_SCHEMA + 'extensions'
 EXTENSION_TAG_NAME = CONTENT_SCHEMA + 'extension'
+
+CONTENT_SCHEMA_VARIABLES = {
+                            'file-extension' : 'extension',
+                            'file-name' : 'original_name',
+                            'file-path' : 'original_path',
+                            'file-size' : 'size',
+                            'file-count' : 'index',
+                            'file-total' : 'total',
+                            'date-modified' : 'date_modified',
+                            'date-created' : 'date_created',
+                            'date-accessed' : 'date_accessed',
+                            'current-datetime' : 'checkin_datestamp',
+                            'title' : 'title'
+                           }
 
 # Catalog folder structure
 CONTENT_FOLDER_NAME = 'content'
