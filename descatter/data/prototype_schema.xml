@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<contentFolder xmlns="descatter/2013/content_schema">
+	<info>
+		<title>Content Type</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			Files are placed in sub-folders based on their file extension. The structure follows the content type, or Internet Media Type for files.
+		</description>
+	</info>
+	<macros/>
+	<destinations use="file-extension" case-sensitive="false">
+		<destination match="doc">
+			<folder name="application">
+				<folder name="msword">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="docx">
+			<folder name="application">
+				<folder name="msword">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="xls">
+			<folder name="application">
+				<folder name="vnd.ms-excel">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="xlsx">
+			<folder name="application">
+				<folder name="vnd.ms-excel">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="ppt">
+			<folder name="application">
+				<folder name="vnd.ms-powerpoint">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="pptx">
+			<folder name="application">
+				<folder name="vnd.ms-powerpoint">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="mp3">
+			<folder name="audio">
+				<folder name="mp3">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>
+		</destination>
+		<destination match="mpeg3">
+			<folder name="audio">
+				<folder name="mp3">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>
+		</destination>
+		<destination match="jpeg">
+			<folder name="image">
+				<folder name="jpeg">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="jpg">
+			<folder name="image">
+				<folder name="jpeg">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="png">
+			<folder name="image">
+				<folder name="png">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="tiff">
+			<folder name="image">
+				<folder name="tiff">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="tif">
+			<folder name="image">
+				<folder name="tiff">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="txt">
+			<folder name="text">
+				<folder name="plain">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="md">
+			<folder name="text">
+				<folder name="x-markdown">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="css">
+			<folder name="text">
+				<folder name="css">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="csv">
+			<folder name="text">
+				<folder name="csv">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>
+		</destination>
+		<destination match="html">
+			<folder name="text">
+				<folder name="html">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="htm">
+			<folder name="text">
+				<folder name="html">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="xml">
+			<folder name="text">
+				<folder name="xml">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="avi">
+			<folder name="video">
+				<folder name="avi">
+					<content-name variable="file-name"/>
+				</folder>
+			</folder>	
+		</destination>
+	</destinations>
+</contentFolder>
