@@ -109,14 +109,20 @@ def is_catalog(catalog_path):
 
 def create_checkin_file(os_file_path, title=None):
     
+    file_name, file_extension = os.path.splitext(os_file_path)
+    file_name = os.path.basename(file_name)
+    file_extension = file_extension[1:].strip().lower() 
+    
     return {'file-path': os.path.dirname(os_file_path),
-            'file-name': os.path.basename(os_file_path),
-            'file-extension': os.path.splitext(os_file_path)[1][1:].strip().lower(),
+            'file-name': file_name,
+            'file-extension': file_extension,
             'file-size': os.path.getsize(os_file_path),
             'file-date-created': os.path.getctime(os_file_path),
             'file-date-modified': os.path.getmtime(os_file_path),
             'file-date-accessed': os.path.getatime(os_file_path),
-            'title': title}
+            'file-title': title,
+            'file-index': 1,
+            'file-count': 1}
     
 class Catalog(object):
     
