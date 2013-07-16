@@ -107,6 +107,17 @@ def is_catalog(catalog_path):
         
         return folder_structure_exists and content_schema_file_exists and tags_db_exists
 
+def create_checkin_file(os_file_path, title=None):
+    
+    return {'file-path': os.path.dirname(os_file_path),
+            'file-name': os.path.basename(os_file_path),
+            'file-extension': os.path.splitext(os_file_path)[1][1:].strip().lower(),
+            'file-size': os.path.getsize(os_file_path),
+            'file-date-created': os.path.getctime(os_file_path),
+            'file-date-modified': os.path.getmtime(os_file_path),
+            'file-date-accessed': os.path.getatime(os_file_path),
+            'title': title}
+    
 class Catalog(object):
     
     def __init__(self, path):
@@ -245,7 +256,7 @@ class Catalog(object):
         self.session.commit()
         
         return remove_tag
-    
+        
     def get_files_by_tags(self, tag_names):
         
         query = self.session.query(database.File)
@@ -262,59 +273,69 @@ class Catalog(object):
 
 class ContentSchema(object):                       
     
-    def __init__(self, catalog):
+    def __init__(self, schema_file_path):
         
-        self.base_path = os.path.join(catalog.path, constants.CONTENT_SCHEMA_FILE_NAME)
-    
-    def read(self):
-        pass
-    
-    # TODO: Add simplified element walk with XPath for recursive find of 'content-name'
-    
-    def _content_path(self, catalog_file, element, content_path):
+        self.schema_file_path = schema_file_path
+        self.root = etree.parse(self.schema_file_path).getroot() 
+               
+        self.get_use_attribute = etree.XPath(("//" + 
+                                              constants.CONTENT_SCHEMA_PREFIX + 
+                                              ":" + 
+                                              constants.DESTINATIONS_TAG_NAME + 
+                                              "/@" + 
+                                              constants.USE_ATTRIBUTE_NAME), 
+                                             namespaces=constants.XPATH_NAMESPACE)
         
-        folder_element = element.find(constants.FOLDER_TAG_NAME)       
-        folder_name = folder_element.get(constants.NAME_ATTRIBUTE_NAME)
-        content_path = os.path.join(content_path, folder_name)
-        content_name_element = folder_element.find(constants.CONTENT_NAME_TAG_NAME)
+        self.get_destination_element = etree.XPath(("//" +
+                                                    constants.CONTENT_SCHEMA_PREFIX +
+                                                    ":" +
+                                                    constants.DESTINATIONS_TAG_NAME +
+                                                    "/" +
+                                                    constants.CONTENT_SCHEMA_PREFIX +
+                                                    ":" +
+                                                    constants.DESTINATION_TAG_NAME +
+                                                    "[@" +
+                                                    constants.MATCH_ATTRIBUTE_NAME +
+                                                    "=$match]"), 
+                                                   namespaces=constants.XPATH_NAMESPACE)
         
-        # TODO: Add check for folder element prior to recursive call to find content-name
+        self.get_folder_names = etree.XPath(("//" +
+                                             constants.CONTENT_SCHEMA_PREFIX +
+                                             ":" +
+                                             constants.DESTINATIONS_TAG_NAME +
+                                             "/" +
+                                             constants.CONTENT_SCHEMA_PREFIX +
+                                             ":" +
+                                             constants.DESTINATION_TAG_NAME +
+                                             "[@" +
+                                             constants.MATCH_ATTRIBUTE_NAME +
+                                             "=$match]//" +
+                                             constants.CONTENT_SCHEMA_PREFIX +
+                                             ":" +
+                                             constants.FOLDER_TAG_NAME +
+                                             "/@" +
+                                             constants.NAME_ATTRIBUTE_NAME), 
+                                            namespaces=constants.XPATH_NAMESPACE)
         
-        if content_name_element is None:
-            content_path = self._content_path(catalog_file, folder_element, content_path)
+    def get_destination(self, checkin_file):
+        
+        use_variable = self.get_use_attribute(self.root)[0]
+        match_value = checkin_file[use_variable]
+        destination_element = self.get_destination_element(self.root, match=match_value)[0]
+        
+        if destination_element is None:
+            raise CatalogError("A destination could not be found for the checkin file")
         else:
-            variable_attribute_value = content_name_element.get(constants.VARIABLE_ATTRIBUTE_NAME)
-            content_name = getattr(catalog_file, constants.CONTENT_SCHEMA_VARIABLES[variable_attribute_value])
-            content_path = os.path.join(content_path, content_name)
+            destination_file_path = self.content_folder_path = os.path.join(os.path.dirname(self.schema_file_path), constants.CONTENT_FOLDER_NAME)
+            folder_names = self.get_folder_names(self.root, match=match_value)
             
-        return content_path
-    
-    def get_destination(self, catalog_file):
-        
-        destination_path = None
-        schema_document = etree.parse(self.schema_path)
-        destinations_element = schema_document.find(constants.DESTINATIONS_TAG_NAME)
-        use_attribute_value = destinations_element.get(constants.USE_ATTRIBUTE_NAME)
-        case_sensitive_attribute_value = destinations_element.get(constants.CASE_SENSITIVE_ATTRIBUTE_NAME)
-          
-        catalog_file_use_value = getattr(catalog_file, constants.CONTENT_SCHEMA_VARIABLES[use_attribute_value])
+            for folder_name in folder_names:
+                destination_file_path = os.path.join(destination_file_path, folder_name)
             
-        if case_sensitive_attribute_value.lower() == 'false':
-            catalog_file_use_value = catalog_file_use_value.lower()
+            # TODO: Add creation of unique, random folder name
+            # TODO: Add 'unique-random' macro parsing
             
-        destination_elements = destinations_element.findall(constants.DESTINATION_TAG_NAME)
-            
-        for destination_element in destination_elements:
-            match_attribute_value = destination_element.get(constants.MATCH_ATTRIBUTE_NAME)
-                
-            if match_attribute_value == '*' or match_attribute_value == catalog_file_use_value:
-                destination_path = self._content_path(catalog_file, destination_element, self.base_path)
-                break
-            
-        if destination_path is None:
-            raise CatalogError("A destination in the content folder could not be determined")
-        
-        return destination_path
+            return destination_file_path
     
 class ContentMap(object):
     
