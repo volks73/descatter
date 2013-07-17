@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<contentFolder xmlns="descatter/2013/content_schema/1.0">
+    <info>
+		<title>Test Organizing by YYYY, MM, DD Folder Structure</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A test and example schema for placing files in folders based on the year, month, and day they were added, or accessed by descatter.
+		</description>
+	</info>
+	<macros>
+		<macro name="year-folder">
+			<date variable="current-date">
+				<date-part name="year"/>
+			</date>
+		</macro>
+		<macro name="month-folder">
+			<date variable="current-date">
+				<date-part name="month" form="numeric-leading-zeros"/>
+			</date>
+		</macro>
+		<macro name="day-folder">
+			<date variable="current-date">
+				<date-part name="day" form="numeric-leading-zeros"/>
+			</date>
+		</macro>
+		<macro name="original-name">
+	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
+	       	<text variable="file-extension"/>    
+	    </macro>
+	    <macro name="metadata-name">
+	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
+	        <text variable="metadata-extension"/>    
+	    </macro>
+	</macros>
+	<destinations use="current-date">
+		<desintation match="*">
+			<folder macro="year-folder">
+				<folder macro="month-folder">
+					<folder macro="day-folder">
+					    <folder random="true">
+					    	<file macro="original-name"/>
+							<metadata macro="metadata-name" template="general.tpl"/>    
+					    </folder>						
+					</folder>
+				</folder>
+			</folder>
+		</desintation>
+	</destinations>
+</contentFolder>

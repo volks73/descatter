@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <contentFolder xmlns="descatter/2013/content_schema/1.0">
 	<info>
-		<title>File Content Type</title>
+		<title>Test Internet Content Type</title>
 		<author>
 			<name>Christopher R. Field</name>
 			<email>cfield2 at gmail dot com</email>
 		</author>
 		<description>
-			Files are placed in sub-folders based on their file extension. The structure follows the content type, or Internet Media Type for files.
+			A test schema for placing files based on file extension in a folder structure following the Internet Content Type, or MIME type. This is to be used for running unit tests.
 		</description>
 	</info>
 	<macros>
@@ -67,7 +67,7 @@
 		<destination match="docx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="msword-folder">
-				    <folder macro="unique-random-folder">
+				    <folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
@@ -77,7 +77,7 @@
 		<destination match="xls" condition="equals" case-sensitive="false">
 		    <folder macro="application-folder">
 				<folder macro="excel-folder">
-				    <folder macro="unique-random-folder">
+				    <folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="excel.tpl"/>
 				    </folder>
@@ -87,7 +87,7 @@
 		<destination match="xlsx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="excel-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
@@ -96,8 +96,8 @@
 		</destination>
 		<destination match="ppt" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
-				<folder name="powerpoint-folder">
-					<folder macro="unique-random-folder">
+				<folder macro="powerpoint-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="powerpoint.tpl"/>
 				    </folder>
@@ -105,19 +105,29 @@
 			</folder>	
 		</destination>
 		<destination match="pptx" condition="equals" case-sensitive="false">
-			<folder name="application">
-				<folder name="powerpoint-folder">
-					<folder macro="unique-random-folder">
+			<folder macro="application-folder">
+				<folder macro="powerpoint-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="powerpoint.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
+		<destination match="pdf" condition="equals" case-sensitive="false">
+			<folder macro="application-folder">
+				<folder value="pdf">
+					<folder random="true">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="pdf.tpl"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</destination>
 		<destination match="mp3" condition="equals" case-sensitive="false">
 			<folder macro="audio-folder">
-				<folder name="mp3">
-					<folder macro="unique-random-folder">
+				<folder value="mp3">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="audio.tpl"/>
 				    </folder>
@@ -127,7 +137,7 @@
 		<destination match="jpeg" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -137,7 +147,7 @@
 		<destination match="jpg" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -146,8 +156,8 @@
 		</destination>
 		<destination match="png" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
-				<folder name="png">
-					<folder macro="unique-random-folder">
+				<folder value="png">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -157,7 +167,7 @@
 		<destination match="tiff" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -167,7 +177,7 @@
 		<destination match="tif" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -176,8 +186,8 @@
 		</destination>
 		<destination match="txt" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
-				<folder name="plain">
-					<folder macro="unique-random-folder">
+				<folder value="plain">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="text.tpl"/>
 				    </folder>
@@ -186,8 +196,8 @@
 		</destination>
 		<destination match="md" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
-				<folder name="x-markdown">
-					<folder macro="unique-random-folder">
+				<folder value="x-markdown">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="text.tpl"/>
 				    </folder>
@@ -196,8 +206,8 @@
 		</destination>
 		<destination match="css" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
-				<folder name="css">
-					<folder macro="unique-random-folder">
+				<folder value="css">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -206,8 +216,8 @@
 		</destination>
 		<destination match="csv" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
-				<folder name="csv">
-					<folder macro="unique-random-folder">
+				<folder value="csv">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="data.tpl"/>
 				    </folder>
@@ -217,7 +227,7 @@
 		<destination match="html" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder macro="html-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -227,7 +237,7 @@
 		<destination match="htm" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder macro="html-folder">
-					<folder macro="unique-random-folder">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -236,8 +246,8 @@
 		</destination>
 		<destination match="xml" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
-				<folder name="xml">
-					<folder macro="unique-random-folder">
+				<folder value="xml">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -246,8 +256,8 @@
 		</destination>
 		<destination match="avi" condition="equals" case-sensitive="false">
 			<folder macro="video-folder">
-				<folder name="avi">
-					<folder macro="unique-random-folder">
+				<folder value="avi">
+					<folder random="true">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="video.tpl"/>
 				    </folder>
