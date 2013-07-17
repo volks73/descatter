@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<contentFolder xmlns="descatter/2013/content_schema">
+<contentFolder xmlns="descatter/2013/content_schema/1.0">
 	<info>
-		<title>Content Type</title>
+		<title>File Content Type</title>
 		<author>
 			<name>Christopher R. Field</name>
 			<email>cfield2 at gmail dot com</email>
@@ -12,7 +12,7 @@
 	</info>
 	<macros>
 	    <macro name="application-folder">
-	        <text value="application"/>
+	        <text value="Application"/>
 	    </macro>
 	    <macro name="msword-folder">
 	        <text value="msword"/>
@@ -24,10 +24,10 @@
 	        <text value="vnd.ms-powerpoint"/>
 	    </macro>
 	    <macro name="audio-folder">
-	        <text value="audio"/>
+	        <text value="Audio"/>
 	    </macro>
 	    <macro name="image-folder">
-	        <text value="image"/>
+	        <text value="Image"/>
 	    </macro>
 	  	<macro name="jpeg-folder">
 	  	    <text value="jpeg"/>
@@ -36,227 +36,220 @@
 	  	    <text value="tiff"/>
 	  	</macro>
 	    <macro name="text-folder">
-	        <text value="text"/>
+	        <text value="Text"/>
 	    </macro>
 	    <macro name="html-folder">
 	        <text value="html"/>
 	    </macro>
 	    <macro name="video-folder">
-	        <text value="video"/>
-	    </macro>
-	    <macro name="unique-random-folder">
-	        <text variable="temp-folder"/>
+	        <text value="Video"/>
 	    </macro>
 	    <macro name="original-name">
-	        <group>
-	        	<text variable="file-name" suffix="."/>
-	       		<text variable="file-extension"/>    
-	        </group>
+	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
+	       	<text variable="file-extension"/>    
 	    </macro>
 	    <macro name="metadata-name">
-	        <group>
-	        	<text variable="file-name" suffix="."/>
-	        	<text variable="metadata-extension"/>    
-	        </group>
+	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
+	        <text variable="metadata-extension"/>    
 	    </macro>
 	</macros>
-	<destinations use="file-extension" case-sensitive="false">
-		<destination match="doc" condition="equals">
+	<destinations use="file-extension">
+		<destination match="doc" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="msword-folder">
-				    <folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="word.tpl">
+				    <folder random="true">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="docx" condition="equals">
+		<destination match="docx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="msword-folder">
 				    <folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="word.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
 				</folder>
 			</folder>
 		</destination>
-		<destination match="xls" condition="equals">
+		<destination match="xls" condition="equals" case-sensitive="false">
 		    <folder macro="application-folder">
 				<folder macro="excel-folder">
 				    <folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="excel.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="excel.tpl"/>
 				    </folder>
 				</folder>
 			</folder>
 		</destination>
-		<destination match="xlsx" condition="equals">
+		<destination match="xlsx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="excel-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="word.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="ppt" condition="equals">
+		<destination match="ppt" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder name="powerpoint-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="powerpoint.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="powerpoint.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="pptx" condition="equals">
+		<destination match="pptx" condition="equals" case-sensitive="false">
 			<folder name="application">
 				<folder name="powerpoint-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="word.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="powerpoint.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="mp3" condition="equals">
+		<destination match="mp3" condition="equals" case-sensitive="false">
 			<folder macro="audio-folder">
 				<folder name="mp3">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="audio.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="audio.tpl"/>
 				    </folder>
 				</folder>
 			</folder>
 		</destination>
-		<destination match="jpeg" condition="equals">
+		<destination match="jpeg" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="image.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="jpg" condition="equals">
+		<destination match="jpg" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="image.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="png" condition="equals">
+		<destination match="png" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder name="png">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="image.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="tiff" condition="equals">
+		<destination match="tiff" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="image.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="tif" condition="equals">
+		<destination match="tif" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="image.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="txt" condition="equals">
+		<destination match="txt" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder name="plain">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="text.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="text.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="md" condition="equals">
+		<destination match="md" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder name="x-markdown">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="text.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="text.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="css" condition="equals">
+		<destination match="css" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder name="css">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="website.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="csv" condition="equals">
+		<destination match="csv" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder name="csv">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="data.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="data.tpl"/>
 				    </folder>
 				</folder>
 			</folder>
 		</destination>
-		<destination match="html" condition="equals">
+		<destination match="html" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder macro="html-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="website.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="htm" condition="equals">
+		<destination match="htm" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder macro="html-folder">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="website.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="xml" condition="equals">
+		<destination match="xml" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder name="xml">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	
 		</destination>
-		<destination match="avi" condition="equals">
+		<destination match="avi" condition="equals" case-sensitive="false">
 			<folder macro="video-folder">
 				<folder name="avi">
 					<folder macro="unique-random-folder">
-					    <file macro="original-name">
-					    <metadata macro="metadata-name" template="video.tpl">
+					    <file macro="original-name"/>
+					    <metadata macro="metadata-name" template="video.tpl"/>
 				    </folder>
 				</folder>
 			</folder>	

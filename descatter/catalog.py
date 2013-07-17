@@ -1,4 +1,5 @@
 from lxml import etree
+from datetime import datetime
 
 import os
 import tempfile
@@ -120,6 +121,7 @@ def create_checkin_file(os_file_path, title=None):
             'file-date-created': os.path.getctime(os_file_path),
             'file-date-modified': os.path.getmtime(os_file_path),
             'file-date-accessed': os.path.getatime(os_file_path),
+            'file-date-added': datetime.now(),
             'file-title': title,
             'file-index': 1,
             'file-count': 1}
@@ -279,55 +281,150 @@ class Catalog(object):
 
 class ContentSchema(object):                       
     
+    # XML    
+    PREFIX = 'ds'
+    NAMESPACE = 'descatter/2013/content_schema/1.0'
+    XPATH_NAMESPACE = {PREFIX: NAMESPACE}
+    
+    # Tags
+    INFO_TAG = 'info'
+    TITLE_TAG = 'title'
+    AUTHOR_TAG = 'author'
+    NAME_TAG = 'name'
+    EMAIL_TAG = 'email'
+    DESCRIPTION_TAG = 'description'
+    MACROS_TAG = 'macros'
+    MACRO_TAG = 'macro'
+    TEXT_TAG = 'text'
+    GROUP_TAG = 'group'
+    DESTINATIONS_TAG = 'destinations'
+    DESTINATION_TAG = 'destination'
+    FOLDER_TAG = 'folder'
+    FILE_TAG = 'file'
+    METADATA_TAG = 'metadata'
+    
+    # Attributes
+    CASE_ATTRIBUTE = 'case'
+    CASE_SENSITIVE_ATTRIBUTE = 'case-sensitive'
+    CONDITION_ATTRIBUTE = 'conditions'
+    MACRO_ATTRIBUTE = 'macro'
+    MATCH_ATTRIBUTE = 'match'
+    NAME_ATTRIBUTE = 'name'
+    PREFIX_ATTRIBUTE = 'prefix'
+    REPLACE_SPACES_WITH_ATTRIBUTE = 'replace-spaces-with'
+    SUFFIX_ATTRIBUTE = 'suffix'
+    TEMPLATE_ATTRIBUTE = 'template'
+    USE_ATTRIBUTE = 'use'
+    VALUE_ATTRIBUTE = 'value'
+    
+    ANY_WILDCARD = '*'
+    
+    # Conditions
+    EQUALS_CONDITION = 'equals'
+    GREATER_THAN_CONDITION = 'greater-than'
+    LESS_THAN_CONDITION = 'less-than'
+    
+    
+    
+    CASES = ('lowercase', 'uppercase', 'capitalize-first', 'capitalize-all', 'sentence', 'title')
+    VARIABLES = ('file-path',
+                 'file-name',
+                 'file-extension',
+                 'file-size',
+                 'file-date-created',
+                 'file-date-modified',
+                 'file-date-accessed',
+                 'file-date-added',
+                 'file-title',
+                 'file-index',
+                 'file-count',
+                 'temp-folder',
+                 'metadata-extension')
+    
     def __init__(self, schema_file_path):
         
         self.schema_file_path = schema_file_path
         self.root = etree.parse(self.schema_file_path).getroot() 
                
         self.get_use_attribute = etree.XPath(("//" + 
-                                              constants.CONTENT_SCHEMA_PREFIX + 
+                                              self.PREFIX + 
                                               ":" + 
-                                              constants.DESTINATIONS_TAG_NAME + 
+                                              self.DESTINATIONS_TAG + 
                                               "/@" + 
-                                              constants.USE_ATTRIBUTE_NAME), 
-                                             namespaces=constants.XPATH_NAMESPACE)
+                                              self.USE_ATTRIBUTE), 
+                                             namespaces=self.XPATH_NAMESPACE)
+        
+        self.get_destination_elements = etree.XPath(("//" +
+                                                     self.PREFIX +
+                                                     ":" +
+                                                     self.DESTINATIONS_TAG +
+                                                     "/" +
+                                                     self.PREFIX +
+                                                     ":" +
+                                                     self.DESINTATION_TAG),
+                                                    namespaces=self.XPATH_NAMESPACE)
         
         self.get_destination_element = etree.XPath(("//" +
-                                                    constants.CONTENT_SCHEMA_PREFIX +
+                                                    self.PREFIX +
                                                     ":" +
-                                                    constants.DESTINATIONS_TAG_NAME +
+                                                    self.DESTINATIONS_TAG +
                                                     "/" +
-                                                    constants.CONTENT_SCHEMA_PREFIX +
+                                                    self.PREFIX +
                                                     ":" +
-                                                    constants.DESTINATION_TAG_NAME +
+                                                    self.DESTINATION_TAG +
                                                     "[@" +
-                                                    constants.MATCH_ATTRIBUTE_NAME +
+                                                    self.MATCH_ATTRIBUTE +
                                                     "=$match]"), 
-                                                   namespaces=constants.XPATH_NAMESPACE)
+                                                   namespaces=self.XPATH_NAMESPACE)
         
         self.get_folder_names = etree.XPath(("//" +
-                                             constants.CONTENT_SCHEMA_PREFIX +
+                                             self.PREFIX +
                                              ":" +
-                                             constants.DESTINATIONS_TAG_NAME +
+                                             self.DESTINATIONS_TAG +
                                              "/" +
-                                             constants.CONTENT_SCHEMA_PREFIX +
+                                             self.PREFIX +
                                              ":" +
-                                             constants.DESTINATION_TAG_NAME +
+                                             self.DESTINATION_TAG +
                                              "[@" +
-                                             constants.MATCH_ATTRIBUTE_NAME +
+                                             self.MATCH_ATTRIBUTE +
                                              "=$match]//" +
-                                             constants.CONTENT_SCHEMA_PREFIX +
+                                             self.PREFIX +
                                              ":" +
-                                             constants.FOLDER_TAG_NAME +
+                                             self.FOLDER_TAG +
                                              "/@" +
-                                             constants.NAME_ATTRIBUTE_NAME), 
-                                            namespaces=constants.XPATH_NAMESPACE)
+                                             self.NAME_ATTRIBUTE), 
+                                            namespaces=self.XPATH_NAMESPACE)
+            
+    def matches(self, destination_element, checkin_file_value):
+        match_value = destination_element.get(self.MATCH_ATTRIBUTE)
+        match_condition = destination_element.get(self.CONDITION_ATTRIBUTE)
+        conditions = {self.EQUALS_CONDITION: self.match_equals,
+                      self.GREATER_THAN_CONDITION: self.match_greater_than,
+                      self.LESS_THAN_CONDITION: self.match_less_than}
+        
+        return conditions[match_condition](match_value, checkin_file_value)
+        
+    def match_equals(self, match_value, checkin_file_value):
+        # TODO: Add handling of any wildcard
+        return match_value == checkin_file_value
+    
+    def match_greater_than(self, match_value, checkin_file_value):
+        # TODO: Add handling of any wildcard
+        return match_value > checkin_file_value
+    
+    def match_less_than(self, match_value, checkin_file_value):
+        # TODO: Add handling of any wildcard
+        return match_value < checkin_file_value
         
     def get_destination(self, checkin_file):
         
         use_variable = self.get_use_attribute(self.root)[0]
-        match_value = checkin_file[use_variable]
-        destination_element = self.get_destination_element(self.root, match=match_value)[0]
+        checkin_file_value = checkin_file[use_variable]
+        destination_elements = self.get_destination_elements(self.root)
+        
+        for destination_element in destination_elements:
+            if self.matches(destination_element, checkin_file_value):
+                break    
         
         if destination_element is None:
             raise CatalogError("A destination could not be found for the checkin file")

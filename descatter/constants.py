@@ -105,20 +105,6 @@ ID_ATTRIBUTE_NAME = 'id'
 EXTENSIONS_TAG_NAME = CONTENT_SCHEMA + 'extensions'
 EXTENSION_TAG_NAME = CONTENT_SCHEMA + 'extension'
 
-CONTENT_SCHEMA_VARIABLES = {
-                            'file-extension' : 'extension',
-                            'file-name' : 'original_name',
-                            'file-path' : 'original_path',
-                            'file-size' : 'size',
-                            'file-count' : 'index',
-                            'file-total' : 'total',
-                            'date-modified' : 'date_modified',
-                            'date-created' : 'date_created',
-                            'date-accessed' : 'date_accessed',
-                            'current-datetime' : 'checkin_datestamp',
-                            'title' : 'title'
-                           }
-
 # Catalog folder structure
 CONTENT_FOLDER_NAME = 'content'
 TEMPLATES_FOLDER_NAME = 'templates'
