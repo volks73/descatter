@@ -27,4 +27,5 @@ class TestFiler(unittest.TestCase):
         processor = filer.Processor(self.test_base_folder_path, TEST_DIRECTIVE_FILE_PATH)
         processor.file(self.test_source_file_path)
         
+        # TODO: Change to using string of XML instead of file
         # TODO: Add check for file copied to appropriate destination

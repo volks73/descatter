@@ -345,19 +345,20 @@ class Director(object):
         type_value = condition_element.get(self.TYPE_ATTRIBUTE).lower()
         variable = condition_element.get(self.VARIABLE_ATTRIBUTE)
         value = condition_element.get(self.VALUE_ATTRIBUTE)
-        
-        # TODO: Add case-sensitive option to the condition tag
+        case_sensitive = condition_element.get(self.CASE_SENSITIVE_ATTRIBUTE)
         
         if variable is None:
             raise DirectorError("The '%s' attribute must be present in the '%s' tag" % (self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))
         else:
-            variable = self.file_context[variable].lower()
+            variable = self.file_context[variable]
             
         if value is None:
             raise DirectorError("The '%s' attribute must be present in the '%s' tag" % (self.VALUE_ATTRIBUTE, self.CONDITION_TAG))
-        else:
+        
+        if not case_sensitive:
+            variable = variable.lower()
             value = value.lower()
-                
+            
         if type_value == self.CONDITION_TYPE_EQUALS:
             if value == self.ANY_VALUE_WILDCARD:
                 return True

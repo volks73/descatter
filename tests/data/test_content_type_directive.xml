@@ -196,93 +196,93 @@
 	<rules>
 		<rule name="msword-rule" path="msword-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="doc"/>
-				<condition type="equals" variable="file-extension" value="docx"/>  
+				<condition type="equals" variable="file-extension" value="doc" case-sensitive="false"/>
+				<condition type="equals" variable="file-extension" value="docx" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="excel-rule" path="excel-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="xls"/>
-				<condition type="equals" variable="file-extension" value="xlsx"/>  
+				<condition type="equals" variable="file-extension" value="xls" case-sensitive="false"/>
+				<condition type="equals" variable="file-extension" value="xlsx" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="powerpoint-rule" path="powerpoint-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="ppt"/>
-				<condition type="equals" variable="file-extension" value="pptx"/>  
+				<condition type="equals" variable="file-extension" value="ppt" case-sensitive="false"/>
+				<condition type="equals" variable="file-extension" value="pptx" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="pdf-rule" path="pdf-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="pdf"/>  
+				<condition type="equals" variable="file-extension" value="pdf" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="mp3-rule" path="mpeg3-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="mp3"/>  
+				<condition type="equals" variable="file-extension" value="mp3" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="jpeg-rule" path="jpeg-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="jpg"/>
-				<condition type="equals" variable="file-extension" value="jpeg"/>  
+				<condition type="equals" variable="file-extension" value="jpg" case-sensitive="false"/>
+				<condition type="equals" variable="file-extension" value="jpeg" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="png-rule" path="png-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="png"/>  
+				<condition type="equals" variable="file-extension" value="png" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="tiff-rule" path="tiff-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="tif"/>
-				<condition type="equals" variable="file-extension" value="tiff"/>  
+				<condition type="equals" variable="file-extension" value="tif" case-sensitive="false"/>
+				<condition type="equals" variable="file-extension" value="tiff" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="text-rule" path="text-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="txt"/>  
+				<condition type="equals" variable="file-extension" value="txt" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="markdown-rule" path="markdown-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="md"/>  
+				<condition type="equals" variable="file-extension" value="md" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="markdown-rule" path="markdown-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="md"/>  
+				<condition type="equals" variable="file-extension" value="md" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="css-rule" path="css-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="css"/>  
+				<condition type="equals" variable="file-extension" value="css" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="csv-rule" path="csv-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="csv"/>  
+				<condition type="equals" variable="file-extension" value="csv" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="html-rule" path="html-path">
 			<conditions match="any">
-				<condition type="equals" variable="file-extension" value="html"/>
-				<condition type="equals" variable="file-extension" value="htm"/>  
+				<condition type="equals" variable="file-extension" value="html" case-sensitive="false"/>
+				<condition type="equals" variable="file-extension" value="htm" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="xml-rule" path="csv-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="xml"/>  
+				<condition type="equals" variable="file-extension" value="xml" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="avi-rule" path="avi-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="avi"/>  
+				<condition type="equals" variable="file-extension" value="avi" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="default" path="default-path">
 			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="*"/>  
+				<condition type="equals" variable="file-extension" value="*" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 	</rules>
