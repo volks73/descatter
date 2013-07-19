@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Internet Content Type</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A test directive to place files in folders based on their Internet Content, or MIME, type and subtype.
+		</description>
+	</info>
+	<macros>
+	    <macro name="application-folder">
+	        <text value="Application"/>
+	    </macro>
+	    <macro name="msword-folder">
+	        <text value="msword"/>
+	    </macro>
+	    <macro name="excel-folder">
+	        <text value="vnd.ms-excel"/>
+	    </macro>
+	    <macro name="powerpoint-folder">
+	        <text value="vnd.ms-powerpoint"/>
+	    </macro>
+	    <macro name="audio-folder">
+	        <text value="Audio"/>
+	    </macro>
+	    <macro name="image-folder">
+	        <text value="Image"/>
+	    </macro>
+	  	<macro name="jpeg-folder">
+	  	    <text value="jpeg"/>
+	  	</macro>
+	  	<macro name="tiff-folder">
+	  	    <text value="tiff"/>
+	  	</macro>
+	    <macro name="text-folder">
+	        <text value="Text"/>
+	    </macro>
+	    <macro name="html-folder">
+	        <text value="html"/>
+	    </macro>
+	    <macro name="video-folder">
+	        <text value="Video"/>
+	    </macro>
+	    <macro name="original-name">
+	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
+	       	<text variable="file-extension"/>    
+	    </macro>
+	</macros>
+	<paths>
+		<path name="msword-path">
+			<folder macro="application-folder">
+				<folder macro="msword-folder">
+				    <folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="excel-path">
+		    <folder macro="application-folder">
+				<folder macro="excel-folder">
+				    <folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>
+		</path>
+		<path name="powerpoint-path">
+			<folder macro="application-folder">
+				<folder macro="powerpoint-folder">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="pdf-path">
+			<folder macro="application-folder">
+				<folder value="pdf">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="mp3-path">
+			<folder macro="audio-folder">
+				<folder value="mp3">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>
+		</path>
+		<path name="jpeg-path">
+			<folder macro="image-folder">
+				<folder macro="jpeg-folder">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="png-path">
+			<folder macro="image-folder">
+				<folder value="png">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="tiff-path">
+			<folder macro="image-folder">
+				<folder macro="tiff-folder">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="text-path">
+			<folder macro="text-folder">
+				<folder value="plain">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="markdown-path">
+			<folder macro="text-folder">
+				<folder value="x-markdown">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="css-path">
+			<folder macro="text-folder">
+				<folder value="css">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="csv-path">
+			<folder macro="text-folder">
+				<folder value="csv">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>
+		</path>
+		<path name="html-path">
+			<folder macro="text-folder">
+				<folder macro="html-folder">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="xml-path">
+			<folder macro="text-folder">
+				<folder value="xml">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="avi-path" condition="equals" case-sensitive="false">
+			<folder macro="video-folder">
+				<folder value="avi">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="default-path">
+			<folder value="unknown">
+				<folder value="?">
+					<file macro="original-name"/>
+				</folder>
+			</folder>	
+		</path>
+	</paths>
+	<rules>
+		<rule name="msword-rule" path="msword-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="doc"/>
+				<condition type="equals" variable="file-extension" value="docx"/>  
+			</conditions>
+		</rule>
+		<rule name="excel-rule" path="excel-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="xls"/>
+				<condition type="equals" variable="file-extension" value="xlsx"/>  
+			</conditions>
+		</rule>
+		<rule name="powerpoint-rule" path="powerpoint-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="ppt"/>
+				<condition type="equals" variable="file-extension" value="pptx"/>  
+			</conditions>
+		</rule>
+		<rule name="pdf-rule" path="pdf-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="pdf"/>  
+			</conditions>
+		</rule>
+		<rule name="mp3-rule" path="mpeg3-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="mp3"/>  
+			</conditions>
+		</rule>
+		<rule name="jpeg-rule" path="jpeg-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="jpg"/>
+				<condition type="equals" variable="file-extension" value="jpeg"/>  
+			</conditions>
+		</rule>
+		<rule name="png-rule" path="png-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="png"/>  
+			</conditions>
+		</rule>
+		<rule name="tiff-rule" path="tiff-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="tif"/>
+				<condition type="equals" variable="file-extension" value="tiff"/>  
+			</conditions>
+		</rule>
+		<rule name="text-rule" path="text-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="txt"/>  
+			</conditions>
+		</rule>
+		<rule name="markdown-rule" path="markdown-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="md"/>  
+			</conditions>
+		</rule>
+		<rule name="markdown-rule" path="markdown-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="md"/>  
+			</conditions>
+		</rule>
+		<rule name="css-rule" path="css-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="css"/>  
+			</conditions>
+		</rule>
+		<rule name="csv-rule" path="csv-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="csv"/>  
+			</conditions>
+		</rule>
+		<rule name="html-rule" path="html-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="html"/>
+				<condition type="equals" variable="file-extension" value="htm"/>  
+			</conditions>
+		</rule>
+		<rule name="xml-rule" path="csv-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="xml"/>  
+			</conditions>
+		</rule>
+		<rule name="avi-rule" path="avi-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="avi"/>  
+			</conditions>
+		</rule>
+		<rule name="default" path="default-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="*"/>  
+			</conditions>
+		</rule>
+	</rules>
+</directive>
