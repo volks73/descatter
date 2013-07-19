@@ -12,17 +12,17 @@
 	</info>
 	<macros>
 		<macro name="year-folder">
-			<date variable="current-date">
+			<date variable="current-datetime">
 				<date-part name="year"/>
 			</date>
 		</macro>
 		<macro name="month-folder">
-			<date variable="current-date">
+			<date variable="current-datetime">
 				<date-part name="month" form="numeric-leading-zeros"/>
 			</date>
 		</macro>
 		<macro name="day-folder">
-			<date variable="current-date">
+			<date variable="current-datetime">
 				<date-part name="day" form="numeric-leading-zeros"/>
 			</date>
 		</macro>
@@ -35,7 +35,7 @@
 	        <text variable="metadata-extension"/>    
 	    </macro>
 	</macros>
-	<destinations use="current-date">
+	<destinations use="current-datetime">
 		<desintation match="*">
 			<folder macro="year-folder">
 				<folder macro="month-folder">

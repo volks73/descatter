@@ -52,8 +52,8 @@ CASE_LOWER = 'lower'
 CASE_TITLE = 'title'
 CASE_UPPER = 'upper'
     
-# Standard Variables
-CURRENT_DATE = 'current-date'   
+# Schema Variables
+CURRENT_DATETIME = 'current-datetime'   
 FILE_COUNT = 'file-count'
 FILE_EXTENSION = 'file-extension'
 FILE_DATE_ACCESSED = 'file-date-accessed'
@@ -73,6 +73,26 @@ FILE_SIZE = 'file-size'
 RANDOM_FILE_PLACEHOLDER = '?-file'
 RANDOM_FOLDER_PLACEHOLDER = '?-folder'
 
+def create_variables(os_file_path, file_index, file_count):
+        
+    schema_variables = {}
+    file_name, file_extension = os.path.splitext(os_file_path)
+    file_name = os.path.basename(file_name)
+    file_extension = file_extension[1:].strip().lower() 
+        
+    schema_variables[CURRENT_DATETIME] = datetime.now()
+    schema_variables[FILE_PATH] = os.path.dirname(os_file_path)
+    schema_variables[FILE_NAME] = file_name
+    schema_variables[FILE_EXTENSION] = file_extension
+    schema_variables[FILE_SIZE] = os.path.getsize(os_file_path)
+    schema_variables[FILE_DATE_CREATED] = os.path.getctime(os_file_path)
+    schema_variables[FILE_DATE_MODIFIED] = os.path.getmtime(os_file_path)
+    schema_variables[FILE_DATE_ACCESSED] = os.path.getatime(os_file_path)
+    schema_variables[FILE_INDEX] = file_index
+    schema_variables[FILE_COUNT] = file_count
+
+    return schema_variables
+
 class PathFinderError(Exception):
     
     def __init__(self, message, file_path):
@@ -83,9 +103,7 @@ class PathFinder(object):
     
     def __init__(self, schema_file_path):
         
-        schema_document = etree.parse(schema_file_path)
-        self.root = schema_document.getroot()
-        self.standard_variables = {}
+        self.root = etree.parse(schema_file_path).getroot()
         
         self.get_macro_elements = etree.XPath(("//" +
                                                PREFIX +
@@ -216,13 +234,13 @@ class PathFinder(object):
         # replacing spaces and setting case.
         self.text_attributes = (text_case, text_replace_spaces_with, text_prefix, text_suffix)
     
-    def find_path(self, os_file_path):
+    def find_path(self, os_file_path, schema_variables):
         
         path = None
-        self.load_standard_variables(os_file_path)
+        self.schema_variables = schema_variables
         
         use_variable = self.get_use_attribute(self.root)[0]
-        use_value = self.standard_variables[use_variable]
+        use_value = self.schema_variables[use_variable]
         destination_element = self.get_destination_element(use_value)
         
         if destination_element is None:
@@ -239,26 +257,7 @@ class PathFinder(object):
             path = os.path.join(path, file_name)
             
         return path
-        
-    def load_standard_variables(self, os_file_path):
-        
-        file_name, file_extension = os.path.splitext(os_file_path)
-        file_name = os.path.basename(file_name)
-        file_extension = file_extension[1:].strip().lower() 
-        
-        self.standard_variables[CURRENT_DATE] = datetime.now()
-        self.standard_variables[FILE_PATH] = os.path.dirname(os_file_path)
-        self.standard_variables[FILE_NAME] = file_name
-        self.standard_variables[FILE_EXTENSION] = file_extension
-        self.standard_variables[FILE_SIZE] = os.path.getsize(os_file_path)
-        self.standard_variables[FILE_DATE_CREATED] = os.path.getctime(os_file_path)
-        self.standard_variables[FILE_DATE_MODIFIED] = os.path.getmtime(os_file_path)
-        self.standard_variables[FILE_DATE_ACCESSED] = os.path.getatime(os_file_path)
-                
-        # TODO: Implement file_index and file_count for batch mode processing
-        self.standard_variables[FILE_INDEX] = 1 # To be implemented later when the batch mode is finished
-        self.standard_variables[FILE_COUNT] = 1
-        
+            
     def get_destination_element(self, use_value):
         
         destination_element = None
@@ -288,7 +287,7 @@ class PathFinder(object):
         if value is not None:
             text = value
         elif variable is not None:
-            text = self.standard_variables[variable]
+            text = self.schema_variables[variable]
         else:
             raise PathFinderError("The value for the text element could not be determined")
         
@@ -317,7 +316,7 @@ class PathFinder(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self.standard_variables[variable]
+            return self.schema_variables[variable]
         elif macro is not None:
             return self.process_macro(macro)
         elif random:            
@@ -335,7 +334,7 @@ class PathFinder(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self.standard_variables[variable]
+            return self.schema_variables[variable]
         elif macro is not None:
             return self.process_macro(macro)
         elif random:
