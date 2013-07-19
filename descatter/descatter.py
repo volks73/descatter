@@ -1,3 +1,7 @@
+import os
+import tempfile
+import shutil
+
 import schema
 
 class FilerError(Exception): pass
@@ -11,18 +15,42 @@ class Filer(object):
     def __init__(self, base_folder_path, schema_file_path):
         self.base_folder_path = base_folder_path
         self.path_finder = schema.PathFinder(schema_file_path)
-        
-        # TODO: Check if .descatter folder exists
-        # TODO: Create .descatter hidden folder
-        # TODO: Copy schema definition file to hidden folder
     
-    def file(self, os_file_path, delete_source=False):
-        destination_path = self.path_finder.find_path(os_file_path)
-        # TODO: Finish implementing. After determining the destination path, the folder structure to the destination
-        # needs to be created. Any temp folders and files must be created and replaced in the path. Then, copy
-        # file.
+    def split_path(self, path):
+        head, tail = os.path.split(path)
+        return (self.split_path(head) if len(head) and len(tail) else []) + [tail]
+    
+    def file(self, source_file_path, delete_source=False):
+        destination_path = self.path_finder.find_path(source_file_path, schema.create_variables(source_file_path, 1, 1))
+        folder_names = self.split_path(os.path.dirname(destination_path))
         
-        # TODO: Implement deleting source file
+        current_path = self.base_folder_path
+        for folder_name in folder_names:
+            if folder_name == schema.RANDOM_PLACEHOLDER:
+                current_path = tempfile.mkdtemp(suffix='', prefix='', dir=current_path)
+            else:
+                current_path = os.path.join(current_path, folder_name)
+                os.makedirs(current_path, exist_ok=True)
+        
+        destination_file_path = os.path.basename(destination_path)
+        random_placeholder_index = destination_file_path.find(schema.RANDOM_PLACEHOLDER) 
+        
+        if random_placeholder_index == -1:
+            destination_file_path = os.path.join(current_path, destination_file_path)
+        else:
+            prefix = destination_file_path[:random_placeholder_index]
+            suffix = destination_file_path[random_placeholder_index+1:]
+
+            temp_file_handle, destination_file_path = tempfile.mkstemp(suffix=suffix, prefix=prefix, dir=current_path, text=False)
+            
+            # Ensure the race condition, thread-safe created temporary file has been closed and is not used by another
+            # process so that it can be replaced by the source file.
+            os.fdopen(temp_file_handle, 'w').close()
+        
+        shutil.copy2(source_file_path, destination_file_path)
+        
+        if delete_source:
+            os.remove(source_file_path)
     
     def batch_file(self, os_folder_path):
         # TODO: Add filing of all files in the folder
@@ -41,6 +69,10 @@ class Tagger(object): pass
     # Creates a hidden folder named ".descatter" in a folder and places a SQLite
     # database in the hidden folder. This stores the tags for all files in the
     # sub-folder of the base folder.
+    
+    # TODO: Check if .descatter folder exists
+    # TODO: Create .descatter hidden folder
+    # TODO: Copy schema definition file to hidden folder
 
 class Viewer(object): pass # Or maybe rename to Organizer
     # Graphical User Interface (GUI) to view a folder that has been descattered

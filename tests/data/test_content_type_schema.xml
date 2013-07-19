@@ -57,7 +57,7 @@
 		<destination match="doc" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="msword-folder">
-				    <folder random="true">
+				    <folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
@@ -67,7 +67,7 @@
 		<destination match="docx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="msword-folder">
-				    <folder random="true">
+				    <folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
@@ -77,7 +77,7 @@
 		<destination match="xls" condition="equals" case-sensitive="false">
 		    <folder macro="application-folder">
 				<folder macro="excel-folder">
-				    <folder random="true">
+				    <folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="excel.tpl"/>
 				    </folder>
@@ -87,7 +87,7 @@
 		<destination match="xlsx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="excel-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="word.tpl"/>
 				    </folder>
@@ -97,7 +97,7 @@
 		<destination match="ppt" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="powerpoint-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="powerpoint.tpl"/>
 				    </folder>
@@ -107,7 +107,7 @@
 		<destination match="pptx" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder macro="powerpoint-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="powerpoint.tpl"/>
 				    </folder>
@@ -117,7 +117,7 @@
 		<destination match="pdf" condition="equals" case-sensitive="false">
 			<folder macro="application-folder">
 				<folder value="pdf">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="pdf.tpl"/>
 				    </folder>
@@ -127,7 +127,7 @@
 		<destination match="mp3" condition="equals" case-sensitive="false">
 			<folder macro="audio-folder">
 				<folder value="mp3">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="audio.tpl"/>
 				    </folder>
@@ -137,7 +137,7 @@
 		<destination match="jpeg" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -147,7 +147,7 @@
 		<destination match="jpg" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -157,7 +157,7 @@
 		<destination match="png" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder value="png">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -167,7 +167,7 @@
 		<destination match="tiff" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -177,7 +177,7 @@
 		<destination match="tif" condition="equals" case-sensitive="false">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="image.tpl"/>
 				    </folder>
@@ -187,7 +187,7 @@
 		<destination match="txt" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder value="plain">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="text.tpl"/>
 				    </folder>
@@ -197,7 +197,7 @@
 		<destination match="md" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder value="x-markdown">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="text.tpl"/>
 				    </folder>
@@ -207,7 +207,7 @@
 		<destination match="css" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder value="css">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -217,7 +217,7 @@
 		<destination match="csv" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder value="csv">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="data.tpl"/>
 				    </folder>
@@ -227,7 +227,7 @@
 		<destination match="html" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder macro="html-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -237,7 +237,7 @@
 		<destination match="htm" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder macro="html-folder">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -247,7 +247,7 @@
 		<destination match="xml" condition="equals" case-sensitive="false">
 			<folder macro="text-folder">
 				<folder value="xml">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="website.tpl"/>
 				    </folder>
@@ -257,10 +257,18 @@
 		<destination match="avi" condition="equals" case-sensitive="false">
 			<folder macro="video-folder">
 				<folder value="avi">
-					<folder random="true">
+					<folder value="?">
 					    <file macro="original-name"/>
 					    <metadata macro="metadata-name" template="video.tpl"/>
 				    </folder>
+				</folder>
+			</folder>	
+		</destination>
+		<destination match="*" condition="equals" case-sensitive="false">
+			<folder value="unknown">
+				<folder value="?">
+					<file macro="original-name"/>
+					<metadata macro="metadata-name"/>
 				</folder>
 			</folder>	
 		</destination>

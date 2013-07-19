@@ -33,7 +33,6 @@ MACRO_ATTRIBUTE = 'macro'
 MATCH_ATTRIBUTE = 'match'
 NAME_ATTRIBUTE = 'name'
 PREFIX_ATTRIBUTE = 'prefix'
-RANDOM_ATTRIBUTE = 'random'
 REPLACE_SPACES_WITH_ATTRIBUTE = 'replace-spaces-with'
 SUFFIX_ATTRIBUTE = 'suffix'
 TEMPLATE_ATTRIBUTE = 'template'
@@ -42,7 +41,6 @@ VALUE_ATTRIBUTE = 'value'
 VARIABLE_ATTRIBUTE = 'variable'
         
 # Condition options
-ANY_WILDCARD = '*'
 EQUALS_CONDITION = 'equals'
 GREATER_THAN_CONDITION = 'greater-than'
 LESS_THAN_CONDITION = 'less-than'
@@ -64,14 +62,12 @@ FILE_NAME = 'file-name'
 FILE_PATH = 'file-path'
 FILE_SIZE = 'file-size'
 
-# Random Placeholder
-# The '?-folder' and '?-file' is a flag to to create a unique, random folder/file name using 
-# the tempfile module. The '?' is used because it is an invalid character for all operating systems
-# The folder cannot be created until the entire destination is determined. Once the file is
-# ready to copy into the destination, then the folders will be created and this will be 
-# replaced in the path with a random folder.
-RANDOM_FILE_PLACEHOLDER = '?-file'
-RANDOM_FOLDER_PLACEHOLDER = '?-folder'
+# Placeholders
+ANY_PLACEHOLDER = '*'
+
+# '?' is used as a placeholder to define a random file name or random folder name because
+# it is an illegal character on all operating systems.
+RANDOM_PLACEHOLDER = '?'
 
 def create_variables(os_file_path, file_index, file_count):
         
@@ -272,6 +268,13 @@ class PathFinder(object):
                 match_value = match_value.lower()
                 use_value = use_value.lower()
             
+            # The ANY_PLACEHOLDER means any value that is not specified matched with any other destination.
+            # This serves to define a default destination, but only use the default if no other 
+            # destination matches. A default does not have to be defined in the schema, in which case
+            # if no match is found, return 'None'.
+            if match_value == ANY_PLACEHOLDER:
+                destination_element = element
+            
             if self.conditions[match_condition](match_value, use_value):
                 destination_element = element
                 break
@@ -280,6 +283,7 @@ class PathFinder(object):
     
     def get_text(self, text_element):
         
+        # TODO: Add date formatting if a date child tag is present
         text = None
         value = text_element.get(VALUE_ATTRIBUTE)
         variable = text_element.get(VARIABLE_ATTRIBUTE)
@@ -311,7 +315,6 @@ class PathFinder(object):
         value = folder_element.get(VALUE_ATTRIBUTE)
         variable = folder_element.get(VARIABLE_ATTRIBUTE)
         macro = folder_element.get(MACRO_ATTRIBUTE)
-        random = folder_element.get(RANDOM_ATTRIBUTE)
         
         if value is not None:
             return value
@@ -319,8 +322,6 @@ class PathFinder(object):
             return self.schema_variables[variable]
         elif macro is not None:
             return self.process_macro(macro)
-        elif random:            
-            return RANDOM_FOLDER_PLACEHOLDER
         else:
             raise PathFinderError("Folder name could not be determined")
     
@@ -329,7 +330,6 @@ class PathFinder(object):
         value = file_element.get(VALUE_ATTRIBUTE)
         variable = file_element.get(VARIABLE_ATTRIBUTE)
         macro = file_element.get(MACRO_ATTRIBUTE)
-        random = file_element.get(RANDOM_ATTRIBUTE)
         
         if value is not None:
             return value
@@ -337,7 +337,5 @@ class PathFinder(object):
             return self.schema_variables[variable]
         elif macro is not None:
             return self.process_macro(macro)
-        elif random:
-            return RANDOM_FILE_PLACEHOLDER
         else:
             raise PathFinderError("File name could not be determined")

@@ -33,7 +33,7 @@ class TestContentTypeSchema(unittest.TestCase):
         schema_variables = schema.create_variables(test_source_file_path, 1, 1)
             
         expected_value = os.path.join(type_folder_name, subtype_folder_name)
-        expected_value = os.path.join(expected_value, schema.RANDOM_FOLDER_PLACEHOLDER)
+        expected_value = os.path.join(expected_value, schema.RANDOM_PLACEHOLDER)
         expected_value = os.path.join(expected_value, expected_file_name)
         
         return (test_source_file_path, schema_variables, expected_value)
@@ -107,3 +107,5 @@ class TestContentTypeSchema(unittest.TestCase):
         self.assertEqual(output_value, expected_value)
         
         os.remove(test_source_file_path)
+        
+    # TODO: Add tests for all file extensions defined in schema
