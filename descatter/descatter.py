@@ -1,3 +1,5 @@
+APPLICATION_NAME = 'descatter'
+
 class TaggerError(Exception): pass
 
 class ReFiler(object): pass

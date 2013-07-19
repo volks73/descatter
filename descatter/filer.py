@@ -5,7 +5,6 @@ import os
 import tempfile
 import shutil
 
-class ProcessorError(Exception): pass
 class DirectorError(Exception): pass
 
 class Processor(object):
@@ -48,12 +47,14 @@ class Processor(object):
     
         return context
 
-    def file(self, source, delete_source=False):
+    def file(self, source, recursive=False, delete_source=False):
         
-        if os.path.isfile(source):
-            self.file_single(self.file_context(source), delete_source)
+        if os.path.isdir(source):
+            return self.file_folder(source, recursive, delete_source)
+        else:
+            return self.file_list(source, delete_source)
 
-    def file_single(self, file_context, delete_source=False):
+    def file_file(self, file_context, delete_source=False):
         
         destination_folder_names, destination_file_name = self.director.find_destination(file_context)
         destination_file_path = self.base_destination_folder_path
@@ -87,10 +88,35 @@ class Processor(object):
         return destination_file_path
     
     def file_list(self, file_list, delete_source=False):
-        pass
+        paths_filed = []
+        paths_not_filed = []
+        
+        for file_path in file_list:
+            if os.path.isfile(file_path):
+                filed_path = self.file_file(self.file_context(file_path), delete_source)
+                paths_filed.append(filed_path)
+            else:
+                paths_not_filed.append(file_path)
     
-    def file_folder(self, folder_path, recurisve=False, delete_source=False):
-        pass
+        return tuple(paths_filed, paths_not_filed)
+    
+    def file_folder(self, folder_path, recursive=False, delete_source=False):
+        paths_filed = []
+        paths_not_filed = []
+        
+        for content_name in os.listdir(folder_path):
+            content_path = os.path.join(folder_path, content_name)
+            
+            if os.path.isfile(content_path):
+                filed_path = self.file_file(self.file_context(content_path), delete_source)
+                paths_filed.append(filed_path)
+            elif os.path.isdir(content_path) and recursive:
+                filed_path = self.file_folder(content_path, recursive, delete_source)
+                paths_filed.append(filed_path)
+            else:
+                paths_not_filed.append(content_path)
+        
+        return tuple(paths_filed, paths_not_filed)        
 
 class Director(object):
     

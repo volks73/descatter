@@ -23,9 +23,15 @@ class TestFiler(unittest.TestCase):
         os.remove(self.test_source_file_path)
         shutil.rmtree(self.test_base_folder_path)
         
-    def test_file_single(self):
+    def test_file_file(self):
         processor = filer.Processor(self.test_base_folder_path, TEST_DIRECTIVE_FILE_PATH)
         processor.file(self.test_source_file_path)
         
         # TODO: Change to using string of XML instead of file
         # TODO: Add check for file copied to appropriate destination
+    
+    def test_file_list(self):
+        pass
+    
+    def test_file_folder(self):
+        pass
