@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Directive for the TestFileList unit test</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A simple directive to file multiple files from a list to a single folder.
+		</description>
+	</info>
+	<macros>
+		<macro name="original-name">
+			<text variable="file-name"/>
+			<text variable="file-extension" prefix="."/>
+		</macro>
+	</macros>
+	<paths>
+		<path name="default-path">
+			<file macro="original-name"/>
+		</path>
+	</paths>
+	<rules>
+		<rule name="default" path="default-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-name" value="*" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+	</rules>
+</directive>

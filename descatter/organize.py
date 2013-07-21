@@ -45,27 +45,63 @@ class Filer(object):
     """
     
     # File Context Variables
-    CURRENT_DATETIME = 'current-datetime'   
+    
+    # The current datetime stamp
+    CURRENT_DATETIME = 'current-datetime'
+    
+    # The total number of files in the batch of files to be filed   
     FILE_COUNT = 'file-count'
+    
+    # The file extension minus the leading period
     FILE_EXTENSION = 'file-extension'
+    
+    # The datetime stamp the file was last accessed
     FILE_DATE_ACCESSED = 'file-date-accessed'
+    
+    # The datetime stamp the file was created
     FILE_DATE_CREATED = 'file-date-created' 
+    
+    # The datetime stamp the file was last modified
     FILE_DATE_MODIFIED = 'file-date-modified'
+    
+    # The index of the file in the batch of files to be filed
     FILE_INDEX = 'file-index'
+    
+    # The file name without the path or extension
     FILE_NAME = 'file-name'
+    
+    # The path to the source file without the file name
     FILE_PATH = 'file-path'
+    
+    # The file size in bytes
     FILE_SIZE = 'file-size'
-    FILE_SOURCE = 'file-source'
+    
+    # The source path, this is the absolute path to the source file and includes the file name and extension.
+    FILE_SOURCE_PATH = 'file-source-path'
     
     def __init__(self, root, directive):
+        """Constructor for the :class:'.Filer'."""
+        
         self.root = root
         self.directive = directive
 
     def file_file(self, file, move=False):
+        """Files a single file.
+        
+        :param file: The path to the file.
+        :param move: Optional boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+
+        """
         
         return self._file(self._create_context(file), move)
     
     def file_list(self, files, move=False):
+        """Files a list of file paths.
+        
+        :param files: A list of file paths.
+        :param move: Optional boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        
+        """
         
         filed_paths = []       
         file_count = len(files)
@@ -80,12 +116,19 @@ class Filer(object):
         return filed_paths
         
     def file_folder(self, folder, deep=False, move=False):
+        """Files all of the files in a folder.
         
+        :param folder: A path to a folder.
+        :param deep: Optional boolean value. 'True' indicates a recursive filing where all files in all subfolders are filed and included in the batch. 'False' indicates only the files in the root, or top, folder will be filed and all subfolders are ignored.
+        :param move: Optional boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        
+        """
+                
         if os.path.isdir(folder):
             files = []
     
             if deep:
-                for root, subfolders, file_names in os.walk(folder):
+                for root, subfolder_names, file_names in os.walk(folder):
                     for file_name in file_names:
                         files.append(os.path.join(root, file_name))
             else:
@@ -98,7 +141,14 @@ class Filer(object):
         else:
             raise FilerError("The folder: '%s' could not be filed because it is not a directory" % folder)
 
-    def _create_context(self, source, file_index=1, file_count=1):
+    def _create_context(self, source, index=1, count=1):
+        """Creates a filer context.
+        
+        :param source: The path to the source file.
+        :param index: Optional integer value indicating the file index, or number, within a batch operation.
+        :param count: Optional integer value indicating the total number of files within a batch operation.
+        
+        """
     
         if os.path.isfile(source):
             context = {}
@@ -107,22 +157,28 @@ class Filer(object):
             file_extension = file_extension[1:].strip().lower() 
                     
             context[self.CURRENT_DATETIME] = datetime.now()
-            context[self.FILE_COUNT] = file_count
+            context[self.FILE_COUNT] = count
             context[self.FILE_EXTENSION] = file_extension
             context[self.FILE_DATE_ACCESSED] = os.path.getatime(source)
             context[self.FILE_DATE_CREATED] = os.path.getctime(source)
             context[self.FILE_DATE_MODIFIED] = os.path.getmtime(source)
-            context[self.FILE_INDEX] = file_index
+            context[self.FILE_INDEX] = index
             context[self.FILE_NAME] = file_name
             context[self.FILE_PATH] = os.path.dirname(source)
             context[self.FILE_SIZE] = os.path.getsize(source)
-            context[self.FILE_SOURCE] = source    
+            context[self.FILE_SOURCE_PATH] = os.path.abspath(source)    
             
             return context
         else:
             raise FilerError("A filer context could not be created because the source is not a file")
 
     def _file(self, context, move):
+        """Files a file based on the filer context.
+        
+        :param context: The filer context, use _create_context to generate the filer context of a file.
+        :param move: A boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+
+        """
         
         destination_folder_names, destination_file_name = self.directive.get_destination(context)
         destination_file_path = self.root
@@ -165,6 +221,8 @@ class Directive(object):
     :param file: The directive definition XML file path. 
     
     """
+    
+    # TODO: Add "format" attribute to "description" tag that defines the markup language (markdown, reStructureText, etc.) used to write the description text.
     
     # XML    
     NAMESPACE = 'descatter/filer/schema/1.0'
@@ -212,7 +270,8 @@ class Directive(object):
     # Condition type attribute values
     CONDITION_TYPE_EQUALS = 'equals'
     CONDITION_TYPE_GREATER_THAN = 'greater-than'
-    CONDITION_TYPE_LESS_THAN = 'less-than'    
+    CONDITION_TYPE_LESS_THAN = 'less-than' 
+    # TODO: Add a 'has' condition to test if a text or variable has a value within it. This would be similar to searching a string for substring and returning 'True' if found.   
     
     # Text case attribute values
     TEXT_CASE_LOWER = 'lower'
@@ -234,18 +293,31 @@ class Directive(object):
     XPATH_PATH_ELEMENT = etree.XPath("//" + PREFIX + ":" + PATHS_TAG + "/" + PREFIX + ":" + PATH_TAG + "[@" + NAME_ATTRIBUTE + "=$name]", namespaces=XPATH_NAMESPACE)
     XPATH_FOLDER_ELEMENTS = etree.XPath(".//" + PREFIX + ":" + FOLDER_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_TEXT_ELEMENTS = etree.XPath("//" + PREFIX + ":" + MACROS_TAG + "/" + PREFIX + ":" + MACRO_TAG + "[@" + NAME_ATTRIBUTE + "=$name]/" + PREFIX + ":" + TEXT_TAG, namespaces=XPATH_NAMESPACE)
-    XPATH_FILE_ELEMENT = etree.XPath(PREFIX + ":" + FOLDER_TAG + "//" + PREFIX + ":" + FILE_TAG, namespaces=XPATH_NAMESPACE)
+    XPATH_FILE_ELEMENT = etree.XPath("//*//" + PREFIX + ":" + FILE_TAG, namespaces=XPATH_NAMESPACE)
     
     def __init__(self, file):
         
         self.file_path = file
         self._root = etree.parse(self.file_path).getroot()
         
-    def get_destination(self, file_context):
+        # TODO: Add loading of the "info" tag.
+        
+    def get_destination(self, filer_context):
+        """Determines the destination for a filer context.
+        
+        :param filer_context: A dictionary containing the variables used within a directive to create rules, folder names, and file names.
+            
+            This is a container for the various variables that can be used within the directive XML file to create rules and text.
+            
+            See also:
+            
+            :ref: `create_context`
+        
+        """
         
         file_name = None
         path_name = None
-        self.file_context = file_context
+        self.filer_context = filer_context
         
         for rule_element in self.XPATH_RULE_ELEMENTS(self._root):
             path_name = self._process_rule(rule_element)
@@ -259,7 +331,7 @@ class Directive(object):
             path_element = self.XPATH_PATH_ELEMENT(self._root, name=path_name)
             
             if path_element is None:
-                raise DirectiveError("A path could not be determined for the file: '%s'" % file_context[Filer.FILE_SOURCE])
+                raise DirectiveError("A path could not be determined for the file: '%s'" % filer_context[Filer.FILE_SOURCE])
             else:
                 path_element = path_element[0]
   
@@ -308,7 +380,7 @@ class Directive(object):
         if variable is None:
             raise DirectiveError("The '%s' attribute must be present in the '%s' tag" % (self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))
         else:
-            variable = self.file_context[variable]
+            variable = self.filer_context[variable]
             
         if value is None:
             raise DirectiveError("The '%s' attribute must be present in the '%s' tag" % (self.VALUE_ATTRIBUTE, self.CONDITION_TAG))
@@ -340,11 +412,13 @@ class Directive(object):
         if value is not None:
             text = value
         elif variable is not None:
-            text = self.file_context[variable]
+            text = self.filer_context[variable]
         else:
             raise DirectiveError("The '%s' tag is missing either the '%s' or '%s' attribute to determine the value" % (self.TEXT_TAG, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE))
         
-        text = self._format_text(text, text_element)
+        # Only format the text if it is non-empty
+        if text:
+            text = self._format_text(text, text_element)
             
         return text
     
@@ -421,7 +495,7 @@ class Directive(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self.file_context[variable]
+            return self.filer_context[variable]
         elif macro is not None:
             return self._process_macro(macro)
         else:
@@ -436,8 +510,15 @@ class Directive(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self.file_context[variable]
+            return self.filer_context[variable]
         elif macro is not None:
             return self._process_macro(macro)
         else:
             raise DirectiveError("The '%s' tag is missing either the '%s', '%s', or '%s' attribute to determine the value" % (self.FILE_TAG, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
+
+class Validator(object):
+    """Checks a directive to see if it is usable for directing a filer."""
+    
+    def __init__(self):
+        # TODO: Implement the validator.
+        pass

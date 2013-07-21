@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <directive xmlns="descatter/filer/schema/1.0">
 	<info>
-		<title>Test Internet Content Type</title>
+		<title>Internet MIME Content Type</title>
 		<author>
 			<name>Christopher R. Field</name>
 			<email>cfield2 at gmail dot com</email>
 		</author>
 		<description>
-			A test directive to place files in folders based on their Internet Content, or MIME, type and subtype.
+			Places files in folders based on their Internet, or MIME, content type and subtype as maintained by the Internet Assigned Numbers Authority (IANA). 
+			The content type and subtype is determined by the file extension. 
+			A rule exists for every file extension.
+			A default rule exists that directs files with unknown file extensions, or file extensions without a rule, to an "Unknown" folder.
+			Files are placed in a folder tree starting with their content type (Application, Audio, Example, Image, Message, Model, Multipart, Text, and Video) followed by a subfolder cooresponding to the file's subtype as registered with IANA, and follow by a subfolder with a random six character name.
+			The random folder name is used to create a unique path for a file within the subtype folder, so file names can be re-used without overwriting the original file.
+			The original, or source, file name is used for the filed name but spaces are replaced with underscores and title case is used for the text. 
 		</description>
 	</info>
 	<macros>
@@ -45,8 +51,8 @@
 	        <text value="Video"/>
 	    </macro>
 	    <macro name="original-name">
-	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
-	       	<text variable="file-extension" case="lower"/>    
+	        <text variable="file-name" replace-spaces-with="_" case="title"/>
+	       	<text variable="file-extension" prefix="." case="lower"/>    
 	    </macro>
 	</macros>
 	<paths>
@@ -95,6 +101,15 @@
 				</folder>
 			</folder>
 		</path>
+		<path name="gif-path">
+			<folder macro="image-folder">
+				<folder value="gif">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
 		<path name="jpeg-path">
 			<folder macro="image-folder">
 				<folder macro="jpeg-folder">
@@ -116,6 +131,15 @@
 		<path name="tiff-path">
 			<folder macro="image-folder">
 				<folder macro="tiff-folder">
+					<folder value="?">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+		<path name="svg-path">
+			<folder macro="image-folder">
+				<folder value="svg+xml">
 					<folder value="?">
 					    <file macro="original-name"/>
 				    </folder>
@@ -222,6 +246,11 @@
 				<condition type="equals" variable="file-extension" value="mp3" case-sensitive="false"/>  
 			</conditions>
 		</rule>
+		<rule name="gif-rule" path="png-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="gif" case-sensitive="false"/>  
+			</conditions>
+		</rule>
 		<rule name="jpeg-rule" path="jpeg-path">
 			<conditions match="any">
 				<condition type="equals" variable="file-extension" value="jpg" case-sensitive="false"/>
@@ -239,14 +268,14 @@
 				<condition type="equals" variable="file-extension" value="tiff" case-sensitive="false"/>  
 			</conditions>
 		</rule>
+		<rule name="svg-rule" path="svg-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="svg" case-sensitive="false"/>  
+			</conditions>
+		</rule>
 		<rule name="text-rule" path="text-path">
 			<conditions match="all">
 				<condition type="equals" variable="file-extension" value="txt" case-sensitive="false"/>  
-			</conditions>
-		</rule>
-		<rule name="markdown-rule" path="markdown-path">
-			<conditions match="all">
-				<condition type="equals" variable="file-extension" value="md" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="markdown-rule" path="markdown-path">
