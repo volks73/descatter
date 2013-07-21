@@ -271,7 +271,8 @@ class Directive(object):
     CONDITION_TYPE_EQUALS = 'equals'
     CONDITION_TYPE_GREATER_THAN = 'greater-than'
     CONDITION_TYPE_LESS_THAN = 'less-than' 
-    # TODO: Add a 'has' condition to test if a text or variable has a value within it. This would be similar to searching a string for substring and returning 'True' if found.   
+    # TODO: Add a 'has' condition to test if a text or variable has a value within it. This would be similar to searching a string for substring and returning 'True' if found.
+    # TODO: Add a 'not-equal' condition   
     
     # Text case attribute values
     TEXT_CASE_LOWER = 'lower'
