@@ -344,7 +344,7 @@ class ContentSchema(object):
     def __init__(self, schema_file_path):
         
         self.schema_file_path = schema_file_path
-        self.root = etree.parse(self.schema_file_path).getroot() 
+        self._root = etree.parse(self.schema_file_path).getroot() 
                
         self.get_use_attribute = etree.XPath(("//" + 
                                               self.PREFIX + 
@@ -418,9 +418,9 @@ class ContentSchema(object):
         
     def get_destination(self, checkin_file):
         
-        use_variable = self.get_use_attribute(self.root)[0]
+        use_variable = self.get_use_attribute(self._root)[0]
         checkin_file_value = checkin_file[use_variable]
-        destination_elements = self.get_destination_elements(self.root)
+        destination_elements = self.get_destination_elements(self._root)
         
         for destination_element in destination_elements:
             if self.matches(destination_element, checkin_file_value):
@@ -430,7 +430,7 @@ class ContentSchema(object):
             raise CatalogError("A destination could not be found for the checkin file")
         else:
             destination_file_path = self.content_folder_path = os.path.join(os.path.dirname(self.schema_file_path), constants.CONTENT_FOLDER_NAME)
-            folder_names = self.get_folder_names(self.root, match=match_value)
+            folder_names = self.get_folder_names(self._root, match=match_value)
             
             for folder_name in folder_names:
                 destination_file_path = os.path.join(destination_file_path, folder_name)

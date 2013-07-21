@@ -46,7 +46,7 @@
 	    </macro>
 	    <macro name="original-name">
 	        <text variable="file-name" suffix="." replace-spaces-with="_" case="title"/>
-	       	<text variable="file-extension"/>    
+	       	<text variable="file-extension" case="lower"/>    
 	    </macro>
 	</macros>
 	<paths>
@@ -186,7 +186,7 @@
 			</folder>	
 		</path>
 		<path name="default-path">
-			<folder value="unknown">
+			<folder value="Unknown">
 				<folder value="?">
 					<file macro="original-name"/>
 				</folder>
@@ -217,7 +217,7 @@
 				<condition type="equals" variable="file-extension" value="pdf" case-sensitive="false"/>  
 			</conditions>
 		</rule>
-		<rule name="mp3-rule" path="mpeg3-path">
+		<rule name="mp3-rule" path="mp3-path">
 			<conditions match="any">
 				<condition type="equals" variable="file-extension" value="mp3" case-sensitive="false"/>  
 			</conditions>
