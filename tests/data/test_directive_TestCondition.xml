@@ -32,9 +32,14 @@
 				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>  
 			</conditions>
 		</rule>
-		<rule name="equals-case-sensitive-rule" path="equals-case-sensitive-path">
+		<rule name="equals-case-sensitive-true-rule" path="equals-case-sensitive-true-path">
 			<conditions match="all">
 				<condition type="equals" variable="file-extension" value="TXT" case-sensitive="true"/>  
+			</conditions>
+		</rule>
+		<rule name="equals-case-sensitive-false-rule" path="equals-case-sensitive-false-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="TXT" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="equals-missing-case-sensitive-rule" path="equals-missing-case-sensitive-path">

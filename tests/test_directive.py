@@ -18,17 +18,12 @@
 
 import os
 import unittest
-import tempfile
-import shutil
 
 import organize
+import config
 
 from lxml import etree
 from datetime import datetime
-
-TESTS_FOLDER_NAME = 'tests'
-TESTS_DATA_FOLDER_NAME = 'data'
-TESTS_DATA_FOLDER_PATH = os.path.join(os.path.join(os.getcwd(), TESTS_FOLDER_NAME), TESTS_DATA_FOLDER_NAME)
 
 class TestCondition(unittest.TestCase):
     """Test 'condition' element, or tag in the XML file, and its related attributes processing."""
@@ -54,7 +49,7 @@ class TestCondition(unittest.TestCase):
                                                     organize.Directive.CONDITION_TAG), 
                                                    namespaces=organize.Directive.XPATH_NAMESPACE)
         
-        self.directive = organize.Directive(os.path.join(TESTS_DATA_FOLDER_PATH, "test_directive_TestConditionElement.xml"))
+        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestCondition.xml"))
         
         context = {}
         context[organize.Filer.CURRENT_DATETIME] = datetime.now()
@@ -86,11 +81,17 @@ class TestCondition(unittest.TestCase):
      
         self.assertFalse(output_value)
      
-    def test_equals_case_sensitive(self):
-        condition_element = self.xpath_condition_element(self.directive._root, name='equals-case-sensitive-rule')[0]
+    def test_equals_case_sensitive_true(self):
+        condition_element = self.xpath_condition_element(self.directive._root, name='equals-case-sensitive-true-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
      
         self.assertFalse(output_value)
+        
+    def test_equals_case_sensitive_false(self):
+        condition_element = self.xpath_condition_element(self.directive._root, name='equals-case-sensitive-false-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+     
+        self.assertTrue(output_value)
 
     def test_equals_missing_case_sensitive(self):
         condition_element = self.xpath_condition_element(self.directive._root, name='equals-missing-case-sensitive-rule')[0]

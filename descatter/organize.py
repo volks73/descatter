@@ -19,6 +19,7 @@
 """The organize module provides the mechanism for copying or moving files to folders based on a structure defined in a directive file.
 
 """
+
 import os
 import tempfile
 import shutil
@@ -230,6 +231,8 @@ class Directive(object):
     NAMESPACE = 'descatter/filer/schema/1.0'
     PREFIX = 'ds'
     XPATH_NAMESPACE = {PREFIX: NAMESPACE}
+    TRUE_ATTRIBUTE_VALUE = 'true'
+    FALSE_ATTRIBUTE_VALUE = 'false'
             
     # Tags
     AUTHOR_TAG = 'author'
@@ -399,6 +402,13 @@ class Directive(object):
         if case_sensitive is None:
             variable = variable.lower()
             value = value.lower()
+        elif case_sensitive.lower() == self.FALSE_ATTRIBUTE_VALUE:
+            variable = variable.lower()
+            value = value.lower()
+        elif case_sensitive.lower() == self.TRUE_ATTRIBUTE_VALUE:
+            pass
+        else:
+            raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.CASE_SENSITIVE_ATTRIBUTE, self.CONDITION_TAG))
             
         if type_value == self.CONDITION_TYPE_EQUALS:
             if value == self.ANY_VALUE_WILDCARD:

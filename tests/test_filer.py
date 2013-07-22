@@ -22,10 +22,7 @@ import tempfile
 import shutil
 
 import organize
-
-TESTS_FOLDER_NAME = 'tests'
-TESTS_DATA_FOLDER_NAME = 'data'
-TESTS_DATA_FOLDER_PATH = os.path.join(os.path.join(os.getcwd(), TESTS_FOLDER_NAME), TESTS_DATA_FOLDER_NAME)
+import config
 
 class TestFileFile(unittest.TestCase):
     """Tests for the organize.Filer.file_file function."""
@@ -33,7 +30,7 @@ class TestFileFile(unittest.TestCase):
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFile_src_", dir=None)
         self.test_destination_folder_path = tempfile.mkdtemp(suffix='', prefix='descatter_TestFileFile_dst_', dir=None)
-        directive_path_TestFileFile = os.path.join(TESTS_DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
+        directive_path_TestFileFile = os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
         self.test_filer = organize.Filer(self.test_destination_folder_path, organize.Directive(directive_path_TestFileFile))
 
     def tearDown(self):
@@ -70,7 +67,7 @@ class TestFileList(unittest.TestCase):
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFile_src_", dir=None)
         self.test_destination_folder_path = tempfile.mkdtemp(suffix='', prefix='descatter_TestFileFile_dst_', dir=None)
-        directive_path_TestFileFile = os.path.join(TESTS_DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
+        directive_path_TestFileFile = os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
         self.test_filer = organize.Filer(self.test_destination_folder_path, organize.Directive(directive_path_TestFileFile))
 
     def tearDown(self):
@@ -93,7 +90,7 @@ class TestFileList(unittest.TestCase):
         
         output_value = self.test_filer.file_list(test_source_file_path)
         
-        for index, value in enumerate(output_value):
+        for index in range(len(output_value)):
             self.assertEquals(output_value, expected_filed_paths[index])
             self.assertTrue(os.path.exists(expected_filed_paths[index]))
     
@@ -113,7 +110,7 @@ class TestFileList(unittest.TestCase):
         
         output_value = self.test_filer.file_list(test_source_file_path)
         
-        for index, value in enumerate(output_value):
+        for index in range(len(output_value)):
             self.assertEquals(output_value, expected_filed_paths[index])
             self.assertTrue(os.path.exists(expected_filed_paths[index]))
 
@@ -121,32 +118,32 @@ class TestFileFolder(unittest.TestCase):
     """Tests for the organize.Filer.file_folder function."""
     
     EXTENSIONS = ('.doc', 
-              '.docx', 
-              '.xls',
-              '.xlsx', 
-              '.ppt',
-              '.pptx', 
-              '.pdf',
-              '.odt', 
-              '.mp3', 
-              '.tif', 
-              '.tiff', 
-              '.jpg',
-              '.jpeg', 
-              '.png',
-              '.svg',
-              '.txt', 
-              '.md',
-              '.csv',
-              '.css', 
-              '.htm', 
-              '.html', 
-              '.avi')
+                  '.docx', 
+                  '.xls',
+                  '.xlsx', 
+                  '.ppt',
+                  '.pptx', 
+                  '.pdf',
+                  '.odt', 
+                  '.mp3', 
+                  '.tif', 
+                  '.tiff', 
+                  '.jpg',
+                  '.jpeg', 
+                  '.png',
+                  '.svg',
+                  '.txt', 
+                  '.md',
+                  '.csv',
+                  '.css', 
+                  '.htm', 
+                  '.html', 
+                  '.avi')
     
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFolder_src_", dir=None)
         self.test_destination_folder_path = tempfile.mkdtemp(suffix='', prefix='descatter_TestFileFolder_dst_', dir=None)
-        directive_path_TestFileFile = os.path.join(TESTS_DATA_FOLDER_PATH, "test_directive_TestFileFolder.xml")
+        directive_path_TestFileFile = os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestFileFolder.xml")
         self.test_filer = organize.Filer(self.test_destination_folder_path, organize.Directive(directive_path_TestFileFile))
 
         self.test_source_file_paths = []
