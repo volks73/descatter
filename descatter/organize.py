@@ -356,7 +356,13 @@ class Directive(object):
         
         path_name = None
         
-        match = self.XPATH_MATCH_ATTRIBUTE(rule_element)[0].lower()
+        match = self.XPATH_MATCH_ATTRIBUTE(rule_element)
+        
+        if match:
+            match = match[0].lower()
+        else:
+            raise DirectiveError("The '%s' attribute is missing for the '%s' tag" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
+        
         condition_results = []        
         
         for condition_element in self.XPATH_CONDITION_ELEMENTS(rule_element):
@@ -364,6 +370,9 @@ class Directive(object):
         
         if self._is_match(match, condition_results):
             path_name = rule_element.get(self.PATH_ATTRIBUTE)
+            
+            if path_name is None:
+                raise DirectiveError("The '%s' attribute is missing for the '%s' tag" % (self.PATH_ATTRIBUTE, self.RULE_TAG))
         
         return path_name
 

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Directive for the TestConditions unit test</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A simple directive to test correct handling of conditions elements.
+		</description>
+	</info>
+	<macros>
+		<macro name="original-name">
+			<text variable="file-name"/>
+			<text variable="file-extension" prefix="."/>
+		</macro>
+	</macros>
+	<paths>
+		<path name="default-path">
+			<file macro="original-name"/>
+		</path>
+	</paths>
+	<rules>
+		<rule name="match-all-rule" path="match-all-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="txt" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="5" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="match-all-not-rule" path="match-all-not-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="txt" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="match-any-rule" path="match-any-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="txt" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="match-any-not-rule" path="match-any-not-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-extension" value="ext" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_not_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="match-unknown-rule" path="match-unknown-path">
+			<conditions match="unknown">
+				<condition type="equals" variable="file-extension" value="ext" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_not_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="match-missing-rule" path="match-missing-path">
+			<conditions>
+				<condition type="equals" variable="file-extension" value="ext" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_not_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="path-missing-rule">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="txt" case-sensitive="false"/>
+				<condition type="equals" variable="file-index" value="5" case-sensitive="false"/>
+				<condition type="equals" variable="file-name" value="test_file" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="conditions-missing-rule" path="conditions-missing-path">
+		</rule>
+		<rule name="condition-missing-rule" path="condition-missing-path">
+		    <conditions>  
+			</conditions>
+		</rule>		
+	</rules>
+</directive>
