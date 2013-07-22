@@ -28,6 +28,7 @@ TESTS_DATA_FOLDER_NAME = 'data'
 TESTS_DATA_FOLDER_PATH = os.path.join(os.path.join(os.getcwd(), TESTS_FOLDER_NAME), TESTS_DATA_FOLDER_NAME)
 
 class TestFileFile(unittest.TestCase):
+    """Tests for the organize.Filer.file_file function."""
     
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFile_src_", dir=None)
@@ -64,6 +65,7 @@ class TestFileFile(unittest.TestCase):
         self.assertTrue(os.path.exists(expected_filed_path))
 
 class TestFileList(unittest.TestCase):
+    """Tests for the organize.Filer.file_list function."""
     
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFile_src_", dir=None)
@@ -116,6 +118,7 @@ class TestFileList(unittest.TestCase):
             self.assertTrue(os.path.exists(expected_filed_paths[index]))
 
 class TestFileFolder(unittest.TestCase):
+    """Tests for the organize.Filer.file_folder function."""
     
     EXTENSIONS = ('.doc', 
               '.docx', 

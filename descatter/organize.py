@@ -157,15 +157,17 @@ class Filer(object):
             file_extension = file_extension[1:].strip().lower() 
                     
             context[self.CURRENT_DATETIME] = datetime.now()
-            context[self.FILE_COUNT] = count
+            
+            # Need to change count, index, and size to string; otherwise, the condition tests will try to equate a string with an integer.
+            context[self.FILE_COUNT] = str(count)
             context[self.FILE_EXTENSION] = file_extension
             context[self.FILE_DATE_ACCESSED] = os.path.getatime(source)
             context[self.FILE_DATE_CREATED] = os.path.getctime(source)
             context[self.FILE_DATE_MODIFIED] = os.path.getmtime(source)
-            context[self.FILE_INDEX] = index
+            context[self.FILE_INDEX] = str(index)
             context[self.FILE_NAME] = file_name
             context[self.FILE_PATH] = os.path.dirname(source)
-            context[self.FILE_SIZE] = os.path.getsize(source)
+            context[self.FILE_SIZE] = str(os.path.getsize(source))
             context[self.FILE_SOURCE_PATH] = os.path.abspath(source)    
             
             return context
@@ -207,9 +209,9 @@ class Filer(object):
         filed_path = None
         
         if move:
-            filed_path = shutil.move(context[self.FILE_SOURCE], destination_file_path)
+            filed_path = shutil.move(context[self.FILE_SOURCE_PATH], destination_file_path)
         else:
-            filed_path = shutil.copy2(context[self.FILE_SOURCE], destination_file_path)
+            filed_path = shutil.copy2(context[self.FILE_SOURCE_PATH], destination_file_path)
         
         return filed_path
     
@@ -306,7 +308,7 @@ class Directive(object):
     def get_destination(self, filer_context):
         """Determines the destination for a filer context.
         
-        :param filer_context: A dictionary containing the variables used within a directive to create rules, folder names, and file names.
+        :param _filer_context: A dictionary containing the variables used within a directive to create rules, folder names, and file names.
             
             This is a container for the various variables that can be used within the directive XML file to create rules and text.
             
@@ -318,7 +320,7 @@ class Directive(object):
         
         file_name = None
         path_name = None
-        self.filer_context = filer_context
+        self._filer_context = filer_context
         
         for rule_element in self.XPATH_RULE_ELEMENTS(self._root):
             path_name = self._process_rule(rule_element)
@@ -372,21 +374,29 @@ class Directive(object):
             raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
     
     def _get_condition_result(self, condition_element):
+        """Gets the boolean result from a condition element."""
         
-        type_value = condition_element.get(self.TYPE_ATTRIBUTE).lower()
+        type_value = condition_element.get(self.TYPE_ATTRIBUTE)
         variable = condition_element.get(self.VARIABLE_ATTRIBUTE)
         value = condition_element.get(self.VALUE_ATTRIBUTE)
         case_sensitive = condition_element.get(self.CASE_SENSITIVE_ATTRIBUTE)
         
-        if variable is None:
-            raise DirectiveError("The '%s' attribute must be present in the '%s' tag" % (self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))
+        if type_value is None:
+            raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
         else:
-            variable = self.filer_context[variable]
+            type_value = type_value.lower()
+        
+        if variable is None:
+            raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))
+        elif variable in self._filer_context:
+            variable = self._filer_context[variable]
+        else:
+            raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable, self.VARIABLE_ATTRIBUTE))
             
         if value is None:
-            raise DirectiveError("The '%s' attribute must be present in the '%s' tag" % (self.VALUE_ATTRIBUTE, self.CONDITION_TAG))
+            raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.VALUE_ATTRIBUTE, self.CONDITION_TAG))
         
-        if not case_sensitive:
+        if case_sensitive is None:
             variable = variable.lower()
             value = value.lower()
             
@@ -413,7 +423,7 @@ class Directive(object):
         if value is not None:
             text = value
         elif variable is not None:
-            text = self.filer_context[variable]
+            text = self._filer_context[variable]
         else:
             raise DirectiveError("The '%s' tag is missing either the '%s' or '%s' attribute to determine the value" % (self.TEXT_TAG, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE))
         
@@ -496,7 +506,7 @@ class Directive(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self.filer_context[variable]
+            return self._filer_context[variable]
         elif macro is not None:
             return self._process_macro(macro)
         else:
@@ -511,7 +521,7 @@ class Directive(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self.filer_context[variable]
+            return self._filer_context[variable]
         elif macro is not None:
             return self._process_macro(macro)
         else:
