@@ -80,6 +80,12 @@ class TestCondition(unittest.TestCase):
         output_value = self.directive._get_condition_result(condition_element)
      
         self.assertFalse(output_value)
+        
+    def test_type_equals_wildcard(self):
+        condition_element = self.xpath_condition_element(self.directive._root, name='type-equals-wildcard-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+     
+        self.assertTrue(output_value)
      
     def test_type_greater_than(self):
         condition_element = self.xpath_condition_element(self.directive._root, name='type-greater-than-rule')[0]
@@ -240,3 +246,122 @@ class TestRule(unittest.TestCase):
         rule_element = self.xpath_rule_element(self.directive._root, name='condition-missing-rule')[0]
          
         self.assertRaises(organize.DirectiveError, self.directive._process_rule, rule_element)
+
+class TestPath(unittest.TestCase):
+    
+    def setUp(self):
+        self.xpath_path_element = etree.XPath(("//" +
+                                               organize.Directive.PREFIX + 
+                                               ":" + 
+                                               organize.Directive.PATHS_TAG + 
+                                               "/" + 
+                                               organize.Directive.PREFIX + 
+                                               ":" + 
+                                               organize.Directive.PATH_TAG + 
+                                               "[@" +
+                                               organize.Directive.NAME_ATTRIBUTE +
+                                               "=$name]"), 
+                                              namespaces=organize.Directive.XPATH_NAMESPACE)
+        
+        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestPath.xml"))
+        
+        context = {}
+        context[organize.Filer.CURRENT_DATETIME] = datetime.now()
+        context[organize.Filer.FILE_COUNT] = str(10)
+        context[organize.Filer.FILE_EXTENSION] = 'txt'
+        context[organize.Filer.FILE_DATE_ACCESSED] = datetime.now()
+        context[organize.Filer.FILE_DATE_CREATED] = datetime.now()
+        context[organize.Filer.FILE_DATE_MODIFIED] = datetime.now()
+        context[organize.Filer.FILE_INDEX] = str(5)
+        context[organize.Filer.FILE_NAME] = 'path_file_variable'
+        context[organize.Filer.FILE_PATH] = 'path_folder_variable'
+        context[organize.Filer.FILE_SIZE] = str(0)
+        context[organize.Filer.FILE_SOURCE_PATH] = os.getcwd()
+        
+        self.directive._filer_context = context
+    
+    def tearDown(self):
+        pass
+    
+    def test_file(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-path')[0]
+        output_value = self.directive._process_path(path_element)[1]
+        
+        self.assertEqual(output_value, 'path_file')
+    
+    def test_file_missing(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-missing-path')[0]
+         
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+    
+    def test_file_variable(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-variable-path')[0]
+        output_value = self.directive._process_path(path_element)[1]
+
+        self.assertEqual(output_value, 'path_file_variable')
+    
+    def test_file_macro(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-macro-path')[0]
+        output_value = self.directive._process_path(path_element)[1]
+
+        self.assertEqual(output_value, 'file_macro_name')
+    
+    def test_file_value_missing(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-value-missing-path')[0]
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+    
+    def test_file_variable_unknown(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-variable-unknown-path')[0]
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        
+    def test_file_macro_unknown(self):
+        path_element = self.xpath_path_element(self.directive._root, name='file-macro-unknown-path')[0]
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+    
+    def test_folder(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-path')[0]
+        folder_names, file_name = self.directive._process_path(path_element)
+        
+        self.assertEqual(file_name, 'path_folder_file')
+        self.assertEqual(folder_names[0], 'path_folder')
+    
+    def test_folder_value_missing(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-value-missing-path')[0]
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        
+    def test_folder_variable(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-variable-path')[0]
+        folder_names, file_name = self.directive._process_path(path_element)
+
+        self.assertEqual(file_name, 'path_folder_variable_file')
+        self.assertEqual(folder_names[0], 'path_folder_variable')
+
+    def test_folder_variable_unknown(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-variable-unknown-path')[0]
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        
+    def test_folder_macro(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-macro-path')[0]
+        folder_names, file_name = self.directive._process_path(path_element)
+
+        self.assertEqual(file_name, 'path_folder_macro_file')
+        self.assertEqual(folder_names[0], 'folder_macro_name')
+
+    def test_folder_macro_unknown(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-macro-unknown-path')[0]
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+    
+    def test_folder_nested(self):
+        path_element = self.xpath_path_element(self.directive._root, name='folder-nested-path')[0]
+        folder_names, file_name = self.directive._process_path(path_element)
+
+        self.assertEqual(file_name, 'path_folder_nested_file')
+        
+        for index in range(len(folder_names)):
+            self.assertEqual(folder_names[index], 'nested_' + str(index) + '_folder')

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <directive xmlns="descatter/filer/schema/1.0">
 	<info>
-		<title>Test Directive for the TestConditions unit test</title>
+		<title>Test Directive for the TestRule unit test</title>
 		<author>
 			<name>Christopher R. Field</name>
 			<email>cfield2 at gmail dot com</email>
 		</author>
 		<description>
-			A simple directive to test correct handling of conditions elements.
+			A simple directive to test correct handling of rule elements.
 		</description>
 	</info>
 	<macros>

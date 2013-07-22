@@ -299,7 +299,7 @@ class Directive(object):
     XPATH_PATH_ELEMENT = etree.XPath("//" + PREFIX + ":" + PATHS_TAG + "/" + PREFIX + ":" + PATH_TAG + "[@" + NAME_ATTRIBUTE + "=$name]", namespaces=XPATH_NAMESPACE)
     XPATH_FOLDER_ELEMENTS = etree.XPath(".//" + PREFIX + ":" + FOLDER_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_TEXT_ELEMENTS = etree.XPath("//" + PREFIX + ":" + MACROS_TAG + "/" + PREFIX + ":" + MACRO_TAG + "[@" + NAME_ATTRIBUTE + "=$name]/" + PREFIX + ":" + TEXT_TAG, namespaces=XPATH_NAMESPACE)
-    XPATH_FILE_ELEMENT = etree.XPath("//*//" + PREFIX + ":" + FILE_TAG, namespaces=XPATH_NAMESPACE)
+    XPATH_FILE_ELEMENT = etree.XPath("//" + PREFIX + ":" + PATHS_TAG + "/" + PREFIX + ":" + PATH_TAG + "[@" + NAME_ATTRIBUTE + "=$name]//" + PREFIX + ":" + FILE_TAG, namespaces=XPATH_NAMESPACE)
     
     def __init__(self, file):
         
@@ -335,22 +335,32 @@ class Directive(object):
             raise DirectiveError("A path name could not be determined for the file")
         else:
             path_element = self.XPATH_PATH_ELEMENT(self._root, name=path_name)
-            
+        
             if path_element is None:
                 raise DirectiveError("A path could not be determined for the file: '%s'" % filer_context[Filer.FILE_SOURCE])
             else:
                 path_element = path_element[0]
-  
-            folder_names = []
-                            
-            for folder_element in self.XPATH_FOLDER_ELEMENTS(path_element):
-                folder_name = self._get_folder_name(folder_element)
-                folder_names.append(folder_name)
-            
-            file_element = self.XPATH_FILE_ELEMENT(path_element)[0]
-            file_name = self._get_file_name(file_element)
-            
+                
+            folder_names, file_name = self._process_path(path_element)
+                      
         return folder_names, file_name
+
+    def _process_path(self, path_element):
+        
+        folder_names = []
+                            
+        for folder_element in self.XPATH_FOLDER_ELEMENTS(path_element):
+            folder_name = self._get_folder_name(folder_element)
+            folder_names.append(folder_name)
+            
+        file_element = self.XPATH_FILE_ELEMENT(path_element, name=path_element.get(self.NAME_ATTRIBUTE))
+        
+        if file_element is None:
+            raise DirectiveError("The '%s' tag is missing the child '%s' tag" % (self.PATH_TAG, self.FILE_TAG))
+        else:
+            file_element = file_element[0]
+            
+        return folder_names, self._get_file_name(file_element)
 
     def _process_rule(self, rule_element):
         
@@ -540,7 +550,10 @@ class Directive(object):
         if value is not None:
             return value
         elif variable is not None:
-            return self._filer_context[variable]
+            if variable in self._filer_context:
+                return self._filer_context[variable]    
+            else:
+                raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable, self.VARIABLE_ATTRIBUTE))
         elif macro is not None:
             return self._process_macro(macro)
         else:

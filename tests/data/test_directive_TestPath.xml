@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Directive for the TestPath unit test</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A simple directive to test correct handling of path elements.
+		</description>
+	</info>
+	<macros>
+	    <macro name="file-macro">
+	        <text value="file_macro_name"/>
+	    </macro>
+	    <macro name="folder-macro">
+	        <text value="folder_macro_name"/>
+	    </macro>
+	</macros>
+	<paths>
+	    <path name="file-path">
+	        <file value="path_file"/>
+	    </path>
+		<path name="file-missing-path">
+		</path>
+		<path name="file-variable-path">
+		    <file variable="file-name"/>
+		</path>
+		<path name="file-macro-path">
+		    <file macro="file-macro"/>
+		</path>
+		<path name="file-value-missing-path">
+		    <file/>
+		</path>
+		<path name="file-variable-unknown-path">
+		    <file variable="unknown"/>
+		</path>
+		<path name="file-macro-unknown-path">
+		    <file macro="unknown"/>
+		</path>
+		<path name="folder-path">
+		    <folder value="path_folder">
+		        <file value="path_folder_file"/>
+		    </folder>
+		</path>
+		<path name="folder-value-missing-path">
+		    <folder>
+		        <file value="path_folder_value_missing_file"/>
+		    </folder>
+		</path>
+		<path name="folder-variable-path">
+		    <folder variable="file-path">
+		        <file value="path_folder_variable_file"/>
+		    </folder>
+		</path>
+		<path name="folder-variable-unknown-path">
+		    <folder variable="unknown">
+		        <file value="path_folder_variable_unknown_file"/>
+		    </folder>
+		</path>
+		<path name="folder-macro-path">
+		    <folder macro="folder-macro">
+		        <file value="path_folder_macro_file"/>
+		    </folder>
+		</path>
+		<path name="folder-macro-unknown-path">
+		    <folder macro="unknown">
+		        <file value="path_folder_macro_unknown_file"/>
+		    </folder>
+		</path>
+		<path name="folder-nested-path">
+		    <folder value="nested_0_folder">
+		        <folder value="nested_1_folder">
+		            <folder value="nested_2_folder">
+		            	<file value="path_folder_nested_file"/>
+		            </folder>
+		        </folder>
+		    </folder>
+		</path>
+	</paths>
+	<rules/>
+</directive>

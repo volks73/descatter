@@ -10,17 +10,8 @@
 			A simple directive to test correct handling of condition elements.
 		</description>
 	</info>
-	<macros>
-		<macro name="original-name">
-			<text variable="file-name"/>
-			<text variable="file-extension" prefix="."/>
-		</macro>
-	</macros>
-	<paths>
-		<path name="default-path">
-			<file macro="original-name"/>
-		</path>
-	</paths>
+	<macros/>
+	<paths/>
 	<rules>
 		<rule name="type-equals-rule" path="type-equals-path">
 			<conditions match="all">
@@ -30,6 +21,11 @@
 		<rule name="type-equals-not-rule" path="type-equals-not-path">
 			<conditions match="all">
 				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="type-equals-wildcard-rule" path="type-equals-wildcard-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-name" value="*" case-sensitive="false"/>  
 			</conditions>
 		</rule>
 		<rule name="type-greater-than-rule" path="type-greater-than-path">

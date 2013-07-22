@@ -191,7 +191,7 @@ class TestFileFolder(unittest.TestCase):
         for file_path in self.test_source_file_paths:
             expected_filed_paths.append(os.path.join(self.test_destination_folder_path, os.path.basename(file_path)))
         
-        for index, value in enumerate(output_value):
+        for index in range(len(output_value)):
             self.assertTrue(os.path.exists(expected_filed_paths[index]))
     
         number_filed = len(os.listdir(self.test_destination_folder_path))
@@ -204,5 +204,5 @@ class TestFileFolder(unittest.TestCase):
         for file_path in self.test_source_file_paths:
             expected_filed_paths.append(os.path.join(self.test_destination_folder_path, os.path.basename(file_path)))
         
-        for index, value in enumerate(output_value):
+        for index in range(len(output_value)):
             self.assertTrue(os.path.exists(expected_filed_paths[index]))
