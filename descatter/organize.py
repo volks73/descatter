@@ -281,7 +281,7 @@ class Directive(object):
     CONDITION_TYPE_GREATER_THAN = 'greater-than'
     CONDITION_TYPE_LESS_THAN = 'less-than' 
     CONDITION_TYPE_NOT_EQUAL = 'not-equal'
-    # TODO: Add a 'has' condition to test if a text or variable has a value within it. This would be similar to searching a string for substring and returning 'True' if found. 
+    CONDITION_TYPE_HAS = 'has' 
     
     # Text case attribute values
     TEXT_CASE_LOWER = 'lower'
@@ -531,6 +531,8 @@ class Directive(object):
             return variable < value
         elif type_value == self.CONDITION_TYPE_NOT_EQUAL:
             return variable != value
+        elif type_value == self.CONDITION_TYPE_HAS:
+            return value in variable
         else:
             raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
     

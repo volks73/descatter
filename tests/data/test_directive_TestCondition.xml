@@ -58,6 +58,16 @@
 				<condition type="not-equal" variable="file-index" value="5" case-sensitive="false"/>  
 			</conditions>
 		</rule>
+		<rule name="type-has-rule" path="type-has-path">
+			<conditions match="all">
+				<condition type="has" variable="file-name" value="test" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="type-has-not-rule" path="type-has-not-path">
+			<conditions match="all">
+				<condition type="has" variable="file-name" value="folder" case-sensitive="false"/>  
+			</conditions>
+		</rule>
 		<rule name="type-unknown-rule" path="type-unknown-path">
 			<conditions match="all">
 				<condition type="unknown" variable="file-index" value="0" case-sensitive="false"/>  
