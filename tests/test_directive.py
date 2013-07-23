@@ -29,6 +29,7 @@ class TestCondition(unittest.TestCase):
     """Test 'condition' element in the XML directive file and its related children elements and attributes."""
     
     def setUp(self):
+        
         self.xpath_condition_element = etree.XPath(("//" +
                                                     organize.Directive.PREFIX + 
                                                     ":" + 
@@ -70,99 +71,100 @@ class TestCondition(unittest.TestCase):
         pass
     
     def test_type_equals(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-equals-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertTrue(output_value)
     
     def test_type_equals_not(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-equals-not-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertFalse(output_value)
         
     def test_type_equals_wildcard(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-equals-wildcard-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertTrue(output_value)
      
     def test_type_greater_than(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-greater-than-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertTrue(output_value)
      
     def test_type_greater_than_not(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-greater-than-not-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertFalse(output_value)
      
     def test_type_less_than(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-less-than-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertTrue(output_value)
      
     def test_type_less_than_not(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-less-than-not-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertFalse(output_value)
      
     def test_type_unknown(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='type-unknown-rule')[0]
-         
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
      
     def test_type_missing(self):
-        condition_element = self.xpath_condition_element(self.directive._root, name='type-missing-rule')[0]
-         
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='type-missing-rule')[0] 
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
 
     def test_case_sensitive_true(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='case-sensitive-true-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertFalse(output_value)
         
     def test_case_sensitive_false(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='case-sensitive-false-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertTrue(output_value)
 
     def test_case_sensitive_unknown(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='case-sensitive-unknown-rule')[0]
-     
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
 
     def test_case_sensitive_missing(self):
+        
         condition_element = self.xpath_condition_element(self.directive._root, name='case-sensitive-missing-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
-     
         self.assertTrue(output_value)
     
     def test_variable_unknown(self):
-        condition_element = self.xpath_condition_element(self.directive._root, name='variable-unknown-rule')[0]
-         
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='variable-unknown-rule')[0] 
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
          
     def test_variable_missing(self):
-        condition_element = self.xpath_condition_element(self.directive._root, name='variable-missing-rule')[0]
-         
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='variable-missing-rule')[0] 
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
      
     def test_value_missing(self):
-        condition_element = self.xpath_condition_element(self.directive._root, name='value-missing-rule')[0]
-         
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='value-missing-rule')[0] 
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
 
 class TestRule(unittest.TestCase):
     """Test 'rule' element in the XML directive file and its related children elements and attributes.""" 
     
     def setUp(self):
+        
         self.xpath_rule_element = etree.XPath(("//" +
                                                organize.Directive.PREFIX + 
                                                ":" + 
@@ -251,6 +253,7 @@ class TestPath(unittest.TestCase):
     """Test 'path' element in the XML directive file and its related children elements and attributes."""
     
     def setUp(self):
+        
         self.xpath_path_element = etree.XPath(("//" +
                                                organize.Directive.PREFIX + 
                                                ":" + 
@@ -357,6 +360,7 @@ class TestMacro(unittest.TestCase):
     """Test 'macro' element in the XML directive file and its related children elements and attributes."""
     
     def setUp(self):
+        
         self.xpath_macro_element = etree.XPath(("//" +
                                                organize.Directive.PREFIX + 
                                                ":" + 
