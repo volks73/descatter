@@ -294,13 +294,13 @@ class Directive(object):
     # Precompiled XPaths
     XPATH_RULE_ELEMENTS = etree.XPath("//" + PREFIX + ":" + RULES_TAG + "/" + PREFIX + ":" + RULE_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_CONDITION_ELEMENTS = etree.XPath(PREFIX + ":" + CONDITIONS_TAG + "/" + PREFIX + ":" + CONDITION_TAG, namespaces=XPATH_NAMESPACE)
-    XPATH_MACRO_ELEMENTS = etree.XPath("//" + PREFIX + ":" + MACROS_TAG + "/" + PREFIX + ":" + MACRO_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_MATCH_ATTRIBUTE = etree.XPath(PREFIX + ":" + CONDITIONS_TAG + "/@" + MATCH_ATTRIBUTE, namespaces=XPATH_NAMESPACE)
     XPATH_PATH_ELEMENT = etree.XPath("//" + PREFIX + ":" + PATHS_TAG + "/" + PREFIX + ":" + PATH_TAG + "[@" + NAME_ATTRIBUTE + "=$name]", namespaces=XPATH_NAMESPACE)
     XPATH_FOLDER_ELEMENTS = etree.XPath(".//" + PREFIX + ":" + FOLDER_TAG, namespaces=XPATH_NAMESPACE)
-    XPATH_TEXT_ELEMENTS = etree.XPath("//" + PREFIX + ":" + MACROS_TAG + "/" + PREFIX + ":" + MACRO_TAG + "[@" + NAME_ATTRIBUTE + "=$name]/" + PREFIX + ":" + TEXT_TAG, namespaces=XPATH_NAMESPACE)
-    XPATH_FILE_ELEMENT = etree.XPath("//" + PREFIX + ":" + PATHS_TAG + "/" + PREFIX + ":" + PATH_TAG + "[@" + NAME_ATTRIBUTE + "=$name]//" + PREFIX + ":" + FILE_TAG, namespaces=XPATH_NAMESPACE)
-    
+    XPATH_FILE_ELEMENT = etree.XPath(".//" + PREFIX + ":" + FILE_TAG, namespaces=XPATH_NAMESPACE)
+    XPATH_MACRO_ELEMENT = etree.XPath("//" + PREFIX + ":" + MACROS_TAG + "/" + PREFIX + ":" + MACRO_TAG + "[@" + NAME_ATTRIBUTE + "=$name]", namespaces=XPATH_NAMESPACE)
+    XPATH_TEXT_ELEMENTS = etree.XPath(".//" + PREFIX + ":" + TEXT_TAG, namespaces=XPATH_NAMESPACE)
+        
     def __init__(self, file):
         
         self.file_path = file
@@ -321,7 +321,6 @@ class Directive(object):
         
         """
         
-        file_name = None
         path_name = None
         self._filer_context = filer_context
         
@@ -332,59 +331,76 @@ class Directive(object):
                 break
         
         if path_name is None:
-            raise DirectiveError("A path name could not be determined for the file")
+            raise DirectiveError("A path could not be determined")
         else:
-            path_element = self.XPATH_PATH_ELEMENT(self._root, name=path_name)
-        
-            if path_element is None:
-                raise DirectiveError("A path could not be determined for the file: '%s'" % filer_context[Filer.FILE_SOURCE])
-            else:
-                path_element = path_element[0]
-                
-            folder_names, file_name = self._process_path(path_element)
-                      
-        return folder_names, file_name
-
-    def _process_path(self, path_element):
-        
-        folder_names = []
-                            
-        for folder_element in self.XPATH_FOLDER_ELEMENTS(path_element):
-            folder_name = self._get_folder_name(folder_element)
-            folder_names.append(folder_name)
-            
-        file_element = self.XPATH_FILE_ELEMENT(path_element, name=path_element.get(self.NAME_ATTRIBUTE))
-        
-        if file_element is None:
-            raise DirectiveError("The '%s' tag is missing the child '%s' tag" % (self.PATH_TAG, self.FILE_TAG))
-        else:
-            file_element = file_element[0]
-            
-        return folder_names, self._get_file_name(file_element)
+            return self._process_path(path_name)
 
     def _process_rule(self, rule_element):
         
         path_name = None
-        
-        match = self.XPATH_MATCH_ATTRIBUTE(rule_element)
-        
-        if match:
-            match = match[0].lower()
-        else:
-            raise DirectiveError("The '%s' attribute is missing for the '%s' tag" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
         
         condition_results = []        
         
         for condition_element in self.XPATH_CONDITION_ELEMENTS(rule_element):
             condition_results.append(self._get_condition_result(condition_element))
         
+        match = self.XPATH_MATCH_ATTRIBUTE(rule_element)
+        
+        if match:
+            match = match[0].lower()
+        else:
+            raise DirectiveError("The '%s' attribute is missing for the '%s' element" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
+        
         if self._is_match(match, condition_results):
             path_name = rule_element.get(self.PATH_ATTRIBUTE)
             
             if path_name is None:
-                raise DirectiveError("The '%s' attribute is missing for the '%s' tag" % (self.PATH_ATTRIBUTE, self.RULE_TAG))
+                raise DirectiveError("The '%s' attribute is missing for the '%s' element" % (self.PATH_ATTRIBUTE, self.RULE_TAG))
         
         return path_name
+
+    def _process_path(self, name):
+        
+        path_element = self.XPATH_PATH_ELEMENT(self._root, name=name)
+        
+        if not path_element:
+            raise DirectiveError("The '%s' path could not be found" % name)
+        else:
+            path_element = path_element[0]
+        
+        folder_names = []
+                            
+        for folder_element in self.XPATH_FOLDER_ELEMENTS(path_element):
+            folder_name = self._get_value(folder_element)
+            folder_names.append(folder_name)
+            
+        file_element = self.XPATH_FILE_ELEMENT(path_element, name=path_element.get(self.NAME_ATTRIBUTE))
+        
+        if not file_element:
+            raise DirectiveError("The '%s' element is missing the child '%s' element" % (self.PATH_TAG, self.FILE_TAG))
+        else:
+            return folder_names, self._get_value(file_element[0])
+
+    def _process_macro(self, name):
+        
+        macro_element = self.XPATH_MACRO_ELEMENT(self._root, name=name)
+        
+        if not macro_element:
+            raise DirectiveError("The '%s' macro could not be found")
+        else:
+            macro_element = macro_element[0]
+        
+        text_elements = self.XPATH_TEXT_ELEMENTS(macro_element, name=name)
+        
+        if not text_elements:
+            raise DirectiveError("The '%s' macro is missing one or more '%s' child elements" % (name, self.TEXT_TAG))
+        else:
+            text = ''
+            
+            for text_element in text_elements:
+                text = text + self._get_text(text_element)
+        
+            return text
 
     def _is_match(self, match, results):
         
@@ -445,22 +461,35 @@ class Directive(object):
         
         # TODO: Add date formatting if a date child tag is present
         # TODO: Add numeric formatting if a numeric child tag is present
-        text = ''
-        value = text_element.get(self.VALUE_ATTRIBUTE)
-        variable = text_element.get(self.VARIABLE_ATTRIBUTE)
-        
-        if value is not None:
-            text = value
-        elif variable is not None:
-            text = self._filer_context[variable]
-        else:
-            raise DirectiveError("The '%s' tag is missing either the '%s' or '%s' attribute to determine the value" % (self.TEXT_TAG, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE))
+        text = self._get_value(text_element)
         
         # Only format the text if it is non-empty
         if text:
             text = self._format_text(text, text_element)
             
         return text
+    
+    def _get_value(self, element):
+        
+        value = element.get(self.VALUE_ATTRIBUTE)
+        variable_name = element.get(self.VARIABLE_ATTRIBUTE)
+        macro_name = element.get(self.MACRO_ATTRIBUTE)
+        
+        if value is not None:
+            return value
+        elif variable_name is not None:
+            return self._get_variable_value(variable_name)
+        elif macro_name is not None:
+            return self._process_macro(macro_name)
+        else:
+            raise DirectiveError("The '%s' element is missing either the '%s', '%s', or '%s' attribute" % (element.tag, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
+    
+    def _get_variable_value(self, variable_name):
+        
+        if variable_name in self._filer_context:
+            return self._filer_context[variable_name]
+        else:
+            raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable_name, self.VARIABLE_ATTRIBUTE))
     
     def _format_text(self, text, text_element): 
         
@@ -480,7 +509,10 @@ class Directive(object):
         
         if case is None:
             return text
-        elif case == self.TEXT_CASE_LOWER:
+        else:
+            case = case.lower()
+            
+        if case == self.TEXT_CASE_LOWER:
             return text.lower()
         elif case == self.TEXT_CASE_UPPER:
             return text.upper()
@@ -515,49 +547,6 @@ class Directive(object):
             return text
         else:
             return text + suffix
-    
-    def _process_macro(self, name):
-        
-        text = ''
-        text_elements = self.XPATH_TEXT_ELEMENTS(self._root, name=name)
-        
-        for text_element in text_elements:
-            text = text + self._get_text(text_element)
-        
-        return text
-    
-    def _get_folder_name(self, folder_element):
-        
-        value = folder_element.get(self.VALUE_ATTRIBUTE)
-        variable = folder_element.get(self.VARIABLE_ATTRIBUTE)
-        macro = folder_element.get(self.MACRO_ATTRIBUTE)
-        
-        if value is not None:
-            return value
-        elif variable is not None:
-            return self._filer_context[variable]
-        elif macro is not None:
-            return self._process_macro(macro)
-        else:
-            raise DirectiveError("The '%s' tag is missing either the '%s', '%s', or '%s' attribute to determine the value" % (self.FOLDER_TAG, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
-    
-    def _get_file_name(self, file_element):
-        
-        value = file_element.get(self.VALUE_ATTRIBUTE)
-        variable = file_element.get(self.VARIABLE_ATTRIBUTE)
-        macro = file_element.get(self.MACRO_ATTRIBUTE)
-        
-        if value is not None:
-            return value
-        elif variable is not None:
-            if variable in self._filer_context:
-                return self._filer_context[variable]    
-            else:
-                raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable, self.VARIABLE_ATTRIBUTE))
-        elif macro is not None:
-            return self._process_macro(macro)
-        else:
-            raise DirectiveError("The '%s' tag is missing either the '%s', '%s', or '%s' attribute to determine the value" % (self.FILE_TAG, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
 
 class Validator(object):
     """Checks a directive to see if it is usable for directing a filer."""

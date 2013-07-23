@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Directive for the TestMacro unit test</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A simple directive to test correct handling of macro elements.
+		</description>
+	</info>
+	<macros>
+	    <macro name="text-value">
+	        <text value="text_value"/>
+	    </macro>
+	    <macro name="text-missing">
+	    </macro>
+	    <macro name="text-value-missing">
+	        <text/>
+	    </macro>
+	    <macro name="text-variable">
+	        <text variable="file-name"/>
+	    </macro>
+	    <macro name="text-variable-unknown">
+	        <text variable="unknown"/>
+	    </macro>
+	    <macro name="text-prefix">
+	        <text value="text" prefix="prefix_"/>
+	    </macro>
+	    <macro name="text-suffix">
+	        <text value="text" suffix="_suffix"/>
+	    </macro>
+	    <macro name="text-replace-underscore">
+	        <text value="text replace underscore" replace-spaces-with="_"/>
+	    </macro>
+	    <macro name="text-replace-empty">
+	        <text value="Text Replace Empty" replace-spaces-with=""/>
+	    </macro>
+	    <macro name="text-case-upper">
+	        <text value="TEXT case UpPeR" case="upper"/>
+	    </macro>
+	    <macro name="text-case-lower">
+	        <text value="TEXT case LoWeR" case="lower"/>
+	    </macro>
+	    <macro name="text-case-title">
+	        <text value="TEXT case TiTlE" case="title"/>
+	    </macro>
+	    <macro name="text-case-unknown">
+	        <text value="TEXT case UnKnOwN" case="unknown"/>
+	    </macro>
+	    <macro name="text-all-format">
+	        <text value="TEXT all FoRmAt" case="title" prefix="prefix_" suffix="_suffix" replace-spaces-with="_"/>
+	    </macro>	    
+	    <macro name="text-compound">
+	        <text value="macro_"/>
+	        <text value="text_"/>
+	        <text value="compound"/>
+	    </macro>
+	</macros>
+	<paths/>
+	<rules/>
+</directive>

@@ -26,7 +26,7 @@ from lxml import etree
 from datetime import datetime
 
 class TestCondition(unittest.TestCase):
-    """Test 'condition' element, or tag in the XML file, and its related attributes processing."""
+    """Test 'condition' element in the XML directive file and its related children elements and attributes."""
     
     def setUp(self):
         self.xpath_condition_element = etree.XPath(("//" +
@@ -160,7 +160,7 @@ class TestCondition(unittest.TestCase):
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
 
 class TestRule(unittest.TestCase):
-    """Test 'conditions' element, or tag in the XML file, and its related attributes processing.""" 
+    """Test 'rule' element in the XML directive file and its related children elements and attributes.""" 
     
     def setUp(self):
         self.xpath_rule_element = etree.XPath(("//" +
@@ -248,6 +248,7 @@ class TestRule(unittest.TestCase):
         self.assertRaises(organize.DirectiveError, self.directive._process_rule, rule_element)
 
 class TestPath(unittest.TestCase):
+    """Test 'path' element in the XML directive file and its related children elements and attributes."""
     
     def setUp(self):
         self.xpath_path_element = etree.XPath(("//" +
@@ -273,8 +274,8 @@ class TestPath(unittest.TestCase):
         context[organize.Filer.FILE_DATE_CREATED] = datetime.now()
         context[organize.Filer.FILE_DATE_MODIFIED] = datetime.now()
         context[organize.Filer.FILE_INDEX] = str(5)
-        context[organize.Filer.FILE_NAME] = 'path_file_variable'
-        context[organize.Filer.FILE_PATH] = 'path_folder_variable'
+        context[organize.Filer.FILE_NAME] = 'file_variable'
+        context[organize.Filer.FILE_PATH] = 'folder_variable'
         context[organize.Filer.FILE_SIZE] = str(0)
         context[organize.Filer.FILE_SOURCE_PATH] = os.getcwd()
         
@@ -284,84 +285,178 @@ class TestPath(unittest.TestCase):
         pass
     
     def test_file(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-path')[0]
-        output_value = self.directive._process_path(path_element)[1]
         
-        self.assertEqual(output_value, 'path_file')
+        output_value = self.directive._process_path('file')[1]
+        self.assertEqual(output_value, 'file')
     
     def test_file_missing(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-missing-path')[0]
-         
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'file-missing')
     
     def test_file_variable(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-variable-path')[0]
-        output_value = self.directive._process_path(path_element)[1]
-
-        self.assertEqual(output_value, 'path_file_variable')
+        
+        output_value = self.directive._process_path('file-variable')[1]
+        self.assertEqual(output_value, 'file_variable')
     
     def test_file_macro(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-macro-path')[0]
-        output_value = self.directive._process_path(path_element)[1]
-
+        
+        output_value = self.directive._process_path('file-macro')[1]
         self.assertEqual(output_value, 'file_macro_name')
     
     def test_file_value_missing(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-value-missing-path')[0]
-
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'file-value-missing')
     
     def test_file_variable_unknown(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-variable-unknown-path')[0]
 
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'file-variable-unknown')
         
     def test_file_macro_unknown(self):
-        path_element = self.xpath_path_element(self.directive._root, name='file-macro-unknown-path')[0]
 
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'file-macro-unknown')
     
     def test_folder(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-path')[0]
-        folder_names, file_name = self.directive._process_path(path_element)
         
-        self.assertEqual(file_name, 'path_folder_file')
-        self.assertEqual(folder_names[0], 'path_folder')
+        folder_names, file_name = self.directive._process_path('folder')
+        self.assertEqual(file_name, 'folder_file')
+        self.assertEqual(folder_names[0], 'folder')
     
     def test_folder_value_missing(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-value-missing-path')[0]
 
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'folder-value-missing')
         
     def test_folder_variable(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-variable-path')[0]
-        folder_names, file_name = self.directive._process_path(path_element)
 
-        self.assertEqual(file_name, 'path_folder_variable_file')
-        self.assertEqual(folder_names[0], 'path_folder_variable')
+        folder_names, file_name = self.directive._process_path('folder-variable')
+        self.assertEqual(file_name, 'folder_variable_file')
+        self.assertEqual(folder_names[0], 'folder_variable')
 
     def test_folder_variable_unknown(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-variable-unknown-path')[0]
 
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'folder-variable-unknown')
         
     def test_folder_macro(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-macro-path')[0]
-        folder_names, file_name = self.directive._process_path(path_element)
-
-        self.assertEqual(file_name, 'path_folder_macro_file')
+        
+        folder_names, file_name = self.directive._process_path('folder-macro')
+        self.assertEqual(file_name, 'folder_macro_file')
         self.assertEqual(folder_names[0], 'folder_macro_name')
 
     def test_folder_macro_unknown(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-macro-unknown-path')[0]
 
-        self.assertRaises(organize.DirectiveError, self.directive._process_rule, path_element)
+        self.assertRaises(organize.DirectiveError, self.directive._process_path, 'folder-macro-unknown')
     
     def test_folder_nested(self):
-        path_element = self.xpath_path_element(self.directive._root, name='folder-nested-path')[0]
-        folder_names, file_name = self.directive._process_path(path_element)
-
-        self.assertEqual(file_name, 'path_folder_nested_file')
+        
+        folder_names, file_name = self.directive._process_path('folder-nested')
+        self.assertEqual(file_name, 'folder_nested_file')
         
         for index in range(len(folder_names)):
             self.assertEqual(folder_names[index], 'nested_' + str(index) + '_folder')
+
+class TestMacro(unittest.TestCase):
+    """Test 'macro' element in the XML directive file and its related children elements and attributes."""
+    
+    def setUp(self):
+        self.xpath_macro_element = etree.XPath(("//" +
+                                               organize.Directive.PREFIX + 
+                                               ":" + 
+                                               organize.Directive.MACROS_TAG + 
+                                               "/" + 
+                                               organize.Directive.PREFIX + 
+                                               ":" + 
+                                               organize.Directive.MACRO_TAG + 
+                                               "[@" +
+                                               organize.Directive.NAME_ATTRIBUTE +
+                                               "=$name]"), 
+                                              namespaces=organize.Directive.XPATH_NAMESPACE)
+        
+        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestMacro.xml"))
+        
+        context = {}
+        context[organize.Filer.CURRENT_DATETIME] = datetime.now()
+        context[organize.Filer.FILE_COUNT] = str(10)
+        context[organize.Filer.FILE_EXTENSION] = 'txt'
+        context[organize.Filer.FILE_DATE_ACCESSED] = datetime.now()
+        context[organize.Filer.FILE_DATE_CREATED] = datetime.now()
+        context[organize.Filer.FILE_DATE_MODIFIED] = datetime.now()
+        context[organize.Filer.FILE_INDEX] = str(5)
+        context[organize.Filer.FILE_NAME] = 'file_variable'
+        context[organize.Filer.FILE_PATH] = 'folder_variable'
+        context[organize.Filer.FILE_SIZE] = str(0)
+        context[organize.Filer.FILE_SOURCE_PATH] = os.getcwd()
+        
+        self.directive._filer_context = context
+    
+    def tearDown(self):
+        pass
+    
+    def test_text_value(self):
+        
+        output_value = self.directive._process_macro('text-value')
+        self.assertEqual(output_value, 'text_value')
+    
+    def test_text_missing(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'text-missing')
+        
+    def test_text_value_missing(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'text-value-missing')
+    
+    def test_text_variable(self):
+        
+        output_value = self.directive._process_macro('text-variable')
+        self.assertEqual(output_value, 'file_variable')    
+    
+    def test_text_variable_unknown(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'text-variable-unknown')
+    
+    def test_text_prefix(self):
+        
+        output_value = self.directive._process_macro('text-prefix')
+        self.assertEqual(output_value, 'prefix_text')
+    
+    def test_text_suffix(self):
+        
+        output_value = self.directive._process_macro('text-suffix')
+        self.assertEqual(output_value, 'text_suffix')
+    
+    def test_text_replace_underscore(self):
+        
+        output_value = self.directive._process_macro('text-replace-underscore')
+        self.assertEqual(output_value, 'text_replace_underscore')
+    
+    def test_text_replace_empty(self):
+        
+        output_value = self.directive._process_macro('text-replace-empty')
+        self.assertEqual(output_value, 'TextReplaceEmpty')
+    
+    def test_text_case_upper(self):
+        
+        output_value = self.directive._process_macro('text-case-upper')
+        self.assertEqual(output_value, 'TEXT CASE UPPER')
+    
+    def test_text_case_lower(self):
+        
+        output_value = self.directive._process_macro('text-case-lower')
+        self.assertEqual(output_value, 'text case lower')
+        
+    def test_text_case_title(self):
+        
+        output_value = self.directive._process_macro('text-case-title')
+        self.assertEqual(output_value, 'Text Case Title')
+    
+    def test_text_case_unknown(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'text-case-unknown')
+    
+    def test_text_case_all(self):
+        
+        output_value = self.directive._process_macro('text-all-format')
+        self.assertEqual(output_value, 'prefix_Text_All_Format_suffix')
+    
+    def test_text_compound(self):
+        
+        output_value = self.directive._process_macro('text-compound')
+        self.assertEqual(output_value, 'macro_text_compound')
