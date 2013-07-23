@@ -162,9 +162,9 @@ class Filer(object):
             # Need to change count, index, and size to string; otherwise, the condition tests will try to equate a string with an integer.
             context[self.FILE_COUNT] = str(count)
             context[self.FILE_EXTENSION] = file_extension
-            context[self.FILE_DATE_ACCESSED] = os.path.getatime(source)
-            context[self.FILE_DATE_CREATED] = os.path.getctime(source)
-            context[self.FILE_DATE_MODIFIED] = os.path.getmtime(source)
+            context[self.FILE_DATE_ACCESSED] = datetime.fromtimestamp(os.path.getatime(source))
+            context[self.FILE_DATE_CREATED] = datetime.fromtimestamp(os.path.getctime(source))
+            context[self.FILE_DATE_MODIFIED] = datetime.fromtimestamp(os.path.getmtime(source))
             context[self.FILE_INDEX] = str(index)
             context[self.FILE_NAME] = file_name
             context[self.FILE_PATH] = os.path.dirname(source)
