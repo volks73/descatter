@@ -6,7 +6,7 @@
 			<name>Christopher R. Field</name>
 			<email>cfield2 at gmail dot com</email>
 		</author>
-		<description>
+		<description format="text">
 			A directive that has just the information about the directive.
 		</description>
 	</info>

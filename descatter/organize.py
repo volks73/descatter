@@ -345,12 +345,13 @@ class Directive(object):
         else:
             info[self.EMAIL_TAG] = None
         
-        # TODO: Add a format attribute that defines the markup of the description text, such as markdown or reStructuredText.
         description_element = self.XPATH_DESCRIPTION_ELEMENT(self._root)
         
         if description_element:
             description_element = description_element[0]
             info[self.DESCRIPTION_TAG] = description_element.text.strip()
+            format_value = description_element.get(self.FORMAT_ATTRIBUTE)
+            info[self.FORMAT_ATTRIBUTE] = format_value
         else:
             info[self.DESCRIPTION_TAG] = None
         

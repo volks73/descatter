@@ -610,8 +610,10 @@ class TestInfo(unittest.TestCase):
         expected_author_name = 'Christopher R. Field'
         expected_author_email = 'cfield2 at gmail dot com'
         expected_description = 'A directive that has just the information about the directive.'
+        expected_format = 'text'
         output_info = self.directive.get_info()
         self.assertEquals(output_info[organize.Directive.TITLE_TAG], expected_title)
         self.assertEquals(output_info[organize.Directive.NAME_TAG], expected_author_name)
         self.assertEquals(output_info[organize.Directive.EMAIL_TAG], expected_author_email)
         self.assertEquals(output_info[organize.Directive.DESCRIPTION_TAG], expected_description)
+        self.assertEquals(output_info[organize.Directive.FORMAT_ATTRIBUTE], expected_format)
