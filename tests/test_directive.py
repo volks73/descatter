@@ -460,3 +460,48 @@ class TestMacro(unittest.TestCase):
         
         output_value = self.directive._process_macro('text-compound')
         self.assertEqual(output_value, 'macro_text_compound')
+
+class TestDestination(unittest.TestCase):
+    """Test 'get_destination' method of the 'Directive' class."""
+    
+    def setUp(self):
+        self.xpath_macro_element = etree.XPath(("//" +
+                                               organize.Directive.PREFIX + 
+                                               ":" + 
+                                               organize.Directive.MACROS_TAG + 
+                                               "/" + 
+                                               organize.Directive.PREFIX + 
+                                               ":" + 
+                                               organize.Directive.MACRO_TAG + 
+                                               "[@" +
+                                               organize.Directive.NAME_ATTRIBUTE +
+                                               "=$name]"), 
+                                              namespaces=organize.Directive.XPATH_NAMESPACE)
+        
+        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestDestination.xml"))
+        
+        self.context = {}
+        self.context[organize.Filer.CURRENT_DATETIME] = datetime.now()
+        self.context[organize.Filer.FILE_COUNT] = str(10)
+        self.context[organize.Filer.FILE_EXTENSION] = 'file_extension'
+        self.context[organize.Filer.FILE_DATE_ACCESSED] = datetime.now()
+        self.context[organize.Filer.FILE_DATE_CREATED] = datetime.now()
+        self.context[organize.Filer.FILE_DATE_MODIFIED] = datetime.now()
+        self.context[organize.Filer.FILE_INDEX] = str(5)
+        self.context[organize.Filer.FILE_NAME] = 'file name'
+        self.context[organize.Filer.FILE_PATH] = 'file_path'
+        self.context[organize.Filer.FILE_SIZE] = str(0)
+        self.context[organize.Filer.FILE_SOURCE_PATH] = 'file_source_path'
+    
+    def tearDown(self):
+        pass
+    
+    def test_destination(self):
+        
+        expected_file_name = 'prefix_Value_FILE_NAME_suffix'
+        expected_folder_names = ('default_folder','file_path','macro_folder')
+        folder_names, file_name = self.directive.get_destination(self.context)
+        self.assertEquals(file_name, expected_file_name)
+        
+        for index in range(len(folder_names)):
+            self.assertEquals(folder_names[index], expected_folder_names[index])

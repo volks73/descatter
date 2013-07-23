@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Directive for the TestDestination unit test</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A directive that combines all of the tags to test finding the correct destination..
+		</description>
+	</info>
+	<macros>
+		<macro name="file-macro">
+			<text value="value" prefix="prefix_" suffix="_" case="title"/>
+			<text variable="file-name" suffix="_suffix" case="upper" replace-spaces-with="_"/>
+		</macro>
+		<macro name="folder-macro">
+		    <text value="macro_folder"/>
+		</macro>
+	</macros>
+	<paths>
+		<path name="default-path">
+		    <folder value="default_folder">
+		        <folder variable="file-path">
+		            <folder macro="folder-macro">
+		            	<file macro="file-macro"/>    
+		            </folder>
+		        </folder>
+		    </folder>
+		</path>
+	</paths>
+	<rules>
+		<rule name="default-rule" path="default-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-name" value="*"/>  
+			</conditions>
+		</rule>		
+	</rules>
+</directive>
