@@ -466,7 +466,6 @@ class Directive(object):
     
     def _get_text(self, text_element):
         
-        # TODO: Add numeric formatting if a numeric child tag is present
         text = self._get_value(text_element)
         
         # Only format the text if it is non-empty
