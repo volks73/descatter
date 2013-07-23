@@ -394,6 +394,10 @@ class TestMacro(unittest.TestCase):
     def tearDown(self):
         pass
     
+    def test_child_unknown(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'child-unknown')
+    
     def test_text_value(self):
         
         output_value = self.directive._process_macro('text-value')
@@ -473,6 +477,54 @@ class TestMacro(unittest.TestCase):
         
         output_value = self.directive._process_macro('text-compound')
         self.assertEqual(output_value, 'macro_text_compound')
+    
+    def test_date_variable(self):
+        
+        now = datetime.now()
+        expected_value = now.strftime('%Y-%m-%d')
+        output_value = self.directive._process_macro('date-variable')
+        self.assertEqual(output_value, expected_value)
+    
+    def test_date_variable_missing(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'date-variable-missing')
+    
+    def test_date_format_missing(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'date-format-missing')
+    
+    def test_date_variable_unknown(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'date-variable-unknown')
+    
+    def test_date_variable_not_datetime(self):
+
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'date-variable-not-datetime')
+    
+    def test_date_format_unknown(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'date-format-unknown')
+
+    def test_date_compound(self):
+        
+        now = datetime.now()
+        expected_value = now.strftime('%Y-%m-%d')
+        output_value = self.directive._process_macro('date-compound')
+        self.assertEqual(output_value, expected_value)
+
+    def test_text_date_compound(self):
+        
+        now = datetime.now()
+        expected_value = "text_date_compound_" + now.strftime('%Y-%m-%d')
+        output_value = self.directive._process_macro('text-date-compound')
+        self.assertEqual(output_value, expected_value)
+    
+    def test_date_text_compound(self):
+        
+        now = datetime.now()
+        expected_value = now.strftime('%Y-%m-%d') + "_date_text_compound"
+        output_value = self.directive._process_macro('date-text-compound')
+        self.assertEqual(output_value, expected_value)
 
 class TestDestination(unittest.TestCase):
     """Test 'get_destination' method of the 'Directive' class."""

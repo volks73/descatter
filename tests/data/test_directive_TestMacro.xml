@@ -11,6 +11,9 @@
 		</description>
 	</info>
 	<macros>
+	    <macro name="child-unknown">
+	        <unknown variable="current-datetime"/>
+	    </macro>
 	    <macro name="text-value">
 	        <text value="text_value"/>
 	    </macro>
@@ -62,6 +65,37 @@
 	        <text value="macro_"/>
 	        <text value="text_"/>
 	        <text value="compound"/>
+	    </macro>
+	    <macro name="date-variable">
+	        <date variable="current-datetime" format="%Y-%m-%d"/>
+	    </macro>
+	    <macro name="date-variable-missing">
+	        <date format="%Y-%m-%d"/>
+	    </macro>
+	    <macro name="date-format-missing">
+	        <date variable="current-datetime"/>
+	    </macro>
+	    <macro name="date-variable-unknown">
+	        <date variable="unknown" format="%Y-%m-%d"/>
+	    </macro>
+	    <macro name="date-variable-not-datetime">
+	        <date variable="file-name" format="%Y-%m-%d"/>
+	    </macro>
+	    <macro name="date-format-unknown">
+	        <date variable="current-datetime" format="unknown"/>
+	    </macro>
+	    <macro name="date-compound">
+	        <date variable="current-datetime" format="%Y"/>
+	        <date variable="current-datetime" format="-%m-"/>
+	        <date variable="current-datetime" format="%d"/>
+	    </macro>
+	    <macro name="text-date-compound">
+	        <text value="text_date_compound_"/>
+	        <date variable="current-datetime" format="%Y-%m-%d"/>
+	    </macro>
+	    <macro name="date-text-compound">
+	        <date variable="current-datetime" format="%Y-%m-%d"/>
+	        <text value="_date_text_compound"/>
 	    </macro>
 	</macros>
 	<paths/>

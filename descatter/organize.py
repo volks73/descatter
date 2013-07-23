@@ -238,6 +238,8 @@ class Directive(object):
     AUTHOR_TAG = 'author'
     CONDITIONS_TAG = 'conditions'
     CONDITION_TAG = 'condition'
+    DATE_TAG = 'date'
+    DATE_TAG_FULL_NAME = "{" + NAMESPACE + "}" + DATE_TAG
     DESCRIPTION_TAG = 'description'
     EMAIL_TAG = 'email'
     FILE_TAG = 'file'
@@ -252,11 +254,13 @@ class Directive(object):
     RULES_TAG = 'rules'
     RULE_TAG = 'rule'
     TEXT_TAG = 'text'
+    TEXT_TAG_FULL_NAME = "{" + NAMESPACE + "}" + TEXT_TAG
     TITLE_TAG = 'title'
         
     # Attributes
     CASE_ATTRIBUTE = 'case'
     CASE_SENSITIVE_ATTRIBUTE = 'case-sensitive'
+    FORMAT_ATTRIBUTE = 'format'
     MACRO_ATTRIBUTE = 'macro'
     MATCH_ATTRIBUTE = 'match'
     NAME_ATTRIBUTE = 'name'
@@ -390,17 +394,20 @@ class Directive(object):
         else:
             macro_element = macro_element[0]
         
-        text_elements = self.XPATH_TEXT_ELEMENTS(macro_element, name=name)
-        
-        if not text_elements:
-            raise DirectiveError("The '%s' macro is missing one or more '%s' child elements" % (name, self.TEXT_TAG))
-        else:
+        if len(macro_element):
             text = ''
             
-            for text_element in text_elements:
-                text = text + self._get_text(text_element)
-        
+            for child in macro_element:
+                if child.tag == self.TEXT_TAG_FULL_NAME:
+                    text = text + self._get_text(child)
+                elif child.tag == self.DATE_TAG_FULL_NAME:
+                    text = text + self._get_date_text(child)
+                else:
+                    raise DirectiveError("The '%s' element is unknown as a '%s' element child" % (child.tag, self.MACRO_TAG))
+            
             return text
+        else:
+            raise DirectiveError("The '%s' macro is missing one or more '%s' child elements" % (name, self.TEXT_TAG))
 
     def _is_match(self, match, results):
         
@@ -459,7 +466,6 @@ class Directive(object):
     
     def _get_text(self, text_element):
         
-        # TODO: Add date formatting if a date child tag is present
         # TODO: Add numeric formatting if a numeric child tag is present
         text = self._get_value(text_element)
         
@@ -468,6 +474,28 @@ class Directive(object):
             text = self._format_text(text, text_element)
             
         return text
+    
+    def _get_date_text(self, date_element):
+        
+        variable_name = date_element.get(self.VARIABLE_ATTRIBUTE) 
+        format_value = date_element.get(self.FORMAT_ATTRIBUTE)
+        
+        if variable_name is None:
+            raise DirectiveError("The '%s' element is missing the '%s' attribute" % (self.DATE_TAG, self.VARIABLE_ATTRIBUTE))
+        elif format_value is None:
+            raise DirectiveError("The '%s' element is missing the '%s' attribute" % (self.DATE_TAG, self.FORMAT_ATTRIBUTE))
+        else:
+            value = self._get_variable_value(variable_name)
+            
+            try:
+                formatted_value = value.strftime(format_value)
+                
+                if formatted_value == format_value:
+                    raise DirectiveError("The '%s' attribute value for the '%s' element is not a valid format string" % (self.FORMAT_ATTRIBUTE, self.DATE_TAG))
+                else:
+                    return formatted_value 
+            except AttributeError:
+                raise DirectiveError("The '%s' attribute value for the '%s' element is not a date or time" % (self.VARIABLE_ATTRIBUTE, self.DATE_TAG)) 
     
     def _get_value(self, element):
         
