@@ -596,7 +596,7 @@ class TestDestination(unittest.TestCase):
             self.assertEquals(folder_names[index], expected_folder_names[index])
 
 class TestInfo(unittest.TestCase):
-    """Test 'get_info' method fo the 'Directive' class."""
+    """Test 'get_info' method of the 'Directive' class."""
     
     def setUp(self):
         self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestInfo.xml"))
