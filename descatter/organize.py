@@ -295,7 +295,15 @@ class Directive(object):
     # it is an illegal character on all operating systems.
     RANDOM_VALUE_WILDCARD = '?'
     
+    # Author dictionary keys
+    AUTHOR_NAME_KEY = 'name'
+    AUTHOR_EMAIL_KEY = 'email'
+    
     # Precompiled XPaths
+    XPATH_TITLE_ELEMENT = etree.XPath(PREFIX + ":" + INFO_TAG + "/" + PREFIX + ":" + TITLE_TAG, namespaces=XPATH_NAMESPACE)
+    XPATH_NAME_ELEMENT = etree.XPath(PREFIX + ":" + INFO_TAG + "/" + PREFIX + ":" + AUTHOR_TAG + "/" + PREFIX + ":" + NAME_TAG, namespaces=XPATH_NAMESPACE)
+    XPATH_EMAIL_ELEMENT = etree.XPath(PREFIX + ":" + INFO_TAG + "/" + PREFIX + ":" + AUTHOR_TAG + "/" + PREFIX + ":" + EMAIL_TAG, namespaces=XPATH_NAMESPACE)
+    XPATH_DESCRIPTION_ELEMENT = etree.XPath(PREFIX + ":" + INFO_TAG + "/" + PREFIX + ":" + DESCRIPTION_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_RULE_ELEMENTS = etree.XPath("//" + PREFIX + ":" + RULES_TAG + "/" + PREFIX + ":" + RULE_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_CONDITION_ELEMENTS = etree.XPath(PREFIX + ":" + CONDITIONS_TAG + "/" + PREFIX + ":" + CONDITION_TAG, namespaces=XPATH_NAMESPACE)
     XPATH_MATCH_ATTRIBUTE = etree.XPath(PREFIX + ":" + CONDITIONS_TAG + "/@" + MATCH_ATTRIBUTE, namespaces=XPATH_NAMESPACE)
@@ -311,7 +319,38 @@ class Directive(object):
         self.file_path = file
         self._root = etree.parse(self.file_path).getroot()
         
-        # TODO: Add loading of the "info" tag.
+        title_element = self.XPATH_TITLE_ELEMENT(self._root)
+        
+        if title_element:
+            title_element = title_element[0]
+            self.title = title_element.text.strip()
+        else:
+            self.title = None
+        
+        self.author = {}
+        
+        name_element = self.XPATH_NAME_ELEMENT(self._root)
+        email_element = self.XPATH_EMAIL_ELEMENT(self._root)
+        
+        if name_element:
+            name_element = name_element[0]
+            self.author[self.AUTHOR_NAME_KEY] = name_element.text.strip()
+        else:
+            self.author[self.AUTHOR_NAME_KEY] = None
+        
+        if email_element:
+            email_element = email_element[0]
+            self.author[self.AUTHOR_EMAIL_KEY] = email_element.text.strip()
+        else:
+            self.author[self.AUTHOR_EMAIL_KEY] = None
+        
+        description_element = self.XPATH_DESCRIPTION_ELEMENT(self._root)
+        
+        if description_element:
+            description_element = description_element[0]
+            self.description = description_element.text.strip()
+        else:
+            self.description = None
         
     def get_destination(self, filer_context):
         """Determines the destination for a filer context.
