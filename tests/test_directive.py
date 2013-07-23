@@ -416,6 +416,15 @@ class TestMacro(unittest.TestCase):
         
         self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'text-variable-unknown')
     
+    def test_text_macro(self):
+        
+        output_value = self.directive._process_macro('text-macro')
+        self.assertEqual(output_value, 'text_value')
+    
+    def test_text_macro_unknown(self):
+        
+        self.assertRaises(organize.DirectiveError, self.directive._process_macro, 'text-macro-unknown')
+    
     def test_text_prefix(self):
         
         output_value = self.directive._process_macro('text-prefix')

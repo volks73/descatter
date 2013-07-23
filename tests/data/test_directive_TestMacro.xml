@@ -25,6 +25,12 @@
 	    <macro name="text-variable-unknown">
 	        <text variable="unknown"/>
 	    </macro>
+	    <macro name="text-macro">
+	        <text macro="text-value"/>
+	    </macro>
+	    <macro name="text-macro-unknown">
+	        <text macro="unknown"/>
+	    </macro>
 	    <macro name="text-prefix">
 	        <text value="text" prefix="prefix_"/>
 	    </macro>
