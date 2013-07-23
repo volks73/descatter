@@ -35,11 +35,11 @@ class Filer(object):
     
     Constructor arguments are as follows:
     
-    :param root: The path to the root, or top, destination folder. 
+    :param root: A path. The path to the root, or top, destination folder. 
         
         All files will be copied or moved to this folder or a subfolder based on the directive.
     
-    :param directive: a :class:'.Directive' object which determines the destination path of files.
+    :param directive: a :class:'.Directive' object. Determines the destination path of files.
     
         The directive is responsible for determining the destination path of files relative to the root, or top, destination folder.
         
@@ -89,8 +89,8 @@ class Filer(object):
     def file_file(self, file, move=False):
         """Files a single file.
         
-        :param file: The path to the file.
-        :param move: Optional boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param file: A path. The path to a single file.
+        :param move: Optional boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
 
         """
         
@@ -99,8 +99,8 @@ class Filer(object):
     def file_list(self, files, move=False):
         """Files a list of file paths.
         
-        :param files: A list of file paths.
-        :param move: Optional boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param files: A list. The file paths to file as a single batch.
+        :param move: Optional boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
         
         """
         
@@ -119,9 +119,9 @@ class Filer(object):
     def file_folder(self, folder, deep=False, move=False):
         """Files all of the files in a folder.
         
-        :param folder: A path to a folder.
-        :param deep: Optional boolean value. 'True' indicates a recursive filing where all files in all subfolders are filed and included in the batch. 'False' indicates only the files in the root, or top, folder will be filed and all subfolders are ignored.
-        :param move: Optional boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param folder: A path. The path to a folder where all files within the folder will be filed as a batch filing.
+        :param deep: Optional Boolean. 'True' indicates a recursive filing where all files in all subfolders are filed and included in the batch. 'False' indicates only the files in the root, or top, folder will be filed and all subfolders are ignored.
+        :param move: Optional Boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
         
         """
                 
@@ -145,9 +145,9 @@ class Filer(object):
     def _create_context(self, source, index=1, count=1):
         """Creates a filer context.
         
-        :param source: The path to the source file.
-        :param index: Optional integer value indicating the file index, or number, within a batch operation.
-        :param count: Optional integer value indicating the total number of files within a batch operation.
+        :param source: A path. The path to a file, which is the source location to be filed to a destination.
+        :param index: Optional integer. Indicates the file index, or number, within a batch operation.
+        :param count: Optional integer. Indicates the total number of files within a batch operation.
         
         """
     
@@ -178,8 +178,8 @@ class Filer(object):
     def _file(self, context, move):
         """Files a file based on the filer context.
         
-        :param context: The filer context, use _create_context to generate the filer context of a file.
-        :param move: A boolean value. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param context: A dictionary. The filer context, use _create_context to generate the filer context of a file.
+        :param move: A boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
 
         """
         
@@ -221,7 +221,7 @@ class Directive(object):
     
     Constructor arguments are as follows:
     
-    :param file: The directive definition XML file path. 
+    :param file: A path. The directive definition XML file path. 
     
     """
     
@@ -306,6 +306,7 @@ class Directive(object):
     XPATH_TEXT_ELEMENTS = etree.XPath(".//" + PREFIX + ":" + TEXT_TAG, namespaces=XPATH_NAMESPACE)
         
     def __init__(self, file):
+        """Constructor for the :class:'.Directive'."""
         
         self.file_path = file
         self._root = etree.parse(self.file_path).getroot()
@@ -315,9 +316,9 @@ class Directive(object):
     def get_destination(self, filer_context):
         """Determines the destination for a filer context.
         
-        :param _filer_context: A dictionary containing the variables used within a directive to create rules, folder names, and file names.
+        :param _filer_context: A dictionary. Contains the variables used within a directive to create rules, folder names, and file names.
             
-            This is a container for the various variables that can be used within the directive XML file to create rules and text.
+            This is a container for the various variables that can be references by their names within the directive XML file to create rules and text.
             
             See also:
             
@@ -340,6 +341,13 @@ class Directive(object):
             return self._process_path(path_name)
 
     def _process_rule(self, rule_element):
+        """Processes a rule element.
+        
+        This retrieves the path name if a rule condition is met.
+        
+        :param rule_element: An etree element. The 'rule' XML node.
+        
+        """
         
         path_name = None
         
@@ -364,6 +372,11 @@ class Directive(object):
         return path_name
 
     def _process_path(self, name):
+        """Retrieves a list of folders and a file name based on a path name.
+        
+        :param name: A String. The value of the 'name' attribute for the path XML node.
+        
+        """
         
         path_element = self.XPATH_PATH_ELEMENT(self._root, name=name)
         
@@ -386,6 +399,11 @@ class Directive(object):
             return folder_names, self._get_value(file_element[0])
 
     def _process_macro(self, name):
+        """Retrieves text based on a macro node.
+        
+        :param name: A String. The value of the 'name' attribute for the macro XML node.
+        
+        """
         
         macro_element = self.XPATH_MACRO_ELEMENT(self._root, name=name)
         
@@ -410,6 +428,12 @@ class Directive(object):
             raise DirectiveError("The '%s' macro is missing one or more '%s' child elements" % (name, self.TEXT_TAG))
 
     def _is_match(self, match, results):
+        """Determines if the rule is match and should be used to determine the path.
+        
+        :param match: A String. The match conditions attribute value.
+        :param results: A List. The boolean values of each condition in the rule.
+        
+        """
         
         if match == self.CONDITIONS_MATCH_ALL:
             return all(results)
@@ -419,7 +443,11 @@ class Directive(object):
             raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
     
     def _get_condition_result(self, condition_element):
-        """Gets the boolean result from a condition element."""
+        """Gets the boolean result from a condition element.
+        
+        :param condition_element: An etree element. The 'condition' XML node.
+        
+        """
         
         type_value = condition_element.get(self.TYPE_ATTRIBUTE)
         variable = condition_element.get(self.VARIABLE_ATTRIBUTE)
@@ -465,6 +493,11 @@ class Directive(object):
             raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
     
     def _get_text(self, text_element):
+        """Gets the formatted text from a text element.
+       
+        :param text_element. An etree element. The 'text' XML node.
+        
+        """
         
         text = self._get_value(text_element)
         
@@ -475,6 +508,11 @@ class Directive(object):
         return text
     
     def _get_date_text(self, date_element):
+        """Gets the formatted date text from a date element.
+       
+        :param date_element: An etree element. A 'date' XML node.
+        
+        """
         
         variable_name = date_element.get(self.VARIABLE_ATTRIBUTE) 
         format_value = date_element.get(self.FORMAT_ATTRIBUTE)
@@ -497,6 +535,15 @@ class Directive(object):
                 raise DirectiveError("The '%s' attribute value for the '%s' element is not a date or time" % (self.VARIABLE_ATTRIBUTE, self.DATE_TAG)) 
     
     def _get_value(self, element):
+        """Gets the value for an element.
+        
+        The value is either the text from the 'value' attribute, the text from the 'variable' attribute, or the text from a 'macro' attribute.
+        The variable text is converted from the filer context based on the name of the variable. The macro text is the output from
+        processing a macro.
+        
+        :param element: An etree element. Any XML that can have a 'value', 'variable', or 'macro' attribute.
+        
+        """
         
         value = element.get(self.VALUE_ATTRIBUTE)
         variable_name = element.get(self.VARIABLE_ATTRIBUTE)
@@ -512,6 +559,11 @@ class Directive(object):
             raise DirectiveError("The '%s' element is missing either the '%s', '%s', or '%s' attribute" % (element.tag, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
     
     def _get_variable_value(self, variable_name):
+        """Gets the text from a filer context variable.
+        
+        :param variable_name: A String. The name of the variable in the filer context.
+        
+        """
         
         if variable_name in self._filer_context:
             return self._filer_context[variable_name]
@@ -519,6 +571,12 @@ class Directive(object):
             raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable_name, self.VARIABLE_ATTRIBUTE))
     
     def _format_text(self, text, text_element): 
+        """Formats the text based on the attributes of the text element.
+        
+        :param text: A String. The text to format.
+        :param text_element: An etree element. The text element.
+        
+        """
         
         # The order is important in the tuple. The various text formatting attributes will be
         # applied in the order in the tuple and the prefix and suffix should be applied after
@@ -531,6 +589,14 @@ class Directive(object):
         return text
     
     def _format_case(self, text, text_element):
+        """Formats text based on the 'case' attribute.
+        
+        If the 'case' attribute is not present in the 'text' element, nothing will be formatted.
+        
+        :param text: A String. The text to format.
+        :param text_element: An etree element. The 'text' XML node.
+        
+        """
             
         case = text_element.get(self.CASE_ATTRIBUTE)
         
@@ -549,6 +615,14 @@ class Directive(object):
             raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.CASE_ATTRIBUTE, self.TEXT_TAG))
         
     def _format_replace_spaces_with(self, text, text_element):
+        """Replaces spaces in a text based on the 'replace-spaces-with' attribute of a 'text' element.
+        
+        If the 'replace-spaces-with' attribute is not present in the 'text' element, nothing will be replaced.
+        
+        :param text: A String. The text to replace spaces.
+        :param text_element: An etree element. The 'text' XML node.
+        
+        """
             
         space_replacement = text_element.get(self.REPLACE_SPACES_WITH_ATTRIBUTE)
             
@@ -558,6 +632,14 @@ class Directive(object):
             return text.replace(' ', space_replacement) 
         
     def _format_prefix(self, text, text_element):
+        """Prefixes text with the 'prefix' attribute value of a 'text' element.
+        
+        If the 'prefix' attribute is not present in the 'text' element, nothing will be prefixed.
+        
+        :param text: A String. The text to prefix.
+        :param text_element: An etree element. The 'text' XML node.
+        
+        """
             
         prefix = text_element.get(self.PREFIX_ATTRIBUTE)
             
@@ -567,6 +649,14 @@ class Directive(object):
             return prefix + text
     
     def _format_suffix(self, text, text_element):
+        """Prefixes text with the 'suffix' attribute value of a 'text' element.
+        
+        If the 'suffix' attribute is not present in the 'text' element, nothing will be suffixed.
+        
+        :param text: A String. The text to suffix.
+        :param text_element: An etree element. The 'text' XML node.
+        
+        """
             
         suffix = text_element.get(self.SUFFIX_ATTRIBUTE)
             
@@ -579,5 +669,7 @@ class Validator(object):
     """Checks a directive to see if it is usable for directing a filer."""
     
     def __init__(self):
+        """Constructor for the :class:'.Validator'."""
+        
         # TODO: Implement the validator.
         pass
