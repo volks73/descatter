@@ -225,8 +225,6 @@ class Directive(object):
     
     """
     
-    # TODO: Add "format" attribute to "description" tag that defines the markup language (markdown, reStructureText, etc.) used to write the description text.
-    
     # XML    
     NAMESPACE = 'descatter/filer/schema/1.0'
     PREFIX = 'ds'
@@ -318,40 +316,45 @@ class Directive(object):
         
         self.file_path = file
         self._root = etree.parse(self.file_path).getroot()
+    
+    def get_info(self):
+        """Gets the contents of the 'info' element and returns a dictionary with the keys as the tag names for each child element."""
+        
+        info = {}
         
         title_element = self.XPATH_TITLE_ELEMENT(self._root)
         
         if title_element:
             title_element = title_element[0]
-            self.title = title_element.text.strip()
+            info[self.TITLE_TAG] = title_element.text.strip()
         else:
-            self.title = None
-        
-        self.author = {}
+            info[self.TITLE_TAG] = None
         
         name_element = self.XPATH_NAME_ELEMENT(self._root)
         email_element = self.XPATH_EMAIL_ELEMENT(self._root)
         
         if name_element:
             name_element = name_element[0]
-            self.author[self.AUTHOR_NAME_KEY] = name_element.text.strip()
+            info[self.NAME_TAG] = name_element.text.strip()
         else:
-            self.author[self.AUTHOR_NAME_KEY] = None
+            info[self.NAME_TAG] = None
         
         if email_element:
             email_element = email_element[0]
-            self.author[self.AUTHOR_EMAIL_KEY] = email_element.text.strip()
+            info[self.EMAIL_TAG] = email_element.text.strip()
         else:
-            self.author[self.AUTHOR_EMAIL_KEY] = None
+            info[self.EMAIL_TAG] = None
         
         # TODO: Add a format attribute that defines the markup of the description text, such as markdown or reStructuredText.
         description_element = self.XPATH_DESCRIPTION_ELEMENT(self._root)
         
         if description_element:
             description_element = description_element[0]
-            self.description = description_element.text.strip()
+            info[self.DESCRIPTION_TAG] = description_element.text.strip()
         else:
-            self.description = None
+            info[self.DESCRIPTION_TAG] = None
+        
+        return info
         
     def get_destination(self, filer_context):
         """Determines the destination for a filer context.
@@ -693,7 +696,7 @@ class Directive(object):
             return prefix + text
     
     def _format_suffix(self, text, text_element):
-        """Prefixes text with the 'suffix' attribute value of a 'text' element.
+        """Suffixes text with the 'suffix' attribute value of a 'text' element.
         
         If the 'suffix' attribute is not present in the 'text' element, nothing will be suffixed.
         

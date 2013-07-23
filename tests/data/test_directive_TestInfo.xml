@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0">
+	<info>
+		<title>Test Directive for the TestInfo unit test</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			A directive that has just the information about the directive.
+		</description>
+	</info>
+	<macros/>
+	<paths/>
+	<rules/>
+</directive>

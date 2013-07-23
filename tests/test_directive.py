@@ -594,3 +594,24 @@ class TestDestination(unittest.TestCase):
         
         for index in range(len(folder_names)):
             self.assertEquals(folder_names[index], expected_folder_names[index])
+
+class TestInfo(unittest.TestCase):
+    """Test 'get_info' method fo the 'Directive' class."""
+    
+    def setUp(self):
+        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestInfo.xml"))
+    
+    def tearDown(self):
+        pass
+    
+    def test_info(self):
+        
+        expected_title = 'Test Directive for the TestInfo unit test'
+        expected_author_name = 'Christopher R. Field'
+        expected_author_email = 'cfield2 at gmail dot com'
+        expected_description = 'A directive that has just the information about the directive.'
+        output_info = self.directive.get_info()
+        self.assertEquals(output_info[organize.Directive.TITLE_TAG], expected_title)
+        self.assertEquals(output_info[organize.Directive.NAME_TAG], expected_author_name)
+        self.assertEquals(output_info[organize.Directive.EMAIL_TAG], expected_author_email)
+        self.assertEquals(output_info[organize.Directive.DESCRIPTION_TAG], expected_description)
