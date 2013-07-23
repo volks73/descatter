@@ -111,6 +111,18 @@ class TestCondition(unittest.TestCase):
         condition_element = self.xpath_condition_element(self.directive._root, name='type-less-than-not-rule')[0]
         output_value = self.directive._get_condition_result(condition_element)
         self.assertFalse(output_value)
+        
+    def test_type_not_equal(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='type-not-equal-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertTrue(output_value)
+    
+    def test_type_not_equal_not(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='type-not-equal-not-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertFalse(output_value)
      
     def test_type_unknown(self):
         

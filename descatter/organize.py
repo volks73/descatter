@@ -280,8 +280,8 @@ class Directive(object):
     CONDITION_TYPE_EQUALS = 'equals'
     CONDITION_TYPE_GREATER_THAN = 'greater-than'
     CONDITION_TYPE_LESS_THAN = 'less-than' 
-    # TODO: Add a 'has' condition to test if a text or variable has a value within it. This would be similar to searching a string for substring and returning 'True' if found.
-    # TODO: Add a 'not-equal' condition   
+    CONDITION_TYPE_NOT_EQUAL = 'not-equal'
+    # TODO: Add a 'has' condition to test if a text or variable has a value within it. This would be similar to searching a string for substring and returning 'True' if found. 
     
     # Text case attribute values
     TEXT_CASE_LOWER = 'lower'
@@ -344,6 +344,7 @@ class Directive(object):
         else:
             self.author[self.AUTHOR_EMAIL_KEY] = None
         
+        # TODO: Add a format attribute that defines the markup of the description text, such as markdown or reStructuredText.
         description_element = self.XPATH_DESCRIPTION_ELEMENT(self._root)
         
         if description_element:
@@ -528,6 +529,8 @@ class Directive(object):
             return variable > value
         elif type_value == self.CONDITION_TYPE_LESS_THAN:
             return variable < value
+        elif type_value == self.CONDITION_TYPE_NOT_EQUAL:
+            return variable != value
         else:
             raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
     

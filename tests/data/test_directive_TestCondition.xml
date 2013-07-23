@@ -48,6 +48,16 @@
 				<condition type="less-than" variable="file-index" value="0" case-sensitive="false"/>  
 			</conditions>
 		</rule>
+		<rule name="type-not-equal-rule" path="type-not-equal-path">
+			<conditions match="all">
+				<condition type="not-equal" variable="file-index" value="0" case-sensitive="false"/>  
+			</conditions>
+		</rule>
+		<rule name="type-not-equal-not-rule" path="type-not-equal-path">
+			<conditions match="all">
+				<condition type="not-equal" variable="file-index" value="5" case-sensitive="false"/>  
+			</conditions>
+		</rule>
 		<rule name="type-unknown-rule" path="type-unknown-path">
 			<conditions match="all">
 				<condition type="unknown" variable="file-index" value="0" case-sensitive="false"/>  
