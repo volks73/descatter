@@ -78,15 +78,36 @@ class Filer(object):
     
     def __init__(self, directive):
         """Constructor for the :class:'.Filer'."""
+        
+        if directive is None:
+            raise FilerError("The directive does not exist")
                 
         self.directive = directive
+
+    def file(self, source, destination, recursive=False, move=False):
+        """Files based on the type of source.
+        
+        If the 'source' is a single file, it will still be batched but with an index of 1 and a count of 1.
+        
+        :param source: A file path, a comma-separated list of file paths, or a folder path that will be filed to the destination according to a directive.
+        :param destination: A path. The path to a folder where the source will be filed.
+        :param recursive: Optional boolean. 'True' indicates a recursive filing if the source is a folder. A recursive filing files all files in subfolders of the source root, or top, folder. 'False' indicates only files in the root, or top, folder are filed.
+        :param move: Optional boolean. 'True' indicates the source is moved (copied to the destination then deleted). 'False' indicates the source is copied but not deleted.
+        
+        """
+
+        if os.path.isdir(source):
+            self.file_folder(source, destination, recursive, move)
+        else:
+            source_list = source.split(',')
+            self.file_list(source_list, destination, move)
 
     def file_file(self, source, destination, move=False):
         """Files a single file.
         
         :param source: A path. The path to a single file to file.
         :param destination: A path. The path to a folder where the source will be filed.
-        :param move: Optional boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param move: Optional boolean. 'True' indicates the file is moved (copy to the destination then deleted). 'False' indicates the source is copied but not deleted.
 
         """
         
@@ -97,7 +118,7 @@ class Filer(object):
         
         :param source: A list. The file paths to be filed as a batch.
         :param destination: A path. The path to a folder where the source will be filed.
-        :param move: Optional boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param move: Optional boolean. 'True' indicates the source is moved (copied to the destination then deleted). 'False' indicates the source is copied but not deleted.
         
         """
         
@@ -113,20 +134,20 @@ class Filer(object):
         
         return filed_paths
         
-    def file_folder(self, source, destination, deep=False, move=False):
+    def file_folder(self, source, destination, recursive=False, move=False):
         """Files all of the files in a folder.
         
         :param source: A path. The path to a folder where all files within the folder will be filed as a batch.
         :param destination: A path. The path to a folder where the source will be filed.
-        :param deep: Optional Boolean. 'True' indicates a recursive filing where all files in all subfolders are filed and included in the batch. 'False' indicates only the files in the root, or top, folder will be filed and all subfolders are ignored.
-        :param move: Optional Boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
+        :param recursive: Optional boolean. 'True' indicates a recursive filing if the source is a folder. A recursive filing files all files in subfolders of the source root, or top, folder. 'False' indicates only files in the root, or top, folder are filed.
+        :param move: Optional boolean. 'True' indicates the source is moved (copied to the destination then deleted). 'False' indicates the source is copied but not deleted.
         
         """
                 
         if os.path.isdir(source):
             files = []
     
-            if deep:
+            if recursive:
                 for root, subfolder_names, file_names in os.walk(source):
                     for file_name in file_names:
                         files.append(os.path.join(root, file_name))

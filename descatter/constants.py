@@ -18,11 +18,9 @@
 
 import os
 
-# Names
 APPLICATION_NAME = 'descatter'
 DATA_FOLDER_NAME = 'data'
 CONFIG_FILE_NAME = 'descatter.ini'
 
-# Paths
 DATA_FOLDER_PATH = os.path.join(os.path.join(os.getcwd(), APPLICATION_NAME), DATA_FOLDER_NAME)
 CONFIG_FILE_PATH = os.path.join(DATA_FOLDER_PATH, CONFIG_FILE_NAME)
