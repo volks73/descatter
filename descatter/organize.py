@@ -95,6 +95,7 @@ class Filer(object):
         :param move: Optional boolean. 'True' indicates the source is moved (copied to the destination then deleted). 'False' indicates the source is copied but not deleted.
         
         """
+        # TODO: Add overwrite argument option. If 'True' files are overwritten if they already exist at the destination. If 'False' files are not copied or moved if they already exist at the destination.
 
         if os.path.isdir(source):
             self.file_folder(source, destination, recursive, move)
@@ -527,6 +528,8 @@ class Directive(object):
             raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
         else:
             type_value = type_value.lower()
+        
+        # TODO: Add support for wildcard variable, which states any variable can be used.
         
         if variable is None:
             raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))

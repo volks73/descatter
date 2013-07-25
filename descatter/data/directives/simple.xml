@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0" name="simple">
+	<info>
+		<title>Simple, Straightforward File</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			Files the source to the destination with the original file name.
+			No sub-folders are created. 
+		</description>
+	</info>
+	<macros>
+	    <macro name="original-name">
+	        <text variable="file-name"/>
+	       	<text variable="file-extension" prefix="." case="lower"/>    
+	    </macro>
+	</macros>
+	<paths>
+		<path name="default-path">
+			<file macro="original-name"/>
+		</path>
+	</paths>
+	<rules>
+		<rule name="default" path="default-path">
+			<conditions match="any">
+				<condition type="equals" variable="file-name" value="*"/>  
+			</conditions>
+		</rule>
+	</rules>
+</directive>
