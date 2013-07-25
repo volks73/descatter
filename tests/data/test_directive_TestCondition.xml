@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<directive xmlns="descatter/filer/schema/1.0">
+<directive xmlns="descatter/filer/schema/1.0" name="TestCondition">
 	<info>
 		<title>Test Directive for the TestCondition unit test</title>
 		<author>

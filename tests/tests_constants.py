@@ -1,4 +1,4 @@
-# descatter/organize.py
+# tests/tests_constants.py
 # Copyright (C) 2013 the Descatter authors and contributers <see AUTHORS file>
 #
 # This module is part of Descatter.

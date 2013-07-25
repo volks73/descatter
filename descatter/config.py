@@ -16,18 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import configparser
 
-# Names
-APPLICATION_NAME = 'descatter'
-DATA_FOLDER_NAME = 'data'
-CONFIG_FILE_NAME = 'config.ini'
+import constants
 
-# Paths
-DATA_FOLDER_PATH = os.path.join(os.path.join(os.getcwd(), APPLICATION_NAME), DATA_FOLDER_NAME)
-CONFIG_FILE_PATH = os.path.join(DATA_FOLDER_PATH, CONFIG_FILE_NAME)
-
-# Configs
-CONFIG = configparser.ConfigParser()
-CONFIG.read(CONFIG_FILE_PATH)
+cfg = configparser.ConfigParser()
+cfg.read(constants.CONFIG_FILE_PATH)

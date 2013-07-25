@@ -1,4 +1,4 @@
-# tests/test_directive.py
+# tests/test_filer.py
 # Copyright (C) 2013 the Descatter authors and contributers <see AUTHORS file>
 #
 # This module is part of Descatter.
@@ -22,7 +22,7 @@ import tempfile
 import shutil
 
 import organize
-import config
+import tests_constants
 
 class TestFileFile(unittest.TestCase):
     """Tests for the organize.Filer.file_file function."""
@@ -30,8 +30,8 @@ class TestFileFile(unittest.TestCase):
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFile_src_", dir=None)
         self.test_destination_folder_path = tempfile.mkdtemp(suffix='', prefix='descatter_TestFileFile_dst_', dir=None)
-        directive_path_TestFileFile = os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
-        self.test_filer = organize.Filer(self.test_destination_folder_path, organize.Directive(directive_path_TestFileFile))
+        directive_path_TestFileFile = os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
+        self.test_filer = organize.Filer(organize.Directive(directive_path_TestFileFile))
 
     def tearDown(self):
         shutil.rmtree(self.test_source_folder_path)
@@ -44,7 +44,7 @@ class TestFileFile(unittest.TestCase):
         
         expected_filed_path = os.path.join(self.test_destination_folder_path, os.path.basename(test_source_file_path))
         
-        output_value = self.test_filer.file_file(test_source_file_path)
+        output_value = self.test_filer.file_file(test_source_file_path, self.test_destination_folder_path)
         
         self.assertEquals(output_value, expected_filed_path)
         self.assertTrue(os.path.exists(expected_filed_path))
@@ -56,7 +56,7 @@ class TestFileFile(unittest.TestCase):
         
         expected_filed_path = os.path.join(self.test_destination_folder_path, os.path.basename(test_source_file_path))
         
-        output_value = self.test_filer.file_file(test_source_file_path)
+        output_value = self.test_filer.file_file(test_source_file_path, self.test_destination_folder_path)
         
         self.assertEquals(output_value, expected_filed_path)
         self.assertTrue(os.path.exists(expected_filed_path))
@@ -67,8 +67,8 @@ class TestFileList(unittest.TestCase):
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFile_src_", dir=None)
         self.test_destination_folder_path = tempfile.mkdtemp(suffix='', prefix='descatter_TestFileFile_dst_', dir=None)
-        directive_path_TestFileFile = os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestFileFile.xml")
-        self.test_filer = organize.Filer(self.test_destination_folder_path, organize.Directive(directive_path_TestFileFile))
+        directive_path_TestFileFile = os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestFileList.xml")
+        self.test_filer = organize.Filer(organize.Directive(directive_path_TestFileFile))
 
     def tearDown(self):
         shutil.rmtree(self.test_source_folder_path)
@@ -88,7 +88,7 @@ class TestFileList(unittest.TestCase):
         for file_path in test_source_file_paths:
             expected_filed_paths.append(os.path.join(self.test_destination_folder_path, os.path.basename(file_path)))
         
-        output_value = self.test_filer.file_list(test_source_file_path)
+        output_value = self.test_filer.file_list(test_source_file_path, self.test_destination_folder_path)
         
         for index in range(len(output_value)):
             self.assertEquals(output_value, expected_filed_paths[index])
@@ -108,7 +108,7 @@ class TestFileList(unittest.TestCase):
         for file_path in test_source_file_paths:
             expected_filed_paths.append(os.path.join(self.test_destination_folder_path, os.path.basename(file_path)))
         
-        output_value = self.test_filer.file_list(test_source_file_path)
+        output_value = self.test_filer.file_list(test_source_file_path, self.test_destination_folder_path)
         
         for index in range(len(output_value)):
             self.assertEquals(output_value, expected_filed_paths[index])
@@ -143,8 +143,8 @@ class TestFileFolder(unittest.TestCase):
     def setUp(self):
         self.test_source_folder_path = tempfile.mkdtemp(suffix='', prefix="descatter_TestFileFolder_src_", dir=None)
         self.test_destination_folder_path = tempfile.mkdtemp(suffix='', prefix='descatter_TestFileFolder_dst_', dir=None)
-        directive_path_TestFileFile = os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestFileFolder.xml")
-        self.test_filer = organize.Filer(self.test_destination_folder_path, organize.Directive(directive_path_TestFileFile))
+        directive_path_TestFileFile = os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestFileFolder.xml")
+        self.test_filer = organize.Filer(organize.Directive(directive_path_TestFileFile))
 
         self.test_source_file_paths = []
 
@@ -185,7 +185,7 @@ class TestFileFolder(unittest.TestCase):
         shutil.rmtree(self.test_destination_folder_path)
 
     def test_not_deep(self):
-        output_value = self.test_filer.file_folder(self.test_source_folder_path, False)
+        output_value = self.test_filer.file_folder(self.test_source_folder_path, self.test_destination_folder_path, False)
         
         expected_filed_paths = []
         for file_path in self.test_source_file_paths:
@@ -198,7 +198,7 @@ class TestFileFolder(unittest.TestCase):
         self.assertEquals(len(output_value), number_filed)
     
     def test_deep(self):
-        output_value = self.test_filer.file_folder(self.test_source_folder_path, True)
+        output_value = self.test_filer.file_folder(self.test_source_folder_path, self.test_destination_folder_path , True)
         
         expected_filed_paths = []
         for file_path in self.test_source_file_paths:

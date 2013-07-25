@@ -20,7 +20,7 @@ import os
 import unittest
 
 import organize
-import config
+import tests_constants
 
 from lxml import etree
 from datetime import datetime
@@ -50,7 +50,7 @@ class TestCondition(unittest.TestCase):
                                                     organize.Directive.CONDITION_TAG), 
                                                    namespaces=organize.Directive.XPATH_NAMESPACE)
         
-        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestCondition.xml"))
+        self.directive = organize.Directive(os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestCondition.xml"))
         
         context = {}
         context[organize.Filer.CURRENT_DATETIME] = datetime.now()
@@ -202,7 +202,7 @@ class TestRule(unittest.TestCase):
                                                "=$name]"), 
                                               namespaces=organize.Directive.XPATH_NAMESPACE)
         
-        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestRule.xml"))
+        self.directive = organize.Directive(os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestRule.xml"))
         
         context = {}
         context[organize.Filer.CURRENT_DATETIME] = datetime.now()
@@ -291,7 +291,7 @@ class TestPath(unittest.TestCase):
                                                "=$name]"), 
                                               namespaces=organize.Directive.XPATH_NAMESPACE)
         
-        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestPath.xml"))
+        self.directive = organize.Directive(os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestPath.xml"))
         
         context = {}
         context[organize.Filer.CURRENT_DATETIME] = datetime.now()
@@ -398,7 +398,7 @@ class TestMacro(unittest.TestCase):
                                                "=$name]"), 
                                               namespaces=organize.Directive.XPATH_NAMESPACE)
         
-        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestMacro.xml"))
+        self.directive = organize.Directive(os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestMacro.xml"))
         
         context = {}
         context[organize.Filer.CURRENT_DATETIME] = datetime.now()
@@ -567,7 +567,7 @@ class TestDestination(unittest.TestCase):
                                                "=$name]"), 
                                               namespaces=organize.Directive.XPATH_NAMESPACE)
         
-        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestDestination.xml"))
+        self.directive = organize.Directive(os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestDestination.xml"))
         
         self.context = {}
         self.context[organize.Filer.CURRENT_DATETIME] = datetime.now()
@@ -599,7 +599,7 @@ class TestInfo(unittest.TestCase):
     """Test 'get_info' method of the 'Directive' class."""
     
     def setUp(self):
-        self.directive = organize.Directive(os.path.join(config.DATA_FOLDER_PATH, "test_directive_TestInfo.xml"))
+        self.directive = organize.Directive(os.path.join(tests_constants.DATA_FOLDER_PATH, "test_directive_TestInfo.xml"))
     
     def tearDown(self):
         pass

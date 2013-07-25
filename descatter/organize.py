@@ -35,10 +35,6 @@ class Filer(object):
     
     Constructor arguments are as follows:
     
-    :param root: A path. The path to the root, or top, destination folder. 
-        
-        All files will be copied or moved to this folder or a subfolder based on the directive.
-    
     :param directive: a :class:'.Directive' object. Determines the destination path of files.
     
         The directive is responsible for determining the destination path of files relative to the root, or top, destination folder.
@@ -80,67 +76,69 @@ class Filer(object):
     # The source path, this is the absolute path to the source file and includes the file name and extension.
     FILE_SOURCE_PATH = 'file-source-path'
     
-    def __init__(self, root, directive):
+    def __init__(self, directive):
         """Constructor for the :class:'.Filer'."""
-        
-        self.root = root
+                
         self.directive = directive
 
-    def file_file(self, file, move=False):
+    def file_file(self, source, destination, move=False):
         """Files a single file.
         
-        :param file: A path. The path to a single file.
+        :param source: A path. The path to a single file to file.
+        :param destination: A path. The path to a folder where the source will be filed.
         :param move: Optional boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
 
         """
         
-        return self._file(self._create_context(file), move)
+        return self._file(self._create_context(source), destination, move)
     
-    def file_list(self, files, move=False):
+    def file_list(self, source, destination, move=False):
         """Files a list of file paths.
         
-        :param files: A list. The file paths to file as a single batch.
+        :param source: A list. The file paths to be filed as a batch.
+        :param destination: A path. The path to a folder where the source will be filed.
         :param move: Optional boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
         
         """
         
         filed_paths = []       
-        file_count = len(files)
+        file_count = len(source)
         file_index = 1
         
-        for file_path in files:
+        for file_path in source:
             if os.path.isfile(file_path):
-                filed_path = self._file(self._create_context(file_path, file_index, file_count), move)
+                filed_path = self._file(self._create_context(file_path, file_index, file_count), destination, move)
                 filed_paths.append(filed_path)
                 file_index = file_index + 1
         
         return filed_paths
         
-    def file_folder(self, folder, deep=False, move=False):
+    def file_folder(self, source, destination, deep=False, move=False):
         """Files all of the files in a folder.
         
-        :param folder: A path. The path to a folder where all files within the folder will be filed as a batch filing.
+        :param source: A path. The path to a folder where all files within the folder will be filed as a batch.
+        :param destination: A path. The path to a folder where the source will be filed.
         :param deep: Optional Boolean. 'True' indicates a recursive filing where all files in all subfolders are filed and included in the batch. 'False' indicates only the files in the root, or top, folder will be filed and all subfolders are ignored.
         :param move: Optional Boolean. 'True' indicates the file is moved (copy to destination followed by delete at source). 'False' indicates the source file is copied and not deleted afterwards.
         
         """
                 
-        if os.path.isdir(folder):
+        if os.path.isdir(source):
             files = []
     
             if deep:
-                for root, subfolder_names, file_names in os.walk(folder):
+                for root, subfolder_names, file_names in os.walk(source):
                     for file_name in file_names:
                         files.append(os.path.join(root, file_name))
             else:
-                for folder_item in os.listdir(folder):
-                    files.append(os.path.join(folder, folder_item))
+                for folder_item in os.listdir(source):
+                    files.append(os.path.join(source, folder_item))
                 
-            filed_paths = self.file_list(files, move)
+            filed_paths = self.file_list(files, destination, move)
             
             return filed_paths
         else:
-            raise FilerError("The folder: '%s' could not be filed because it is not a directory" % folder)
+            raise FilerError("The source: '%s' could not be filed because it is not a folder" % source)
 
     def _create_context(self, source, index=1, count=1):
         """Creates a filer context.
@@ -175,7 +173,7 @@ class Filer(object):
         else:
             raise FilerError("A filer context could not be created because the source is not a file")
 
-    def _file(self, context, move):
+    def _file(self, context, destination, move):
         """Files a file based on the filer context.
         
         :param context: A dictionary. The filer context, use _create_context to generate the filer context of a file.
@@ -183,8 +181,10 @@ class Filer(object):
 
         """
         
+        # TODO: Add observer pattern to notify when a file has been filed.
+        
         destination_folder_names, destination_file_name = self.directive.get_destination(context)
-        destination_file_path = self.root
+        destination_file_path = destination
         
         for destination_folder_name in destination_folder_names:
             if destination_folder_name == Directive.RANDOM_VALUE_WILDCARD:
@@ -316,6 +316,10 @@ class Directive(object):
         
         self.file_path = file
         self._root = etree.parse(self.file_path).getroot()
+    
+    def get_name(self):
+        
+        return self._root.get(self.NAME_ATTRIBUTE)
     
     def get_info(self):
         """Gets the contents of the 'info' element and returns a dictionary with the keys as the tag names for each child element."""
