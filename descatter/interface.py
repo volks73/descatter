@@ -18,25 +18,32 @@
 
 import argparse
 import cmd
-import os
 
 import config
-import constants
 import organize
 
 class ConsoleParser(argparse.ArgumentParser):
 
+    def __init__(self, *args, **kwargs):
+        super(ConsoleParser, self).__init__(*args, **kwargs)
+        self.errors = []
+
+    def parse_line(self, line):
+        """Helper function that parses the console input line."""
+        
+        return vars(self.parse_args(line.split()))
+
     # TODO: Investigate help action in argparse and override it to display help appropriately in console.
     
     # The exit function must be overridden otherwise the help argument will exit the
-    # application and therefore the console. The console should only be exitted when
-    # the users wants to exit.
+    # application and therefore the console. The console should only exit when
+    # the users enters the 'exit' or 'quit' command.
     def exit(self, status=0, message=None):
         pass
          
     def error(self, message):
-        self.print_usage()
-
+        self.errors.append(message)
+        
 class CommandLine(object):
     
     # Configuration keys
@@ -74,7 +81,11 @@ class Console(cmd.Cmd):
     PROMPT = config.cfg[SECTION_NAME]['Prompt'].strip() + ' '
     SHORT_PREFIX = config.cfg[SECTION_NAME]['ShortPrefix'].strip()
     LONG_PREFIX = config.cfg[SECTION_NAME]['LongPrefix'].strip()
+    FILE_COMMAND_PROG = config.cfg[SECTION_NAME]['FileCommandProg'].strip()
     FILE_COMMAND_DESCRIPTION = config.cfg[SECTION_NAME]['FileCommandDescription'].strip()
+    HELP_ARGUMENT_NAME = config.cfg[SECTION_NAME]['HelpArgumentLongName'].strip()
+    HELP_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['HelpArgumentShortName'].strip()
+    HELP_ARGUMENT_HELP = config.cfg[SECTION_NAME]['HelpArgumentHelp'].strip()
     SOURCE_ARGUMENT_NAME = 'source' 
     SOURCE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['SourceArgumentHelp'].strip()
     DESTINATION_ARGUMENT_NAME = 'destination'
@@ -82,6 +93,12 @@ class Console(cmd.Cmd):
     DIRECTIVE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['DirectiveArgumentShortName'].strip()
     DIRECTIVE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['DirectiveArgumentLongName'].strip()
     DIRECTIVE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['DirectiveArgumentHelp'].strip()
+    RECURSIVE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['RecursiveArgumentLongName'].strip()
+    RECURSIVE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['RecursiveArgumentShortName'].strip()
+    RECURSIVE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['RecursiveArgumentHelp'].strip()
+    MOVE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['MoveArgumentLongName'].strip()
+    MOVE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['MoveArgumentShortName'].strip()
+    MOVE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['MoveArgumentHelp'].strip()
     
     intro = INTRODUCTION
     prompt = PROMPT
@@ -89,49 +106,80 @@ class Console(cmd.Cmd):
     def __init__(self):
         """Constructor for the :class:'.Console'."""
         
+        # TODO: Create default directive that simply copies the files to the destination without change.
         self._directive = None
         super(Console, self).__init__()               
-    
-    def do_cwd(self, line):
-        """Displays the current working directive."""
+
+    def get_directive(self, args):
+        """Gets the directive."""
         
-        print(self._directive)
+        argument_value = args[self.DIRECTIVE_ARGUMENT_NAME]
+        
+        if argument_value:
+            return argument_value
+        else:
+            return self._directive
+    
+    def print_errors(self, parser):
+        for error in parser.errors:
+            parser.print_usage()
+            print(error)
             
     def do_file(self, line):
         """Files a source file to a destination folder based on a directive."""
         
-        parser = ConsoleParser(prog=constants.APPLICATION_NAME,
-                               description=self.FILE_COMMAND_DESCRIPTION)
+        parser = ConsoleParser(prog=self.FILE_COMMAND_PROG,
+                               description=self.FILE_COMMAND_DESCRIPTION,
+                               add_help=False)
         parser.add_argument(self.SOURCE_ARGUMENT_NAME,
                             help=self.SOURCE_ARGUMENT_HELP)
         parser.add_argument(self.DESTINATION_ARGUMENT_NAME,
                             help=self.DESTINATION_ARGUMENT_HELP)
         parser.add_argument(self.SHORT_PREFIX +
+                            self.HELP_ARGUMENT_SHORT_NAME,
+                            self.LONG_PREFIX +
+                            self.HELP_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.HELP_ARGUMENT_HELP)
+        parser.add_argument(self.SHORT_PREFIX +
                             self.DIRECTIVE_ARGUMENT_SHORT_NAME,
                             self.LONG_PREFIX +
                             self.DIRECTIVE_ARGUMENT_NAME,
-                            action='store_true',
                             help=self.DIRECTIVE_ARGUMENT_HELP)
-        
-        args = vars(parser.parse_args(line.split()))
-              
-        if args[self.DIRECTIVE_ARGUMENT_NAME]:
-            self._directive = organize.Directive(args[self.DIRECTIVE_ARGUMENT_NAME])
-                    
-        if self._directive is None:
-            print("No directive was selected and there was no previously used directive")
+        parser.add_argument(self.SHORT_PREFIX +
+                            self.RECURSIVE_ARGUMENT_SHORT_NAME,
+                            self.LONG_PREFIX +
+                            self.RECURSIVE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.RECURSIVE_ARGUMENT_HELP)
+        parser.add_argument(self.SHORT_PREFIX +
+                            self.MOVE_ARGUMENT_SHORT_NAME,
+                            self.LONG_PREFIX +
+                            self.MOVE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.MOVE_ARGUMENT_HELP)
+    
+        args = parser.parse_line(line)
+  
+        if args[self.HELP_ARGUMENT_NAME]:
+            parser.print_help()
+        elif parser.errors:
+            self.print_errors(parser)
         else:
-            filer = organize.Filer(self._directive)
-                    
             source = args[self.SOURCE_ARGUMENT_NAME]
             destination = args[self.DESTINATION_ARGUMENT_NAME]
-                    
-            if os.path.isdir(source):
-                filer.file_folder(source, destination, False)
-            else:
-                source_list = source.split(',')
-                filer.file_list(source_list, destination, False)
-
+            directive = self.get_directive(args)
+            recursive = args[self.RECURSIVE_ARGUMENT_NAME]
+            move = args[self.MOVE_ARGUMENT_NAME]
+            
+            try:            
+                filer = organize.Filer(directive)
+                filer.file(source, destination, recursive, move)
+                        
+                # If the filing is successfully, save the directive as the default for future calls to file.
+                self._directive = directive
+            except organize.FilerError as error:
+                print(error)
         
     def do_exit(self, line):
         """Safely exits the console."""
