@@ -25,6 +25,8 @@ import tests_constants
 from lxml import etree
 from datetime import datetime
 
+# TODO: Add tests for equality to all filer context variables.
+
 class TestCondition(unittest.TestCase):
     """Test 'condition' element in the XML directive file and its related children elements and attributes."""
     

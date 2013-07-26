@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Provides information and text based on the application's configuration file."""
+
 import configparser
 
 import constants

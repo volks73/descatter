@@ -16,6 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Interfaces for using the Descatter application.
+
+Provides a number of interfaces for interacting with the Descatter application.
+These interactions include a command line interface (CLI), an interactive console, and a graphical user interface (GUI).
+
+"""
+
 import argparse
 import cmd
 
@@ -25,9 +32,12 @@ import organize
 
 from prettytable import PrettyTable
 
-class ConsoleError(Exception): pass
+class ConsoleError(Exception): 
+    """Raised when the interface console encounters an error in the syntax of a command."""
+    pass
         
 class CommandLine(object):
+    """The command line interface."""
     
     # Configuration keys
     SECTION_NAME = 'CommandLine'
@@ -39,7 +49,7 @@ class CommandLine(object):
     
     
     def __init__(self):
-        """Constructor for the :class:'.CommandLine'."""
+        """Constructor for the :class:`.CommandLine`."""
         
         self.parser = argparse.ArgumentParser()    
         self.parser.add_argument(self.SHORT_PREFIX +
@@ -50,6 +60,7 @@ class CommandLine(object):
                                  help=self.CONSOLE_ARGUMENT_HELP)
         
     def parse(self, param_args=None):
+        """Parses the arguments supplied from the shell."""
         
         args = vars(self.parser.parse_args(param_args))
                       
@@ -57,6 +68,7 @@ class CommandLine(object):
             Console().cmdloop()
 
 class Console(cmd.Cmd):
+    """The interactive console interface."""
     
     # Configuration keys
     SECTION_NAME = 'Console'
@@ -92,7 +104,7 @@ class Console(cmd.Cmd):
     prompt = PROMPT
     
     def __init__(self):
-        """Constructor for the :class:'.Console'."""
+        """Constructor for the :class:`.Console`."""
         
         self._history = {}
         self._most_recent = organize.Directive(constants.DEFAULT_DIRECTIVE_FILE_PATH)
@@ -100,12 +112,26 @@ class Console(cmd.Cmd):
         super(Console, self).__init__()               
 
     def add_directive(self, directive):
+        """Adds a directive to the history of used directives.
+        
+        :param directive: A :class:`.Directive` object.
+                
+        """
         
         self._most_recent = directive
         self._history[directive.get_name()] = directive
 
     def get_directive(self, args):
-        """Gets the directive."""
+        """Returns a directive to use for the 'file' command.
+        
+        If a directive is supplied with the '-d' argument, then it will be returned.
+        If the '-d' argument is not used, then a directive will be returned based on its name from the histroy of used directives if the '-n' argument is used. 
+        If the '-d' and '-n' arguments are not used, then the most recently used directive will be returned. 
+        The most recently used directive is by default, the default.xml directive upon first usage of the 'file' command. 
+        
+        :param args: A list. The arguments submitted with the command.
+        
+        """
         
         directive_value = args[self.DIRECTIVE_ARGUMENT_NAME]
         name_value = args[self.NAME_ARGUMENT_NAME]
@@ -124,12 +150,36 @@ class Console(cmd.Cmd):
                 return self._most_recent
 
     def file_started(self, *args):
+        """Called when a filing is started.
+        
+        See also:
+        
+        :ref: :class:`.Filer`
+        
+        """
+        
         print("Filed: %s to " % args[0], end="")
     
     def file_completed(self, *args):
+        """Called when a filing is completed.
+        
+        See also:
+        
+        :ref: :class:`.Filer`
+        
+        """
+        
         print("%s" % args[0][1])
     
     def file_failed(self, *args):
+        """Called when a filing has failed.
+        
+        See also:
+        
+        :ref: :class:`.Filer`
+        
+        """
+        
         print("FAIL!")
             
     def do_file(self, line):
@@ -223,6 +273,16 @@ class Console(cmd.Cmd):
         return self.do_exit(line)
 
 class ConsoleParser(argparse.ArgumentParser):
+    """A modified argument parser to use with the console.
+    
+    The :class:`.ArgumentParser` of the `argparse` module provides a lot of desirable functionality for parsing console commands and arguments, but it is designed for parsing arguments from the command line interface (CLI). 
+    For example, the default parser exits the application after showing the help message. 
+    If the help argument is supplied, the command is still executed. 
+    The :class:`.ConsoleParser` does not exist after displaying the help message and all other arguments are ignored if the help argument is detected.
+    
+    Errors in parsing console arguments are saved in a list and can be access later rather than raising an error and exiting the application.
+    
+    """
 
     PREFIX = config.cfg[Console.SECTION_NAME]['Prefix'].strip()
     HELP_ARGUMENT_NAME = config.cfg[Console.SECTION_NAME]['HelpArgumentLongName'].strip()
@@ -230,6 +290,14 @@ class ConsoleParser(argparse.ArgumentParser):
     HELP_ARGUMENT_HELP = config.cfg[Console.SECTION_NAME]['HelpArgumentHelp'].strip()    
 
     def __init__(self, *args, **kwargs):
+        """Constructor for the :class:`.ConsoleParser`.
+        
+        The prefix character is defined from the configuration file for the application. 
+        The default help action defined in the parent class is disabled and a new help argument is added. 
+        The new help argument action is 'store_true' so that if the 'help' argument is detected, it prints the help message without exiting.  
+        
+        """
+        
         super(ConsoleParser, self).__init__(prefix_chars=self.PREFIX, add_help=False, *args, **kwargs)
         self.errors = []
         self.add_argument(self.PREFIX +
@@ -240,12 +308,22 @@ class ConsoleParser(argparse.ArgumentParser):
                           help=self.HELP_ARGUMENT_HELP)
 
     def print_errors(self):
+        """Prints the list of errors to the console."""
+        
         for error in self.errors:
             self.print_usage()
             print(error)
 
     def parse_line(self, line):
-        """Helper function that parses the console input line."""
+        """Parses the console input line.
+        
+        This should be used instead of the 'parse_args' method of the :class:`.ArgumentParser`.
+        If a 'help' argument is detected, the help message is printed and the rest of the arguments are ignored and 'None' is returned.
+        Also, the rest of arguments are still parsed for correctness and any errors are saved in the 'self.errors' attribute, but the errors are not automatically displayed.        
+        If errors are detected and the 'help' argument is not detected, the errors are printed and 'None' is returned.
+        Otherwise, the arguments are parsed and returned as a dictionary instead of a :class:`.Namespace` object. 
+            
+        """
         
         args = vars(self.parse_args(line.split()))
     
@@ -262,9 +340,17 @@ class ConsoleParser(argparse.ArgumentParser):
     # application and therefore the console. The console should only exit when
     # the users enters the 'exit' or 'quit' command.
     def exit(self, status=0, message=None):
+        """Overrides the parent 'exit' method to avoid exiting the console."""
         pass
          
     def error(self, message):
+        """Overrides the parent 'error' method to avoid exiting.
+        
+        All error messages are saved in an internal list and can be displayed to the console using the 'print_errors' method. 
+        Errors are still determined, but not printed if the 'help' argument is detected.
+        
+        """
+        
         # Keep track of all error messages, but do not display to the user unless the 'help' argument has NOT been set.
         # The argparse parent class will print an error message if positional arguments are not present but the
         # 'help' argument is also included. I want all errors and arguments to be ignored if the 'help' argument

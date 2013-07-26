@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Provides constants applicable to all modules in the application."""
+
 import os
 
 APPLICATION_NAME = 'descatter'

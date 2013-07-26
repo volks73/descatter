@@ -77,7 +77,7 @@ class Filer(object):
     FILE_SOURCE_PATH = 'file-source-path'
     
     def __init__(self, directive):
-        """Constructor for the :class:'.Filer'."""
+        """Constructor for the :class:`.Filer`."""
         
         if directive is None:
             raise FilerError("The directive does not exist")
@@ -358,7 +358,7 @@ class Directive(object):
     XPATH_TEXT_ELEMENTS = etree.XPath(".//" + PREFIX + ":" + TEXT_TAG, namespaces=XPATH_NAMESPACE)
         
     def __init__(self, file):
-        """Constructor for the :class:'.Directive'."""
+        """Constructor for the :class:`.Directive`."""
         
         self.file_path = file
         self._root = etree.parse(self.file_path).getroot()
@@ -466,7 +466,9 @@ class Directive(object):
         return path_name
 
     def _process_path(self, name):
-        """Retrieves a list of folders and a file name based on a path name.
+        """Processes a path element by its name attribute.
+        
+        Retrieves a list of folders and a file name based on a path name.
         
         :param name: A String. The value of the 'name' attribute for the path XML node.
         
@@ -493,7 +495,9 @@ class Directive(object):
             return folder_names, self._get_value(file_element[0])
 
     def _process_macro(self, name):
-        """Retrieves text based on a macro node.
+        """Processes a macro element by its name attribute.
+        
+        Retrieves text based on a macro node.
         
         :param name: A String. The value of the 'name' attribute for the macro XML node.
         
@@ -638,8 +642,7 @@ class Directive(object):
         """Gets the value for an element.
         
         The value is either the text from the 'value' attribute, the text from the 'variable' attribute, or the text from a 'macro' attribute.
-        The variable text is converted from the filer context based on the name of the variable. The macro text is the output from
-        processing a macro.
+        The variable text is converted from the filer context based on the name of the variable. The macro text is the output from processing a macro.
         
         :param element: An etree element. Any XML that can have a 'value', 'variable', or 'macro' attribute.
         
@@ -769,7 +772,7 @@ class Validator(object):
     """Checks a directive to see if it is usable for directing a filer."""
     
     def __init__(self):
-        """Constructor for the :class:'.Validator'."""
+        """Constructor for the :class:`.Validator`."""
         
         # TODO: Implement the validator.
         pass
