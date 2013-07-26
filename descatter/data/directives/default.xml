@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<directive xmlns="descatter/filer/schema/1.0" name="simple">
+<directive xmlns="descatter/filer/schema/1.0" name="default">
 	<info>
 		<title>Simple, Straightforward File</title>
 		<author>

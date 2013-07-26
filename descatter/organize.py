@@ -83,6 +83,10 @@ class Filer(object):
             raise FilerError("The directive does not exist")
                 
         self.directive = directive
+        self._listeners = []
+    
+    def subscribe(self, listener):
+        self._listeners.append(listener)
 
     def file(self, source, destination, recursive=False, move=False):
         """Files based on the type of source.
@@ -195,6 +199,21 @@ class Filer(object):
         else:
             raise FilerError("A filer context could not be created because the source is not a file")
 
+    def _notify_started(self, *args):
+        
+        for listener in self._listeners:
+            listener.file_started(args)
+        
+    def _notify_completed(self, *args):
+        
+        for listener in self._listeners:
+            listener.file_completed(args)
+    
+    def _notify_failed(self, *args):
+        
+        for listener in self._listeners:
+            listener.file_failed(args)
+
     def _file(self, context, destination, move):
         """Files a file based on the filer context.
         
@@ -203,41 +222,46 @@ class Filer(object):
 
         """
         
-        # TODO: Add observer pattern to notify when a file has been filed.
+        self._notify_started(context[self.FILE_SOURCE_PATH])
         
-        destination_folder_names, destination_file_name = self.directive.get_destination(context)
-        destination_file_path = destination
-        
-        for destination_folder_name in destination_folder_names:
-            if destination_folder_name == Directive.RANDOM_VALUE_WILDCARD:
-                destination_file_path = tempfile.mkdtemp(suffix='', prefix='', dir=destination_file_path)
-            else:
-                destination_file_path = os.path.join(destination_file_path, destination_folder_name)
-                os.makedirs(destination_file_path, exist_ok=True)
+        try:
+            destination_folder_names, destination_file_name = self.directive.get_destination(context)
+            destination_file_path = destination
             
-        random_placeholder_index = destination_file_name.find(Directive.RANDOM_VALUE_WILDCARD) 
-            
-        if random_placeholder_index == -1:
-            destination_file_path = os.path.join(destination_file_path, destination_file_name)
-        else:
-            prefix = destination_file_name[:random_placeholder_index]
-            suffix = destination_file_name[random_placeholder_index+1:]
-    
-            temp_file_handle, destination_file_path = tempfile.mkstemp(suffix=suffix, prefix=prefix, dir=destination_file_path, text=False)
+            for destination_folder_name in destination_folder_names:
+                if destination_folder_name == Directive.RANDOM_VALUE_WILDCARD:
+                    destination_file_path = tempfile.mkdtemp(suffix='', prefix='', dir=destination_file_path)
+                else:
+                    destination_file_path = os.path.join(destination_file_path, destination_folder_name)
+                    os.makedirs(destination_file_path, exist_ok=True)
                 
-            # Ensure the race condition, thread-safe created temporary file has been closed and is not used by another
-            # process so that it can be replaced by the source file.
-            os.fdopen(temp_file_handle, 'w').close()
+            random_placeholder_index = destination_file_name.find(Directive.RANDOM_VALUE_WILDCARD) 
+                
+            if random_placeholder_index == -1:
+                destination_file_path = os.path.join(destination_file_path, destination_file_name)
+            else:
+                prefix = destination_file_name[:random_placeholder_index]
+                suffix = destination_file_name[random_placeholder_index+1:]
         
-        filed_path = None
-        
-        if move:
-            filed_path = shutil.move(context[self.FILE_SOURCE_PATH], destination_file_path)
-        else:
-            filed_path = shutil.copy2(context[self.FILE_SOURCE_PATH], destination_file_path)
-        
-        return filed_path
-    
+                temp_file_handle, destination_file_path = tempfile.mkstemp(suffix=suffix, prefix=prefix, dir=destination_file_path, text=False)
+                    
+                # Ensure the race condition, thread-safe created temporary file has been closed and is not used by another
+                # process so that it can be replaced by the source file.
+                os.fdopen(temp_file_handle, 'w').close()
+            
+            filed_path = None
+            
+            if move:
+                filed_path = shutil.move(context[self.FILE_SOURCE_PATH], destination_file_path)
+            else:
+                filed_path = shutil.copy2(context[self.FILE_SOURCE_PATH], destination_file_path)
+            
+            self._notify_completed(context[self.FILE_SOURCE_PATH], destination_file_path)
+            
+            return filed_path
+        except:
+            self._notify_failed(context[self.FILE_SOURCE_PATH])
+
 class Directive(object):
     """Responsible for reading an XML file and determining the destination of a file.
     

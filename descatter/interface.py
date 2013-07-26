@@ -20,6 +20,7 @@ import argparse
 import cmd
 
 import config
+import constants
 import organize
 
 from prettytable import PrettyTable
@@ -93,9 +94,9 @@ class Console(cmd.Cmd):
     def __init__(self):
         """Constructor for the :class:'.Console'."""
         
-        # TODO: Create default directive that simply copies the files to the destination without change.
-        self._most_recent = None
         self._history = {}
+        self._most_recent = organize.Directive(constants.DEFAULT_DIRECTIVE_FILE_PATH)
+        self.add_directive(self._most_recent)
         super(Console, self).__init__()               
 
     def add_directive(self, directive):
@@ -121,6 +122,15 @@ class Console(cmd.Cmd):
                 raise ConsoleError("No directive has been previously used")
             else:
                 return self._most_recent
+
+    def file_started(self, *args):
+        print("Filed: %s to " % args[0], end="")
+    
+    def file_completed(self, *args):
+        print("%s" % args[0][1])
+    
+    def file_failed(self, *args):
+        print("FAIL!")
             
     def do_file(self, line):
         """Files a source file to a destination folder based on a directive."""
@@ -160,8 +170,6 @@ class Console(cmd.Cmd):
                             action='store_true',
                             help=self.VERBOSE_ARGUMENT_HELP)
     
-        # TODO: Add verbose argument to display text while filing.
-    
         args = parser.parse_line(line)
         
         if args:
@@ -171,8 +179,12 @@ class Console(cmd.Cmd):
                 directive = self.get_directive(args)
                 recursive = args[self.RECURSIVE_ARGUMENT_NAME]
                 move = args[self.MOVE_ARGUMENT_NAME]
-                            
+                
                 filer = organize.Filer(directive)
+                
+                if args[self.VERBOSE_ARGUMENT_NAME]:
+                    filer.subscribe(self)
+                    
                 filer.file(source, destination, recursive, move)
                 self.add_directive(directive)
             except organize.FilerError as error:
