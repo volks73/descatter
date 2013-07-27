@@ -2,17 +2,38 @@ import sys
 
 from cx_Freeze import setup, Executable
 
-# config_file_path = os.path.join('descatter', 'data', 'descatter.ini')
-
 packages = ['lxml',
             'prettytable',
             'descatter']
 
 includes = []
 
-include_files = ['descatter.ini', 'directives/']
+include_files = ['descatter.ini',
+                 'directives/',
+                 'AUTHORS',
+                 'CHANGES',
+                 'LICENSE',
+                 'README.rst']
 
-excludes = ['Tkinter','tcl','Tkconstants','distutils','email','http','json','lib2to3','nose','unittest','xml']
+excludes = ['Tkinter',
+            'tcl',
+            'Tkconstants',
+            'distutils',
+            'email',
+            'http',
+            'json',
+            'lib2to3',
+            'nose',
+            'unittest',
+            'xml',
+            'ssl',
+            'subprocess',
+            'tty',
+            'webbrowser',
+            'urllib',
+            'pickle',
+            'doctest',
+            'random']
 
 path = sys.path + ['descatter']
 

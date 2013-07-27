@@ -160,6 +160,8 @@ class CommandLine(object):
 class Console(cmd.Cmd):
     """The interactive console interface."""
     
+    # TODO: Abstract the getting of attributes from the configuration file. The defining of constants and listing of them is tedious.
+    
     # Configuration keys
     SECTION_NAME = 'Console'
     INTRODUCTION = descatter.config[SECTION_NAME]['Introduction'].strip()
