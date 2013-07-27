@@ -25,10 +25,9 @@ These interactions include a command line interface (CLI), an interactive consol
 
 import argparse
 import cmd
+import os
 
-import config
-import constants
-import organize
+import descatter
 
 from prettytable import PrettyTable
 
@@ -41,11 +40,11 @@ class CommandLine(object):
     
     # Configuration keys
     SECTION_NAME = 'CommandLine'
-    SHORT_PREFIX = config.cfg[SECTION_NAME]['ShortPrefix'].strip()
-    LONG_PREFIX = config.cfg[SECTION_NAME]['LongPrefix'].strip()
-    CONSOLE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['ConsoleArgumentShortName'].strip()
-    CONSOLE_ARGUMENT_LONG_NAME = config.cfg[SECTION_NAME]['ConsoleArgumentLongName'].strip()
-    CONSOLE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['ConsoleArgumentHelp'].strip()
+    SHORT_PREFIX = descatter.config[SECTION_NAME]['ShortPrefix'].strip()
+    LONG_PREFIX = descatter.config[SECTION_NAME]['LongPrefix'].strip()
+    CONSOLE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['ConsoleArgumentShortName'].strip()
+    CONSOLE_ARGUMENT_LONG_NAME = descatter.config[SECTION_NAME]['ConsoleArgumentLongName'].strip()
+    CONSOLE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['ConsoleArgumentHelp'].strip()
     
     
     def __init__(self):
@@ -72,33 +71,33 @@ class Console(cmd.Cmd):
     
     # Configuration keys
     SECTION_NAME = 'Console'
-    INTRODUCTION = config.cfg[SECTION_NAME]['Introduction'].strip()
-    PROMPT = config.cfg[SECTION_NAME]['Prompt'].strip() + ' '
-    FILE_COMMAND_PROG = config.cfg[SECTION_NAME]['FileCommandProg'].strip()
-    FILE_COMMAND_DESCRIPTION = config.cfg[SECTION_NAME]['FileCommandDescription'].strip()
+    INTRODUCTION = descatter.config[SECTION_NAME]['Introduction'].strip()
+    PROMPT = descatter.config[SECTION_NAME]['Prompt'].strip() + ' '
+    FILE_COMMAND_PROG = descatter.config[SECTION_NAME]['FileCommandProg'].strip()
+    FILE_COMMAND_DESCRIPTION = descatter.config[SECTION_NAME]['FileCommandDescription'].strip()
     SOURCE_ARGUMENT_NAME = 'source' 
-    SOURCE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['SourceArgumentHelp'].strip()
+    SOURCE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['SourceArgumentHelp'].strip()
     DESTINATION_ARGUMENT_NAME = 'destination'
-    DESTINATION_ARGUMENT_HELP = config.cfg[SECTION_NAME]['DestinationArgumentHelp'].strip()
-    DIRECTIVE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['DirectiveArgumentShortName'].strip()
-    DIRECTIVE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['DirectiveArgumentLongName'].strip()
-    DIRECTIVE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['DirectiveArgumentHelp'].strip()
-    RECURSIVE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['RecursiveArgumentLongName'].strip()
-    RECURSIVE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['RecursiveArgumentShortName'].strip()
-    RECURSIVE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['RecursiveArgumentHelp'].strip()
-    MOVE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['MoveArgumentLongName'].strip()
-    MOVE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['MoveArgumentShortName'].strip()
-    MOVE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['MoveArgumentHelp'].strip()
-    NAME_ARGUMENT_NAME = config.cfg[SECTION_NAME]['NameArgumentLongName'].strip()
-    NAME_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['NameArgumentShortName'].strip()
-    NAME_ARGUMENT_HELP = config.cfg[SECTION_NAME]['NameArgumentHelp'].strip()
-    VERBOSE_ARGUMENT_NAME = config.cfg[SECTION_NAME]['VerboseArgumentLongName'].strip()
-    VERBOSE_ARGUMENT_SHORT_NAME = config.cfg[SECTION_NAME]['VerboseArgumentShortName'].strip()
-    VERBOSE_ARGUMENT_HELP = config.cfg[SECTION_NAME]['VerboseArgumentHelp'].strip()
-    HISTORY_COMMAND_PROG = config.cfg[SECTION_NAME]['HistoryCommandProg'].strip()
-    HISTORY_COMMAND_DESCRIPTION = config.cfg[SECTION_NAME]['HistoryCommandDescription'].strip()
-    HISTORY_NAME_COLUMN = config.cfg[SECTION_NAME]['HistoryTableNameColumn'].strip()
-    HISTORY_FILE_PATH_COLUMN = config.cfg[SECTION_NAME]['HistoryTableFilePathColumn'].strip()
+    DESTINATION_ARGUMENT_HELP = descatter.config[SECTION_NAME]['DestinationArgumentHelp'].strip()
+    DIRECTIVE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['DirectiveArgumentShortName'].strip()
+    DIRECTIVE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['DirectiveArgumentLongName'].strip()
+    DIRECTIVE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['DirectiveArgumentHelp'].strip()
+    RECURSIVE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['RecursiveArgumentLongName'].strip()
+    RECURSIVE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['RecursiveArgumentShortName'].strip()
+    RECURSIVE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['RecursiveArgumentHelp'].strip()
+    MOVE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['MoveArgumentLongName'].strip()
+    MOVE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['MoveArgumentShortName'].strip()
+    MOVE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['MoveArgumentHelp'].strip()
+    NAME_ARGUMENT_NAME = descatter.config[SECTION_NAME]['NameArgumentLongName'].strip()
+    NAME_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['NameArgumentShortName'].strip()
+    NAME_ARGUMENT_HELP = descatter.config[SECTION_NAME]['NameArgumentHelp'].strip()
+    VERBOSE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['VerboseArgumentLongName'].strip()
+    VERBOSE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['VerboseArgumentShortName'].strip()
+    VERBOSE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['VerboseArgumentHelp'].strip()
+    HISTORY_COMMAND_PROG = descatter.config[SECTION_NAME]['HistoryCommandProg'].strip()
+    HISTORY_COMMAND_DESCRIPTION = descatter.config[SECTION_NAME]['HistoryCommandDescription'].strip()
+    HISTORY_NAME_COLUMN = descatter.config[SECTION_NAME]['HistoryTableNameColumn'].strip()
+    HISTORY_FILE_PATH_COLUMN = descatter.config[SECTION_NAME]['HistoryTableFilePathColumn'].strip()
     
     intro = INTRODUCTION
     prompt = PROMPT
@@ -107,7 +106,9 @@ class Console(cmd.Cmd):
         """Constructor for the :class:`.Console`."""
         
         self._history = {}
-        self._most_recent = organize.Directive(constants.DEFAULT_DIRECTIVE_FILE_PATH)
+        default_directive_file_name = descatter.config[self.SECTION_NAME]['DefaultDirective']
+        default_directive_file_path = descatter.get_file_path(descatter.DIRECTIVES_FOLDER_NAME, default_directive_file_name)
+        self._most_recent = descatter.Directive(default_directive_file_path)
         self.add_directive(self._most_recent)
         super(Console, self).__init__()               
 
@@ -137,7 +138,7 @@ class Console(cmd.Cmd):
         name_value = args[self.NAME_ARGUMENT_NAME]
         
         if directive_value:
-            return organize.Directive(directive_value)
+            return descatter.Directive(directive_value)
         elif name_value:
             if name_value in self._history:
                 return self._history[name_value]
@@ -230,14 +231,14 @@ class Console(cmd.Cmd):
                 recursive = args[self.RECURSIVE_ARGUMENT_NAME]
                 move = args[self.MOVE_ARGUMENT_NAME]
                 
-                filer = organize.Filer(directive)
+                filer = descatter.Filer(directive)
                 
                 if args[self.VERBOSE_ARGUMENT_NAME]:
                     filer.subscribe(self)
                     
                 filer.file(source, destination, recursive, move)
                 self.add_directive(directive)
-            except organize.FilerError as error:
+            except descatter.FilerError as error:
                 print(error)
             except ConsoleError as error:
                 print(error)
@@ -248,6 +249,8 @@ class Console(cmd.Cmd):
         parser = ConsoleParser(prog=self.HISTORY_COMMAND_PROG,
                                description=self.HISTORY_COMMAND_DESCRIPTION)
         
+        # TODO: Add verbose or absolute argument to display paths as absolute paths as opposed to relative paths.
+        
         args = parser.parse_line(line)
         
         if args:
@@ -256,7 +259,7 @@ class Console(cmd.Cmd):
                 history_table.align[self.HISTORY_FILE_PATH_COLUMN] = 'l'
                 
                 for name, directive in self._history.items():
-                    history_table.add_row([name, directive.file_path])
+                    history_table.add_row([name, os.path.relpath(directive.file_path)])
                 
                 print(history_table) 
             except ConsoleError as error:
@@ -284,10 +287,10 @@ class ConsoleParser(argparse.ArgumentParser):
     
     """
 
-    PREFIX = config.cfg[Console.SECTION_NAME]['Prefix'].strip()
-    HELP_ARGUMENT_NAME = config.cfg[Console.SECTION_NAME]['HelpArgumentLongName'].strip()
-    HELP_ARGUMENT_SHORT_NAME = config.cfg[Console.SECTION_NAME]['HelpArgumentShortName'].strip()
-    HELP_ARGUMENT_HELP = config.cfg[Console.SECTION_NAME]['HelpArgumentHelp'].strip()    
+    PREFIX = descatter.config[Console.SECTION_NAME]['Prefix'].strip()
+    HELP_ARGUMENT_NAME = descatter.config[Console.SECTION_NAME]['HelpArgumentLongName'].strip()
+    HELP_ARGUMENT_SHORT_NAME = descatter.config[Console.SECTION_NAME]['HelpArgumentShortName'].strip()
+    HELP_ARGUMENT_HELP = descatter.config[Console.SECTION_NAME]['HelpArgumentHelp'].strip()    
 
     def __init__(self, *args, **kwargs):
         """Constructor for the :class:`.ConsoleParser`.

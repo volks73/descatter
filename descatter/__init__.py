@@ -15,4 +15,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
+
 __version__ = '0.0.1'
+
+APPLICATION_NAME = 'descatter'
+DIRECTIVES_FOLDER_NAME = 'directives'
+CONFIG_FILE_NAME = 'descatter.ini'
+
+from descatter.config import *
+from descatter.interface import *
+from descatter.main import *
+from descatter.organize import *

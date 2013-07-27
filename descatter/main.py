@@ -1,4 +1,4 @@
-# descatter/descatter.py
+# descatter/main.py
 # Copyright (C) 2013 the Descatter authors and contributers <see AUTHORS file>
 #
 # This module is part of Descatter.
@@ -18,10 +18,15 @@
 
 """The Descatter Application."""
 
-import interface
+import descatter
 
-cli = interface.CommandLine()
-cli.parse()
+def main():
+    """Starts the `Descatter` application."""
+    
+    # TODO: Add loading of all directives in the 'directive' folder
+    
+    cli = descatter.CommandLine()
+    cli.parse()
 
 class TaggerError(Exception): pass
 

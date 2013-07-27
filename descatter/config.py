@@ -19,8 +19,27 @@
 """Provides information and text based on the application's configuration file."""
 
 import configparser
+import os
+import sys
 
-import constants
+import descatter
 
-cfg = configparser.ConfigParser()
-cfg.read(constants.CONFIG_FILE_PATH)
+def get_root_folder():
+    
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        root_folder = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store data files
+        root_folder = os.path.dirname(sys.argv[0])
+        
+    return root_folder
+
+def get_file_path(*args):
+    """Finds a data file."""
+    
+    return os.path.join(get_root_folder(), *args)
+
+config = configparser.ConfigParser()
+config.read(descatter.CONFIG_FILE_NAME)

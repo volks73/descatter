@@ -1,4 +1,4 @@
-# descatter/constants.py
+# descatter.py
 # Copyright (C) 2013 the Descatter authors and contributers <see AUTHORS file>
 #
 # This module is part of Descatter.
@@ -16,17 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Provides constants applicable to all modules in the application."""
+from descatter import main
 
-import os
-
-APPLICATION_NAME = 'descatter'
-DATA_FOLDER_NAME = 'data'
-DIRECTIVES_FOLDER_NAME = 'directives'
-CONFIG_FILE_NAME = 'descatter.ini'
-DEFAULT_DIRECTIVE_NAME = 'default.xml'
-
-DATA_FOLDER_PATH = os.path.join(os.path.join(os.getcwd(), APPLICATION_NAME), DATA_FOLDER_NAME)
-CONFIG_FILE_PATH = os.path.join(DATA_FOLDER_PATH, CONFIG_FILE_NAME)
-DIRECTIVES_FOLDER_PATH = os.path.join(DATA_FOLDER_PATH, DIRECTIVES_FOLDER_NAME)
-DEFAULT_DIRECTIVE_FILE_PATH = os.path.join(DIRECTIVES_FOLDER_PATH, DEFAULT_DIRECTIVE_NAME)
+main()
