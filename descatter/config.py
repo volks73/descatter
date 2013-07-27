@@ -24,6 +24,9 @@ import sys
 
 import descatter
 
+config = configparser.ConfigParser()
+config.read(descatter.CONFIG_FILE_NAME)
+
 def get_root_folder():
     
     if getattr(sys, 'frozen', False):
@@ -40,6 +43,3 @@ def get_file_path(*args):
     """Finds a data file."""
     
     return os.path.join(get_root_folder(), *args)
-
-config = configparser.ConfigParser()
-config.read(descatter.CONFIG_FILE_NAME)

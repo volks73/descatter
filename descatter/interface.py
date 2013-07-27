@@ -31,10 +31,19 @@ import descatter
 
 from prettytable import PrettyTable
 
+def file(source, destination, directive, recursive, move, verbose, absolute):
+                  
+    filer = descatter.Filer(directive)    
+              
+    if verbose:
+        filer.subscribe(FilerListener(absolute))
+                    
+    filer.file(source, destination, recursive, move)
+
 class ConsoleError(Exception): 
     """Raised when the interface console encounters an error in the syntax of a command."""
     pass
-        
+    
 class CommandLine(object):
     """The command line interface."""
     
@@ -43,9 +52,26 @@ class CommandLine(object):
     SHORT_PREFIX = descatter.config[SECTION_NAME]['ShortPrefix'].strip()
     LONG_PREFIX = descatter.config[SECTION_NAME]['LongPrefix'].strip()
     CONSOLE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['ConsoleArgumentShortName'].strip()
-    CONSOLE_ARGUMENT_LONG_NAME = descatter.config[SECTION_NAME]['ConsoleArgumentLongName'].strip()
+    CONSOLE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['ConsoleArgumentLongName'].strip()
     CONSOLE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['ConsoleArgumentHelp'].strip()
-    
+    FILE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['FileArgumentShortName'].strip()
+    FILE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['FileArgumentLongName'].strip()
+    FILE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['FileArgumentHelp'].strip()  
+    DIRECTIVE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['DirectiveArgumentShortName'].strip()
+    DIRECTIVE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['DirectiveArgumentLongName'].strip()
+    DIRECTIVE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['DirectiveArgumentHelp'].strip()  
+    RECURSIVE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['RecursiveArgumentLongName'].strip()
+    RECURSIVE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['RecursiveArgumentShortName'].strip()
+    RECURSIVE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['RecursiveArgumentHelp'].strip()
+    MOVE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['MoveArgumentLongName'].strip()
+    MOVE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['MoveArgumentShortName'].strip()
+    MOVE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['MoveArgumentHelp'].strip()
+    VERBOSE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['VerboseArgumentLongName'].strip()
+    VERBOSE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['VerboseArgumentShortName'].strip()
+    VERBOSE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['VerboseArgumentHelp'].strip()
+    ABSOLUTE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['AbsoluteArgumentLongName'].strip()
+    ABSOLUTE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['AbsoluteArgumentShortName'].strip()
+    ABSOLUTE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['AbsoluteArgumentHelp'].strip()
     
     def __init__(self):
         """Constructor for the :class:`.CommandLine`."""
@@ -54,17 +80,82 @@ class CommandLine(object):
         self.parser.add_argument(self.SHORT_PREFIX +
                                  self.CONSOLE_ARGUMENT_SHORT_NAME,
                                  self.LONG_PREFIX +
-                                 self.CONSOLE_ARGUMENT_LONG_NAME,
+                                 self.CONSOLE_ARGUMENT_NAME,
                                  action='store_true',
                                  help=self.CONSOLE_ARGUMENT_HELP)
+        self.parser.add_argument(self.SHORT_PREFIX +
+                                 self.FILE_ARGUMENT_SHORT_NAME,
+                                 self.LONG_PREFIX +
+                                 self.FILE_ARGUMENT_NAME,
+                                 nargs=2,
+                                 help=self.FILE_ARGUMENT_HELP)
+        self.parser.add_argument(self.SHORT_PREFIX +
+                                 self.DIRECTIVE_ARGUMENT_SHORT_NAME,
+                                 self.LONG_PREFIX +
+                                 self.DIRECTIVE_ARGUMENT_NAME,
+                                 help=self.DIRECTIVE_ARGUMENT_HELP)
+        self.parser.add_argument(self.SHORT_PREFIX +
+                                 self.VERBOSE_ARGUMENT_SHORT_NAME,
+                                 self.LONG_PREFIX +
+                                 self.VERBOSE_ARGUMENT_NAME,
+                                 action='store_true',
+                                 help=self.VERBOSE_ARGUMENT_HELP)
+        self.parser.add_argument(self.SHORT_PREFIX +
+                                 self.MOVE_ARGUMENT_SHORT_NAME,
+                                 self.LONG_PREFIX +
+                                 self.MOVE_ARGUMENT_NAME,
+                                 action='store_true',
+                                 help=self.MOVE_ARGUMENT_HELP)
+        self.parser.add_argument(self.SHORT_PREFIX +
+                                 self.RECURSIVE_ARGUMENT_SHORT_NAME,
+                                 self.LONG_PREFIX +
+                                 self.RECURSIVE_ARGUMENT_NAME,
+                                 action='store_true',
+                                 help=self.RECURSIVE_ARGUMENT_HELP)
+        self.parser.add_argument(self.SHORT_PREFIX +
+                                 self.ABSOLUTE_ARGUMENT_SHORT_NAME,
+                                 self.LONG_PREFIX +
+                                 self.ABSOLUTE_ARGUMENT_NAME,
+                                 action='store_true',
+                                 help=self.ABSOLUTE_ARGUMENT_HELP)
         
     def parse(self, param_args=None):
         """Parses the arguments supplied from the shell."""
         
         args = vars(self.parser.parse_args(param_args))
                       
-        if args[self.CONSOLE_ARGUMENT_LONG_NAME]:
-            Console().cmdloop()
+        if args[self.CONSOLE_ARGUMENT_NAME]:
+            self._do_console()
+        elif args[self.FILE_ARGUMENT_NAME]:
+            self._do_file(args)
+        else:
+            print("Nothing to do!")
+    
+    def _do_console(self):
+        
+        Console().cmdloop()
+    
+    def _do_file(self, args):
+        source = args[self.FILE_ARGUMENT_NAME][0]
+        destination = args[self.FILE_ARGUMENT_NAME][1]
+        recursive = args[self.RECURSIVE_ARGUMENT_NAME]
+        move = args[self.MOVE_ARGUMENT_NAME]
+        verbose = args[self.VERBOSE_ARGUMENT_NAME]
+        absolute = args[self.ABSOLUTE_ARGUMENT_NAME]       
+
+        file(source, destination, self._get_directive(args), recursive, move, verbose, absolute)
+    
+    def _get_directive(self, args):
+        
+        directive_path = None
+        
+        if args[self.DIRECTIVE_ARGUMENT_NAME]:
+            directive_path = descatter.Directive(args[self.DIRECTIVE_ARGUMENT_NAME])
+        else:
+            default_directive_file_name = descatter.config[self.SECTION_NAME]['DefaultDirective']
+            directive_path = descatter.get_file_path(descatter.DIRECTIVES_FOLDER_NAME, default_directive_file_name)
+            
+        return descatter.Directive(directive_path)            
 
 class Console(cmd.Cmd):
     """The interactive console interface."""
@@ -96,8 +187,14 @@ class Console(cmd.Cmd):
     VERBOSE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['VerboseArgumentHelp'].strip()
     HISTORY_COMMAND_PROG = descatter.config[SECTION_NAME]['HistoryCommandProg'].strip()
     HISTORY_COMMAND_DESCRIPTION = descatter.config[SECTION_NAME]['HistoryCommandDescription'].strip()
-    HISTORY_NAME_COLUMN = descatter.config[SECTION_NAME]['HistoryTableNameColumn'].strip()
-    HISTORY_FILE_PATH_COLUMN = descatter.config[SECTION_NAME]['HistoryTableFilePathColumn'].strip()
+    RECENT_COMMAND_PROG = descatter.config[SECTION_NAME]['RecentCommandProg'].strip()
+    RECENT_COMMAND_DESCRIPTION = descatter.config[SECTION_NAME]['RecentCommandDescription'].strip()
+    DIRECTIVE_NAME_COLUMN = descatter.config[SECTION_NAME]['DirectiveTableNameColumn'].strip()
+    DIRECTIVE_FILE_COLUMN = descatter.config[SECTION_NAME]['DirectiveTableFileColumn'].strip()
+    DIRECTIVE_PATH_COLUMN = descatter.config[SECTION_NAME]['DirectiveTablePathColumn'].strip()
+    ABSOLUTE_ARGUMENT_NAME = descatter.config[SECTION_NAME]['AbsoluteArgumentLongName'].strip()
+    ABSOLUTE_ARGUMENT_SHORT_NAME = descatter.config[SECTION_NAME]['AbsoluteArgumentShortName'].strip()
+    ABSOLUTE_ARGUMENT_HELP = descatter.config[SECTION_NAME]['AbsoluteArgumentHelp'].strip()
     
     intro = INTRODUCTION
     prompt = PROMPT
@@ -109,10 +206,10 @@ class Console(cmd.Cmd):
         default_directive_file_name = descatter.config[self.SECTION_NAME]['DefaultDirective']
         default_directive_file_path = descatter.get_file_path(descatter.DIRECTIVES_FOLDER_NAME, default_directive_file_name)
         self._most_recent = descatter.Directive(default_directive_file_path)
-        self.add_directive(self._most_recent)
+        self._add_directive(self._most_recent)
         super(Console, self).__init__()               
 
-    def add_directive(self, directive):
+    def _add_directive(self, directive):
         """Adds a directive to the history of used directives.
         
         :param directive: A :class:`.Directive` object.
@@ -122,7 +219,7 @@ class Console(cmd.Cmd):
         self._most_recent = directive
         self._history[directive.get_name()] = directive
 
-    def get_directive(self, args):
+    def _get_directive(self, args):
         """Returns a directive to use for the 'file' command.
         
         If a directive is supplied with the '-d' argument, then it will be returned.
@@ -149,40 +246,40 @@ class Console(cmd.Cmd):
                 raise ConsoleError("No directive has been previously used")
             else:
                 return self._most_recent
+    
+    def _print_directive_table(self, directives, verbose, absolute):
+        """Prints an ASCII table for the list of directives to the console.
+        
+        :param directives: A list of :class:`.Directive` objects.
+        :param verbose: A boolean value. 'True' displays additional information about each directive in the table.
+        :param absolute: A boolean value. 'True' displays paths in a absolute path format.
+        
+        """
 
-    def file_started(self, *args):
-        """Called when a filing is started.
+        if verbose:
+            directive_table = PrettyTable([self.DIRECTIVE_NAME_COLUMN, self.DIRECTIVE_FILE_COLUMN, self.DIRECTIVE_PATH_COLUMN])
+            directive_table.align[self.DIRECTIVE_PATH_COLUMN] = 'l'
+        else:
+            directive_table = PrettyTable([self.DIRECTIVE_NAME_COLUMN, self.DIRECTIVE_FILE_COLUMN])
+                    
+            directive_table.align[self.DIRECTIVE_FILE_COLUMN] = 'l'
         
-        See also:
-        
-        :ref: :class:`.Filer`
-        
-        """
-        
-        print("Filed: %s to " % args[0], end="")
-    
-    def file_completed(self, *args):
-        """Called when a filing is completed.
-        
-        See also:
-        
-        :ref: :class:`.Filer`
-        
-        """
-        
-        print("%s" % args[0][1])
-    
-    def file_failed(self, *args):
-        """Called when a filing has failed.
-        
-        See also:
-        
-        :ref: :class:`.Filer`
-        
-        """
-        
-        print("FAIL!")
+        for directive in directives:
+            name = directive.get_name()
+            file_name = os.path.basename(directive.file_path)
             
+            if verbose:    
+                path = os.path.dirname(directive.file_path)
+                        
+                if absolute:
+                    path = os.path.abspath(path)
+                            
+                directive_table.add_row([name, file_name, path])
+            else:
+                directive_table.add_row([name, file_name])
+                        
+        print(directive_table) 
+      
     def do_file(self, line):
         """Files a source file to a destination folder based on a directive."""
         
@@ -220,6 +317,12 @@ class Console(cmd.Cmd):
                             self.VERBOSE_ARGUMENT_NAME,
                             action='store_true',
                             help=self.VERBOSE_ARGUMENT_HELP)
+        parser.add_argument(ConsoleParser.PREFIX +
+                            self.ABSOLUTE_ARGUMENT_SHORT_NAME,
+                            ConsoleParser.PREFIX + ConsoleParser.PREFIX +
+                            self.ABSOLUTE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.ABSOLUTE_ARGUMENT_HELP)
     
         args = parser.parse_line(line)
         
@@ -227,17 +330,15 @@ class Console(cmd.Cmd):
             try:
                 source = args[self.SOURCE_ARGUMENT_NAME]
                 destination = args[self.DESTINATION_ARGUMENT_NAME]
-                directive = self.get_directive(args)
+                directive = self._get_directive(args)
                 recursive = args[self.RECURSIVE_ARGUMENT_NAME]
                 move = args[self.MOVE_ARGUMENT_NAME]
+                verbose = args[self.VERBOSE_ARGUMENT_NAME]
+                absolute = args[self.ABSOLUTE_ARGUMENT_NAME]
+        
+                file(source, destination, directive, recursive, move, verbose, absolute)
                 
-                filer = descatter.Filer(directive)
-                
-                if args[self.VERBOSE_ARGUMENT_NAME]:
-                    filer.subscribe(self)
-                    
-                filer.file(source, destination, recursive, move)
-                self.add_directive(directive)
+                self._add_directive(directive)
             except descatter.FilerError as error:
                 print(error)
             except ConsoleError as error:
@@ -248,23 +349,59 @@ class Console(cmd.Cmd):
         
         parser = ConsoleParser(prog=self.HISTORY_COMMAND_PROG,
                                description=self.HISTORY_COMMAND_DESCRIPTION)
-        
-        # TODO: Add verbose or absolute argument to display paths as absolute paths as opposed to relative paths.
+        parser.add_argument(ConsoleParser.PREFIX +
+                            self.VERBOSE_ARGUMENT_SHORT_NAME,
+                            ConsoleParser.PREFIX + ConsoleParser.PREFIX +
+                            self.VERBOSE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.VERBOSE_ARGUMENT_HELP)
+        parser.add_argument(ConsoleParser.PREFIX +
+                            self.ABSOLUTE_ARGUMENT_SHORT_NAME,
+                            ConsoleParser.PREFIX + ConsoleParser.PREFIX +
+                            self.ABSOLUTE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.ABSOLUTE_ARGUMENT_HELP)
         
         args = parser.parse_line(line)
         
         if args:
             try:
-                history_table = PrettyTable([self.HISTORY_NAME_COLUMN, self.HISTORY_FILE_PATH_COLUMN])
-                history_table.align[self.HISTORY_FILE_PATH_COLUMN] = 'l'
-                
-                for name, directive in self._history.items():
-                    history_table.add_row([name, os.path.relpath(directive.file_path)])
-                
-                print(history_table) 
+                verbose = args[self.VERBOSE_ARGUMENT_NAME]
+                absolute = args[self.ABSOLUTE_ARGUMENT_NAME]
+            
+                self._print_directive_table(self._history.values(), verbose, absolute) 
             except ConsoleError as error:
                 print(error)
+    
+    def do_recent(self, line):
+        """Displays the most recently used directive."""
         
+        parser = ConsoleParser(prog=self.RECENT_COMMAND_PROG,
+                               description=self.RECENT_COMMAND_DESCRIPTION)
+        parser.add_argument(ConsoleParser.PREFIX +
+                            self.VERBOSE_ARGUMENT_SHORT_NAME,
+                            ConsoleParser.PREFIX + ConsoleParser.PREFIX +
+                            self.VERBOSE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.VERBOSE_ARGUMENT_HELP)
+        parser.add_argument(ConsoleParser.PREFIX +
+                            self.ABSOLUTE_ARGUMENT_SHORT_NAME,
+                            ConsoleParser.PREFIX + ConsoleParser.PREFIX +
+                            self.ABSOLUTE_ARGUMENT_NAME,
+                            action='store_true',
+                            help=self.ABSOLUTE_ARGUMENT_HELP)
+        
+        args = parser.parse_line(line)
+        
+        if args:
+            try:
+                verbose = args[self.VERBOSE_ARGUMENT_NAME]
+                absolute = args[self.ABSOLUTE_ARGUMENT_NAME]
+            
+                self._print_directive_table((self._most_recent,), verbose, absolute)
+            except ConsoleError as error:
+                print(error)
+    
     def do_exit(self, line):
         """Safely exits the console."""
         
@@ -360,3 +497,62 @@ class ConsoleParser(argparse.ArgumentParser):
         # is included. This is a result of the argparse module being used to parse console commands instead of its
         # intended purpose of parsing command line arguments.
         self.errors.append(message)
+
+class FilerListener(object):
+    """Listener for filer.file events when operating in verbose mode."""
+    
+    def __init__(self, absolute=False):
+        """Constructor for the :class:`.FilerListener`."""
+        
+        self.absolute = absolute
+    
+    def file_started(self, *args):
+        """Called when a filing is started.
+        
+        See also:
+        
+        :ref: :class:`.Filer`
+        
+        """
+        
+        source_path = args[0][0]
+        
+        if self.absolute:
+            display = os.path.abspath(source_path)
+        else:
+            parent = os.path.dirname(source_path)
+            parent = os.path.basename(parent)
+            display =  os.path.join(parent, os.path.basename(source_path))
+        
+        print("Filed: %s to " % display, end="")
+    
+    def file_completed(self, *args):
+        """Called when a filing is completed.
+        
+        See also:
+        
+        :ref: :class:`.Filer`
+        
+        """
+        
+        destination_path = args[0][1]
+        
+        if self.absolute:
+            display = os.path.abspath(destination_path)
+        else:
+            parent = os.path.dirname(destination_path)
+            parent = os.path.basename(parent)
+            display =  os.path.join(parent, os.path.basename(destination_path))
+        
+        print("%s" % display)
+    
+    def file_failed(self, *args):
+        """Called when a filing has failed.
+        
+        See also:
+        
+        :ref: :class:`.Filer`
+        
+        """
+        
+        print("FAIL!")
