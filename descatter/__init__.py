@@ -18,11 +18,22 @@
 
 __version__ = '0.0.1'
 
-APPLICATION_NAME = 'descatter'
-DIRECTIVES_FOLDER_NAME = 'directives'
-CONFIG_FILE_NAME = 'descatter.ini'
+import sys
+import os
 
-from descatter.config import *
-from descatter.interface import *
-from descatter.main import *
-from descatter.organize import *
+def get_root_folder():
+    
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        root_folder = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store data files
+        root_folder = os.path.dirname(sys.argv[0])
+        
+    return root_folder
+
+def get_file_path(*args):
+    """Finds a data file."""
+    
+    return os.path.join(get_root_folder(), *args)

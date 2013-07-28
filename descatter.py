@@ -16,6 +16,32 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
-from descatter import main
+import os
+import configparser
 
-main()
+from descatter import get_file_path
+from descatter.interface import CommandLine
+from descatter.organize import Directive
+
+CONFIG_FILE_NAME = 'descatter.ini'
+DIRECTIVES_FOLDER_NAME = 'directives'
+
+config = configparser.ConfigParser()
+config.read(CONFIG_FILE_NAME)
+
+def find_default_directive(file):
+
+    default_directive = None
+
+    root_folder_path = os.path.abspath(file)
+    directive_folder_path = os.path.abspath(get_file_path(os.path.join(DIRECTIVES_FOLDER_NAME, file)))
+
+    if os.path.isfile(root_folder_path):
+        default_directive = Directive(root_folder_path)
+    elif os.path.isfile(directive_folder_path):
+        default_directive = Directive(directive_folder_path)
+    
+    return default_directive
+
+cli = CommandLine(find_default_directive(config['Application']['DefaultDirective']))
+cli.parse()

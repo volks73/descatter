@@ -1,10 +1,11 @@
+=========
 Descatter
 =========
 
 A cross-platform desktop file organizer
 
 Introduction
-------------
+============
 
 Descratter is a cross-platform desktop application for organizing, tagging, and searching files
 within a file system on a hard drsk. Descatter attempts to reduce the amount of 'managing' a user 
@@ -16,21 +17,26 @@ original intended audience for Descatter was scientists to help them better mana
 from multiple sources for multiple experiments and projects. 
 
 Requirements
-------------
+============
 
 1. Python 3.3.0 or higher
+
 2. Distribute module
+
 3. PIP module
+
 4. Nose unit tester
+
 5. A text editor
+
 6. Git
 
 Installation
-------------
+============
 
 TODO: Add installation guidelines
 
 Build
------
+=====
 
 TODO: Add build guidelines
