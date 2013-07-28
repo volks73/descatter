@@ -27,7 +27,7 @@ import argparse
 import cmd
 import os
 
-import descatter.organize
+import descatter
 
 from prettytable import PrettyTable
 

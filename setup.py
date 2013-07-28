@@ -4,11 +4,10 @@ from cx_Freeze import setup, Executable
 
 executables = [Executable('descatter.py')]
 
-packages = ['lxml',
-            'prettytable',
-            'descatter']
-
+# Explicitly load the 'lxml' package, otherwise import errors occur.
+packages = ['lxml']
 includes = []
+excludes = []
 
 include_files = ['descatter.ini',
                  'directives/',
@@ -16,28 +15,6 @@ include_files = ['descatter.ini',
                  'CHANGES',
                  'LICENSE',
                  'README.rst']
-
-excludes = ['Tkinter',
-            'tcl',
-            'Tkconstants',
-            'distutils',
-            'email',
-            'http',
-            'json',
-            'lib2to3',
-            'nose',
-            'unittest',
-            'xml',
-            'ssl',
-            'subprocess',
-            'tty',
-            'webbrowser',
-            'urllib',
-            'pickle',
-            'doctest',
-            'socket']
-
-# excludes = []
 
 path = sys.path + ['descatter']
 
