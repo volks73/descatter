@@ -17,29 +17,3 @@
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
 __version__ = '0.0.1'
-
-import sys
-import os
-
-from descatter.interface import *
-from descatter.organize import *
-
-def get_root_folder():
-    
-    if getattr(sys, 'frozen', False):
-        # The application is frozen
-        root_folder = os.path.dirname(sys.executable)
-    else:
-        # The application is not frozen
-        # Change this bit to match where you store data files
-        root_folder = os.path.dirname(sys.argv[0])
-        
-    return root_folder
-
-def get_file_path(*args):
-    """Finds a data file."""
-    
-    return os.path.join(get_root_folder(), *args)
-
-del interface
-del organize

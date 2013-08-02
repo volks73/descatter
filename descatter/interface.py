@@ -27,8 +27,7 @@ import argparse
 import cmd
 import os
 
-import descatter
-
+from descatter import organize
 from prettytable import PrettyTable
 
 SOURCE_ARGUMENT_NAME = 'source' 
@@ -44,7 +43,7 @@ HELP_ARGUMENT_NAME = 'help'
 
 def file(source, destination, directive, recursive, move, verbose, absolute):
                   
-    filer = descatter.organize.Filer(directive)    
+    filer = organize.Filer(directive)    
               
     if verbose:
         filer.subscribe(FilerListener(absolute))
@@ -58,35 +57,36 @@ class ConsoleError(Exception):
 class CommandLine(object):
     """The command line interface."""
         
-    def __init__(self, default_directive):
+    def __init__(self, loaded, default):
         """Constructor for the :class:`.CommandLine`."""
-               
-        self.default_directive = default_directive
-        self.parser = argparse.ArgumentParser()
-        self.parser.add_argument('-i',
+        
+        self._loaded = loaded       
+        self._default = default
+        self._parser = argparse.ArgumentParser()
+        self._parser.add_argument('-i',
                                  '--' + CONSOLE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Starts the interactive console')
-        self.parser.add_argument('-f',
+        self._parser.add_argument('-f',
                                  '--' + FILE_ARGUMENT_NAME,
                                  nargs=2,
                                  help='Files a source to a destination based on a directive')
-        self.parser.add_argument('-d',
+        self._parser.add_argument('-d',
                                  '--' + DIRECTIVE_ARGUMENT_NAME,                              
                                  help='Defines the directive to use when filing. The most recent past directive will be used for the filing if this argument is omitted')
-        self.parser.add_argument('-m',
+        self._parser.add_argument('-m',
                                  '--' + MOVE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Moves the source to the destination, which deletes the source after copying to the destination')
-        self.parser.add_argument('-r',
+        self._parser.add_argument('-r',
                                  '--' + RECURSIVE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Files all files in every sub-folder if the source is a folder')
-        self.parser.add_argument('-v',
+        self._parser.add_argument('-v',
                                  '--' + VERBOSE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Displays additional status information during and after filing')
-        self.parser.add_argument('-a',
+        self._parser.add_argument('-a',
                                  '--' + ABSOLUTE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Displays all paths as absolute paths')
@@ -94,7 +94,7 @@ class CommandLine(object):
     def parse(self, param_args=None):
         """Parses the arguments supplied from the shell."""
         
-        args = vars(self.parser.parse_args(param_args))
+        args = vars(self._parser.parse_args(param_args))
                       
         if args[CONSOLE_ARGUMENT_NAME]:
             self._do_console(args)
@@ -105,7 +105,7 @@ class CommandLine(object):
     
     def _do_console(self, args):
         
-        Console(self._get_directive(args)).cmdloop()
+        Console(self._loaded, self._default).cmdloop()
     
     def _do_file(self, args):
         source = args[self.file_arg][0]
@@ -120,9 +120,9 @@ class CommandLine(object):
     def _get_directive(self, args):
                
         if args[DIRECTIVE_ARGUMENT_NAME]:
-            return descatter.organize.Directive(args[DIRECTIVE_ARGUMENT_NAME])
+            return organize.Directive(args[DIRECTIVE_ARGUMENT_NAME])
         else:
-            return self.default_directive            
+            return self._default          
 
 class Console(cmd.Cmd):
     """The interactive console interface."""
@@ -130,15 +130,15 @@ class Console(cmd.Cmd):
     intro = 'Welcome to the descatter interactive console!'
     prompt = 'descatter: '
     
-    def __init__(self, default_directive):
+    def __init__(self, loaded, default):
         """Constructor for the :class:`.Console`."""
         
+        self._loaded = loaded
         self._history = {}
-        self._most_recent = default_directive
-        self._add_directive(self._most_recent)
+        self._most_recent = default
         super(Console, self).__init__()               
 
-    def _add_directive(self, directive):
+    def _add_to_history(self, directive):
         """Adds a directive to the history of used directives.
         
         :param directive: A :class:`.Directive` object.
@@ -148,7 +148,7 @@ class Console(cmd.Cmd):
         self._most_recent = directive
         self._history[directive.get_name()] = directive
 
-    def _get_directive(self, args):
+    def _get_directive(self, source):
         """Returns a directive to use for the 'file' command.
         
         If a directive is supplied with the '-d' argument, then it will be returned.
@@ -160,21 +160,16 @@ class Console(cmd.Cmd):
         
         """
         
-        directive_value = args[self.DIRECTIVE_ARGUMENT_NAME]
-        name_value = args[self.NAME_ARGUMENT_NAME]
-        
-        if directive_value:
-            return descatter.organize.Directive(directive_value)
-        elif name_value:
-            if name_value in self._history:
-                return self._history[name_value]
-            else:
-                raise ConsoleError("Directive '%s' not found in history of used directives" % name_value)
+        if source is None:
+            return self._most_recent
+        elif source in self._history:
+            return self._history[source]
+        elif source in self._loaded:
+            return self._loaded[source]
+        elif os.path.isfile(source):
+            return organize.Directive(source)
         else:
-            if self._most_recent is None:
-                raise ConsoleError("No directive has been previously used")
-            else:
-                return self._most_recent
+            raise ConsoleError("A directive could not be determined!") 
     
     def _print_directive_table(self, directives, verbose, absolute):
         """Prints an ASCII table for the list of directives to the console.
@@ -213,31 +208,31 @@ class Console(cmd.Cmd):
         """Files a source file to a destination folder based on a directive."""
         
         parser = ConsoleParser(prog='file',
-                               description='Files a source to a destination based on a directive. The directive is saved as the default directive after successful completion of the command')
+                               description='Files a source to a destination based on a directive. The directive is saved as the default directive after successful completion of the command.')
         
         parser.add_argument(SOURCE_ARGUMENT_NAME,
-                            help='A file path, a comma-separated list of file paths, or a folder path to be filed')
+                            help='A file path, a comma-separated list of file paths, or a folder path to be filed.')
         parser.add_argument(DESTINATION_ARGUMENT_NAME,
-                            help='The folder where the source will be filed')
+                            help='The folder where the source will be filed.')
         parser.add_argument('-d',
                             '--' + DIRECTIVE_ARGUMENT_NAME,                              
-                            help='Defines the directive to use when filing. The most recent past directive will be used for the filing if this argument is omitted')
+                            help='Defines the directive to use when filing. The most recent past directive will be used for the filing if this argument is omitted. The value can be the name of directive that was preloaded at the start of the application, the name of directive in the history, or the path to a directive file.')
         parser.add_argument('-m',
                             '--' + MOVE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Moves the source to the destination, which deletes the source after copying to the destination')
+                            help='Moves the source to the destination, which deletes the source after copying to the destination.')
         parser.add_argument('-r',
                             '--' + RECURSIVE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Files all files in every sub-folder if the source is a folder')
+                            help='Files all files in every sub-folder if the source is a folder.')
         parser.add_argument('-v',
                             '--' + VERBOSE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Displays additional status information during and after filing')
+                            help='Displays additional status information during and after filing.')
         parser.add_argument('-a',
                             '--' + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Displays all paths as absolute paths')
+                            help='Displays all paths as absolute paths.')
     
         args = parser.parse_line(line)
         
@@ -245,7 +240,7 @@ class Console(cmd.Cmd):
             try:
                 source = args[SOURCE_ARGUMENT_NAME]
                 destination = args[DESTINATION_ARGUMENT_NAME]
-                directive = self._get_directive(args)
+                directive = self._get_directive(args[DIRECTIVE_ARGUMENT_NAME])
                 recursive = args[RECURSIVE_ARGUMENT_NAME]
                 move = args[MOVE_ARGUMENT_NAME]
                 verbose = args[VERBOSE_ARGUMENT_NAME]
@@ -253,8 +248,8 @@ class Console(cmd.Cmd):
         
                 file(source, destination, directive, recursive, move, verbose, absolute)
                 
-                self._add_directive(directive)
-            except descatter.organize.FilerError as error:
+                self._add_to_history(directive)
+            except organize.FilerError as error:
                 print(error)
             except ConsoleError as error:
                 print(error)
@@ -306,6 +301,31 @@ class Console(cmd.Cmd):
                 absolute = args[ABSOLUTE_ARGUMENT_NAME]
             
                 self._print_directive_table((self._most_recent,), verbose, absolute)
+            except ConsoleError as error:
+                print(error)
+
+    def do_loaded(self, line):
+        """Displays the directives loaded at the start of the application."""
+        
+        parser = ConsoleParser(prog='loaded',
+                               description="Displays a list of loaded directives that can be called by name in the 'file' command")
+        parser.add_argument('-v',
+                            '--' + VERBOSE_ARGUMENT_NAME,
+                            action='store_true',
+                            help='Displays additional information about each directive')
+        parser.add_argument('-a',
+                            '--' + ABSOLUTE_ARGUMENT_NAME,
+                            action='store_true',
+                            help='Displays all paths as absolute paths')
+        
+        args = parser.parse_line(line)
+        
+        if args:
+            try:
+                verbose = args[VERBOSE_ARGUMENT_NAME]
+                absolute = args[ABSOLUTE_ARGUMENT_NAME]
+            
+                self._print_directive_table(self._loaded.values(), verbose, absolute) 
             except ConsoleError as error:
                 print(error)
     

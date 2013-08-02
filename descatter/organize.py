@@ -153,7 +153,7 @@ class Filer(object):
             files = []
     
             if recursive:
-                for root, subfolder_names, file_names in os.walk(source):
+                for root, subfolder_names, file_names in os.walk(source):  # @UnusedVariable
                     for file_name in file_names:
                         files.append(os.path.join(root, file_name))
             else:
