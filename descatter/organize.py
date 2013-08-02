@@ -20,6 +20,9 @@
 
 """
 
+# TODO: Add macro for tagging files as they are filed
+# TODO: Test conditions involving datetime, i.e. created, modified, accessed properties.
+
 import os
 import tempfile
 import shutil

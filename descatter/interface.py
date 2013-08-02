@@ -23,15 +23,19 @@ These interactions include a command line interface (CLI), an interactive consol
 
 """
 
+# TODO: Test paths with spaces
+
 import argparse
 import cmd
 import os
 
-from descatter import organize
+from descatter import organize, metadata
 from prettytable import PrettyTable
 
+ARGUMENT_PREFIX = '-'
 SOURCE_ARGUMENT_NAME = 'source' 
 DESTINATION_ARGUMENT_NAME = 'destination'
+TAG_ARGUMENT_NAME = 'tag'
 DIRECTIVE_ARGUMENT_NAME = 'directive'
 MOVE_ARGUMENT_NAME = 'move'
 RECURSIVE_ARGUMENT_NAME = 'recursive'
@@ -61,6 +65,31 @@ def file(source, destination, directive, recursive, move, verbose, absolute):
                     
     filer.file(source, destination, recursive, move)
 
+def tag(file, tag_name):
+    """Tags a file.
+    
+    :param tag: A string. A tag to place on a file.
+    :param file: A path. A path to a file to be tagged.
+    
+    """
+    
+    session = metadata.Session()
+            
+    db_tag = session.query(metadata.Tag).filter_by(name=tag_name).first()
+    db_file = session.query(metadata.File).filter_by(path=file).first()
+            
+    if not db_tag:
+        db_tag = metadata.Tag(tag_name)
+            
+    if not db_file:
+        db_file = metadata.File(file)
+        session.add(db_file)
+        
+    db_file.tags.append(db_tag)
+            
+    session.commit()
+    session.close()
+
 class ConsoleError(Exception): 
     """Raised when the interactive console interface encounters an error."""
     pass
@@ -83,31 +112,35 @@ class CommandLine(object):
         self._loaded = loaded       
         self._default = default
         self._parser = argparse.ArgumentParser()
-        self._parser.add_argument('-i',
-                                 '--' + CONSOLE_ARGUMENT_NAME,
+        self._parser.add_argument(ARGUMENT_PREFIX + 'i',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + CONSOLE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Starts the interactive console')
-        self._parser.add_argument('-f',
-                                 '--' + FILE_ARGUMENT_NAME,
+        self._parser.add_argument(ARGUMENT_PREFIX + 'f',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + FILE_ARGUMENT_NAME,
                                  nargs=2,
                                  help='Files a source to a destination based on a directive')
-        self._parser.add_argument('-d',
-                                 '--' + DIRECTIVE_ARGUMENT_NAME,                              
+        self._parser.add_argument(ARGUMENT_PREFIX + 't',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + TAG_ARGUMENT_NAME,
+                                 nargs=2,
+                                 help='Files a source to a destination based on a directive')
+        self._parser.add_argument(ARGUMENT_PREFIX + 'd',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + DIRECTIVE_ARGUMENT_NAME,                              
                                  help='Defines the directive to use when filing. The most recent past directive will be used for the filing if this argument is omitted')
-        self._parser.add_argument('-m',
-                                 '--' + MOVE_ARGUMENT_NAME,
+        self._parser.add_argument(ARGUMENT_PREFIX + 'm',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + MOVE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Moves the source to the destination, which deletes the source after copying to the destination')
-        self._parser.add_argument('-r',
-                                 '--' + RECURSIVE_ARGUMENT_NAME,
+        self._parser.add_argument(ARGUMENT_PREFIX + 'r',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + RECURSIVE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Files all files in every sub-folder if the source is a folder')
-        self._parser.add_argument('-v',
-                                 '--' + VERBOSE_ARGUMENT_NAME,
+        self._parser.add_argument(ARGUMENT_PREFIX + 'v',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + VERBOSE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Displays additional status information during and after filing')
-        self._parser.add_argument('-a',
-                                 '--' + ABSOLUTE_ARGUMENT_NAME,
+        self._parser.add_argument(ARGUMENT_PREFIX + 'a',
+                                 ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                                  action='store_true',
                                  help='Displays all paths as absolute paths')
         
@@ -247,22 +280,22 @@ class Console(cmd.Cmd):
                             help='A file path, a comma-separated list of file paths, or a folder path to be filed.')
         parser.add_argument(DESTINATION_ARGUMENT_NAME,
                             help='The folder where the source will be filed.')
-        parser.add_argument('-d',
+        parser.add_argument(ARGUMENT_PREFIX + 'd',
                             '--' + DIRECTIVE_ARGUMENT_NAME,                              
                             help='Defines the directive to use when filing. The most recent past directive will be used for the filing if this argument is omitted. The value can be the name of directive that was preloaded at the start of the application, the name of directive in the history, or the path to a directive file.')
-        parser.add_argument('-m',
+        parser.add_argument(ARGUMENT_PREFIX + 'm',
                             '--' + MOVE_ARGUMENT_NAME,
                             action='store_true',
                             help='Moves the source to the destination, which deletes the source after copying to the destination.')
-        parser.add_argument('-r',
+        parser.add_argument(ARGUMENT_PREFIX + 'r',
                             '--' + RECURSIVE_ARGUMENT_NAME,
                             action='store_true',
                             help='Files all files in every sub-folder if the source is a folder.')
-        parser.add_argument('-v',
+        parser.add_argument(ARGUMENT_PREFIX + 'v',
                             '--' + VERBOSE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays additional status information during and after filing.')
-        parser.add_argument('-a',
+        parser.add_argument(ARGUMENT_PREFIX + 'a',
                             '--' + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths.')
@@ -292,11 +325,11 @@ class Console(cmd.Cmd):
         
         parser = ConsoleParser(prog='history',
                                description="Displays a list of recently used directives that can be called by name in the 'file' command")
-        parser.add_argument('-v',
+        parser.add_argument(ARGUMENT_PREFIX + 'v',
                             '--' + VERBOSE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays additional information about each directive')
-        parser.add_argument('-a',
+        parser.add_argument(ARGUMENT_PREFIX + 'a',
                             '--' + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
@@ -317,11 +350,11 @@ class Console(cmd.Cmd):
         
         parser = ConsoleParser(prog='recent',
                                description="Displays the most recently used directive that is the default for subsequent calls to 'file' command")
-        parser.add_argument('-v',
+        parser.add_argument(ARGUMENT_PREFIX + 'v',
                             '--' + VERBOSE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays additional information about the recently used directive')
-        parser.add_argument('-a',
+        parser.add_argument(ARGUMENT_PREFIX + 'a',
                             '--' + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
@@ -342,11 +375,11 @@ class Console(cmd.Cmd):
         
         parser = ConsoleParser(prog='loaded',
                                description="Displays a list of loaded directives that can be called by name in the 'file' command")
-        parser.add_argument('-v',
+        parser.add_argument(ARGUMENT_PREFIX + 'v',
                             '--' + VERBOSE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays additional information about each directive')
-        parser.add_argument('-a',
+        parser.add_argument(ARGUMENT_PREFIX + 'a',
                             '--' + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
@@ -362,6 +395,65 @@ class Console(cmd.Cmd):
             except ConsoleError as error:
                 print(error)
     
+    def do_tag(self, line):
+        """Tags a file."""
+        
+        parser = ConsoleParser(prog='tag',
+                               description="Places a tag on a file")
+        parser.add_argument(FILE_ARGUMENT_NAME,
+                            help='The path to the file to be tagged.')
+        parser.add_argument(TAG_ARGUMENT_NAME,
+                            help='A file path, a comma-separated list of file paths, or a folder path to be filed.')
+        
+        args = parser.parse_line(line)
+        
+        if args:
+            file = args[FILE_ARGUMENT_NAME]
+            tag_name = args[TAG_ARGUMENT_NAME]
+            
+            if os.path.isfile(file):
+                tag(file, tag_name)
+            else:
+                print("Failed to tag file. The path must be to a file.")
+
+    def do_files(self, line):
+        """Lists all files that have been tagged."""
+        
+        parser = ConsoleParser(prog='files',
+                               description="Displays a list of tagged files and the tags associated with each file as a comma-separated list.")
+        parser.add_argument(ARGUMENT_PREFIX + 'a',
+                            '--' + ABSOLUTE_ARGUMENT_NAME,
+                            action='store_true',
+                            help='Displays all paths as absolute paths')
+        
+        args = parser.parse_line(line)
+        
+        if args:
+            absolute = args[ABSOLUTE_ARGUMENT_NAME]
+            session = metadata.Session()
+            files = session.query(metadata.File).order_by(metadata.File.id)
+                        
+            files_table = PrettyTable(['files', 'tags'])
+            files_table.align['files'] = 'l'
+            files_table.align['tags'] = 'l'
+        
+            for file in files:
+                tag_names = []
+                for tag in file.tags:
+                    tag_names.append(tag.name)
+                
+                file_path = ''
+                if absolute:
+                    file_path = os.path.abspath(file.path)
+                else:
+                    parent = os.path.dirname(file.path)
+                    parent = os.path.basename(parent)
+                    file_path =  os.path.join(parent, os.path.basename(file.path))
+                    
+                files_table.add_row([file_path, ','.join(tag_names)])
+                        
+            print(files_table)
+            
     def do_exit(self, line):
         """Safely exits the console."""
         

@@ -16,6 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Descatter.  If not, see <http://www.gnu.org/licenses/>.
 
-from descatter import application  # @UnresolvedImport
+from descatter import application
 
 application.main()

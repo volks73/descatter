@@ -20,10 +20,11 @@ import configparser
 import os
 import sys
 
-from descatter import organize
-from descatter import interface
+from descatter import organize, interface, metadata
 
+APPLICATION_FOLDER_NAME = '.descatter'
 CONFIG_FILE_NAME = 'descatter.ini'
+TAGS_DATABASE_NAME = 'tags.sqlite'
 
 config = configparser.ConfigParser()
 config.read(CONFIG_FILE_NAME)
@@ -46,7 +47,20 @@ def get_file_path(*args):
     
     return os.path.join(get_root_folder(), *args)
 
-def _load_directives():
+def get_app_folder():
+    
+    home_folder_path = os.path.expanduser('~')
+    app_folder_path = os.path.join(home_folder_path, APPLICATION_FOLDER_NAME)
+    
+    if not os.path.exists(app_folder_path):
+        os.mkdir(app_folder_path)
+
+        history_path = os.path.join(app_folder_path, 'history')
+        os.mkdir(history_path)
+
+    return app_folder_path 
+
+def load_directives():
     """Loads all directives in a folder defined in the configuration file (descatter.ini) for the application."""
     
     root_folder_path = get_root_folder()
@@ -60,7 +74,10 @@ def _load_directives():
             directive = organize.Directive(directive_file_path)
             loaded[directive.get_name()] = directive
 
-    return loaded
+    return loaded   
+    
+# TODO: Load directives in the history folder
+# TODO: Add user directives folder and load directives there as well
 
 def main():
     """Starts the descatter application.
@@ -70,7 +87,9 @@ def main():
     
     """
     
-    loaded = _load_directives()
+    database_path = os.path.join(get_app_folder(), TAGS_DATABASE_NAME)
+    metadata.connect(database_path)
+    loaded = load_directives()
     default = loaded[config['Application']['DefaultDirectiveName']]    
     
     cli = interface.CommandLine(loaded, default)

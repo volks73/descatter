@@ -4,8 +4,9 @@ from cx_Freeze import setup, Executable
 
 executables = [Executable('descatter.py')]
 
-# Explicitly load the 'lxml' package, otherwise import errors occur.
-packages = ['lxml']
+# Explicitly load these packages; otherwise, runtime errors occur because of missing modules during import.
+# cx_Freeze should detect this, so I am not sure why I must explicitly state these packages.
+packages = ['lxml','sqlalchemy']
 includes = []
 excludes = []
 
