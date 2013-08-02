@@ -42,6 +42,17 @@ CONSOLE_ARGUMENT_NAME = 'interactive'
 HELP_ARGUMENT_NAME = 'help'
 
 def file(source, destination, directive, recursive, move, verbose, absolute):
+    """Files a file.
+    
+    :param source: A path or list. The path to a file, the path to a folder, or a list of paths to copy or move.
+    :param destination: A path. The folder where the source will be copied or moved.
+    :param directive: An :class:`.Directive' object. The directive to control the copy or move of the source to the destination.
+    :param recursive: A boolean value. 'True' if the source is a path to a folder, all files in the folder and subfolders will be copied or moved.
+    :param move: A boolean value. 'True' the source is copied to the destination and then deleted at the source. 'False' the source is only copied.
+    :param verbose: A boolean value. 'True' additional information is displayed during the filing.
+    :param absolute: A boolean value. 'True' all paths are displayed as absolute paths. 'False' all paths are displayed as relative or abbreviated paths.
+    
+    """
                   
     filer = organize.Filer(directive)    
               
@@ -51,14 +62,23 @@ def file(source, destination, directive, recursive, move, verbose, absolute):
     filer.file(source, destination, recursive, move)
 
 class ConsoleError(Exception): 
-    """Raised when the interface console encounters an error in the syntax of a command."""
+    """Raised when the interactive console interface encounters an error."""
+    pass
+
+class CommandLineError(Exception): 
+    """Raised when the command line interface encounters an error."""
     pass
 
 class CommandLine(object):
     """The command line interface."""
         
     def __init__(self, loaded, default):
-        """Constructor for the :class:`.CommandLine`."""
+        """Constructor for the :class:`.CommandLine`.
+        
+        :param loaded: A dictionary of :class:`.Directive` objects.
+        :param default: A :class:`.Directive` object. The default directive to use if the '-d' argument is not specified.
+        
+        """
         
         self._loaded = loaded       
         self._default = default
@@ -104,25 +124,38 @@ class CommandLine(object):
             print("Nothing to do!")
     
     def _do_console(self, args):
+        """Run the interfacetive console."""
         
         Console(self._loaded, self._default).cmdloop()
     
     def _do_file(self, args):
+        """Run the file command."""
+        
         source = args[self.file_arg][0]
         destination = args[self.file_arg][1]
+        directive = self._get_directive(args[self.DIRECTIVE_ARGUMENT_NAME])
         recursive = args[self.recursive_arg]
         move = args[self.move_arg]
         verbose = args[self.verbose_arg]
         absolute = args[self.absolute_arg]       
 
-        file(source, destination, self._get_directive(args), recursive, move, verbose, absolute)
+        file(source, destination, directive, recursive, move, verbose, absolute)
     
-    def _get_directive(self, args):
-               
-        if args[DIRECTIVE_ARGUMENT_NAME]:
-            return organize.Directive(args[DIRECTIVE_ARGUMENT_NAME])
+    def _get_directive(self, source):
+        """Get the directive.
+        
+        :param source: A path or string. A path to a directive file or the name of loaded directive. If 'None', the default directive is used.
+        
+        """
+        
+        if source is None:
+            return self._default
+        elif source in self._loaded:
+            return self._loaded[source]
+        elif os.path.isfile(source):
+            return organize.Directive(source)
         else:
-            return self._default          
+            raise CommandLineError("A directive could not be determined!")          
 
 class Console(cmd.Cmd):
     """The interactive console interface."""
@@ -131,7 +164,12 @@ class Console(cmd.Cmd):
     prompt = 'descatter: '
     
     def __init__(self, loaded, default):
-        """Constructor for the :class:`.Console`."""
+        """Constructor for the :class:`.Console`.
+        
+        :param loaded: A distionary of :class:`.Directive` objects. The directives loaded during application start.
+        :param default: A :class:`.Directive` object. The default directive to use if no directive is specified.
+        
+        """
         
         self._loaded = loaded
         self._history = {}
@@ -149,14 +187,9 @@ class Console(cmd.Cmd):
         self._history[directive.get_name()] = directive
 
     def _get_directive(self, source):
-        """Returns a directive to use for the 'file' command.
+        """Returns a directive to use for the 'file' command. 
         
-        If a directive is supplied with the '-d' argument, then it will be returned.
-        If the '-d' argument is not used, then a directive will be returned based on its name from the histroy of used directives if the '-n' argument is used. 
-        If the '-d' and '-n' arguments are not used, then the most recently used directive will be returned. 
-        The most recently used directive is by default, the default.xml directive upon first usage of the 'file' command. 
-        
-        :param args: A list. The arguments submitted with the command.
+        :param source: A string or path. If string, then the directive will be found from the history or loaded directives. If path, then the directive will be loaded from the path.
         
         """
         

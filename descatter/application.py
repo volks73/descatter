@@ -29,6 +29,7 @@ config = configparser.ConfigParser()
 config.read(CONFIG_FILE_NAME)
 
 def get_root_folder():
+    """Gets the root folder of the application."""
     
     if getattr(sys, 'frozen', False):
         # The application is frozen
@@ -41,11 +42,12 @@ def get_root_folder():
     return root_folder
 
 def get_file_path(*args):
-    """Finds a data file."""
+    """Finds a file relative to the root folder for the application."""
     
     return os.path.join(get_root_folder(), *args)
 
 def _load_directives():
+    """Loads all directives in a folder defined in the configuration file (descatter.ini) for the application."""
     
     root_folder_path = get_root_folder()
     directives_folder_path = os.path.join(root_folder_path, config['Application']['DirectivesFolderPath'])
@@ -61,7 +63,12 @@ def _load_directives():
     return loaded
 
 def main():
-    """Starts the descatter application."""
+    """Starts the descatter application.
+    
+    A 'descatter.ini' file must be located in the same folder as the application start file. The application 
+    start file is either the executable: 'descatter.exe' or the python script: 'descatter.py'.
+    
+    """
     
     loaded = _load_directives()
     default = loaded[config['Application']['DefaultDirectiveName']]    
