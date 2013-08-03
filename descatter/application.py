@@ -48,13 +48,13 @@ def get_file_path(*args):
     return os.path.join(get_root_folder(), *args)
 
 def get_app_folder():
+    """Gets the user application folder."""
     
     home_folder_path = os.path.expanduser('~')
     app_folder_path = os.path.join(home_folder_path, APPLICATION_FOLDER_NAME)
     
     if not os.path.exists(app_folder_path):
         os.mkdir(app_folder_path)
-
         history_path = os.path.join(app_folder_path, 'history')
         os.mkdir(history_path)
 
@@ -91,6 +91,5 @@ def main():
     metadata.init(database)
     loaded = load_directives()
     default = loaded[config['Application']['DefaultDirectiveName']]    
-    
     cli = interface.CommandLine(loaded, default)
     cli.parse()

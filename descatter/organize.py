@@ -163,8 +163,8 @@ class Filer(object):
                 for folder_item in os.listdir(source):
                     files.append(os.path.join(source, folder_item))
                 
-            filed_paths = self.file_list(files, destination, move)
-            
+            filed_paths = self.file_list(files, destination, move) 
+                
             return filed_paths
         else:
             raise FilerError("The source: '%s' could not be filed because it is not a folder" % source)
@@ -182,8 +182,7 @@ class Filer(object):
             context = {}
             file_name, file_extension = os.path.splitext(source)
             file_name = os.path.basename(file_name)
-            file_extension = file_extension[1:].strip().lower() 
-                    
+            file_extension = file_extension[1:].strip().lower()           
             context[self.CURRENT_DATETIME] = datetime.now()
             
             # Need to change count, index, and size to string; otherwise, the condition tests will try to equate a string with an integer.
@@ -203,16 +202,19 @@ class Filer(object):
             raise FilerError("A filer context could not be created because the source is not a file")
 
     def _notify_started(self, *args):
+        """Fires a notification the filing has started."""
         
         for listener in self._listeners:
             listener.file_started(args)
         
     def _notify_completed(self, *args):
+        """Files a notification the filing has completed."""
         
         for listener in self._listeners:
             listener.file_completed(args)
     
     def _notify_failed(self, *args):
+        """Files a notification the filing has failed."""
         
         for listener in self._listeners:
             listener.file_failed(args)
@@ -367,6 +369,7 @@ class Directive(object):
         self._root = etree.parse(self.file_path).getroot()
     
     def get_name(self):
+        """Gets the name of this directive."""
         
         return self._root.get(self.NAME_ATTRIBUTE)
     
@@ -374,7 +377,6 @@ class Directive(object):
         """Gets the contents of the 'info' element and returns a dictionary with the keys as the tag names for each child element."""
         
         info = {}
-        
         title_element = self.XPATH_TITLE_ELEMENT(self._root)
         
         if title_element:
@@ -447,7 +449,6 @@ class Directive(object):
         """
         
         path_name = None
-        
         condition_results = []        
         
         for condition_element in self.XPATH_CONDITION_ELEMENTS(rule_element):

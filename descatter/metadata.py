@@ -100,7 +100,7 @@ def tag(path, tags):
     """Tags a path.
     
     :param path: A path. A path to a file or folder.
-    :param ts: A list of strings. The tags to apply to the path.
+    :param tags: A list of strings. The tags to apply to the path.
     
     """
     
