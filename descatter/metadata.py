@@ -23,41 +23,31 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.pool import NullPool
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, create_engine
 
-FILES_TABLE_NAME = 'files'
-FILES_ID_COLUMN_NAME = FILES_TABLE_NAME + '_id'
+class MetadataError(Exception): pass
+
+ENTITIES_TABLE_NAME = 'entities'
+ENTITIES_ID_COLUMN_NAME = ENTITIES_TABLE_NAME + '_id'
 PATH_COLUMN_NAME = 'path'
 TAGS_TABLE_NAME = 'tags'
 TAGS_ID_COLUMN_NAME = TAGS_TABLE_NAME + '_id'
 NAME_COLUMN_NAME = 'name'
-FILE_TAGS_TABLE_NAME = 'file_tags'
+ENTITY_TAGS_TABLE_NAME = 'entity_tags'
 
 Base = declarative_base()
 Session = sessionmaker()
 
-def connect(path):
-    """Connects to the database.
-    
-    :param path: A path. The path to the SQLite database file.
-    
-    """
-    
-    engine_path = 'sqlite:///' + path
-    engine = create_engine(engine_path, echo=False, poolclass=NullPool)
-    Base.metadata.create_all(engine)
-    Session.configure(bind=engine)
-
-file_tags = Table(FILE_TAGS_TABLE_NAME,
+entity_tags = Table(ENTITY_TAGS_TABLE_NAME,
                   Base.metadata,
-                  Column(FILES_ID_COLUMN_NAME, Integer, ForeignKey(FILES_TABLE_NAME + '.' + FILES_ID_COLUMN_NAME)),
+                  Column(ENTITIES_ID_COLUMN_NAME, Integer, ForeignKey(ENTITIES_TABLE_NAME + '.' + ENTITIES_ID_COLUMN_NAME)),
                   Column(TAGS_ID_COLUMN_NAME, Integer, ForeignKey(TAGS_TABLE_NAME + '.' + TAGS_ID_COLUMN_NAME)))
 
-class File(Base):
-    __tablename__ = FILES_TABLE_NAME
+class Entity(Base):
+    __tablename__ = ENTITIES_TABLE_NAME
     
-    id = Column(Integer, name=FILES_ID_COLUMN_NAME, primary_key=True)
+    id = Column(Integer, name=ENTITIES_ID_COLUMN_NAME, primary_key=True)
     path = Column(String, name=PATH_COLUMN_NAME, nullable=False, unique=True)
 
-    tags = relationship('Tag', secondary=file_tags, backref=FILES_TABLE_NAME)
+    tags = relationship('Tag', secondary=ENTITY_TAGS_TABLE_NAME, backref=ENTITIES_TABLE_NAME)
 
     def __init__(self, path):
         
@@ -73,3 +63,59 @@ class Tag(Base):
     def __init__(self, name):
         
         self.name = name
+
+def init(path):
+    
+    engine_path = 'sqlite:///' + path
+    engine = create_engine(engine_path, echo=False, poolclass=NullPool)
+    Base.metadata.create_all(engine)
+    Session.configure(bind=engine)
+
+def entities():
+    
+    session = Session()
+    
+    entities = session.query(Entity).order_by(Entity.id)
+    
+    session.close()
+    
+    return entities
+
+def tag(path, tag_names):
+    
+    if not path:
+        raise MetadataError("Path is empty")
+    
+    if not tag_names:
+        raise MetadataError("No tags")
+    
+    session = Session()    
+    path = os.path.abspath(path)
+        
+    if os.path.exists(path):        
+        db_entity = session.query(Entity).filter_by(path=path).first()
+
+        if not db_entity:
+            db_entity = Entity(path)
+            session.add(db_entity)
+        
+        for tag_name in tag_names:
+            db_tag = session.query(Tag).filter_by(name=tag_name).first()
+        
+            if not db_tag:
+                db_tag = Tag(tag_name)
+        
+            db_entity.tags.append(db_tag)
+                
+        session.commit()
+        
+        tag_names = []
+        for tag in db_entity.tags:
+            tag_names.append(tag.name)
+        
+        session.close()
+        
+        return path, tag_names
+    else:
+        session.close()
+        raise MetadataError("Path does not exist")

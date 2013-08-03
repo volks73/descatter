@@ -87,8 +87,8 @@ def main():
     
     """
     
-    database_path = os.path.join(get_app_folder(), TAGS_DATABASE_NAME)
-    metadata.connect(database_path)
+    database = os.path.join(get_app_folder(), TAGS_DATABASE_NAME)
+    metadata.init(database)
     loaded = load_directives()
     default = loaded[config['Application']['DefaultDirectiveName']]    
     
