@@ -146,7 +146,6 @@ class CommandLine(object):
         move = args[self.move_arg]
         verbose = args[self.verbose_arg]
         absolute = args[self.absolute_arg]       
-
         file(source, destination, directive, recursive, move, verbose, absolute)
     
     def _get_directive(self, source):
@@ -280,8 +279,7 @@ class Console(cmd.Cmd):
         parser.add_argument(ARGUMENT_PREFIX + 'a',
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Displays all paths as absolute paths.')
-    
+                            help='Displays all paths as absolute paths.')    
         args = parser.parse_line(line)
         
         if args:
@@ -293,9 +291,7 @@ class Console(cmd.Cmd):
                 move = args[MOVE_ARGUMENT_NAME]
                 verbose = args[VERBOSE_ARGUMENT_NAME]
                 absolute = args[ABSOLUTE_ARGUMENT_NAME]
-        
                 file(source, destination, directive, recursive, move, verbose, absolute)
-                
                 self._add_to_history(directive)
             except organize.FilerError as error:
                 print(error)
@@ -303,7 +299,7 @@ class Console(cmd.Cmd):
                 print(error)
             except KeyboardInterrupt:
                 print()
-                print("Cancelled!")
+                print("Canceled!")
     
     def do_tag(self, line):
         """Tags a path."""
@@ -318,25 +314,22 @@ class Console(cmd.Cmd):
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
-        
         args = parser.parse_line(line)
         
         if args:
             try:
                 path_input = input("[path]: ")
                 tag_input = input("[tag(s)]: ").split(',')
-                
                 path, tag_names = metadata.tag(path_input, tag_input)
                 
                 if args[VERBOSE_ARGUMENT_NAME]:
                     path = self._format_path(path, args[ABSOLUTE_ARGUMENT_NAME])
-                    print(path + " tagged with " + ', '.join(tag_names))
-                
+                    print(path + " tagged with " + ', '.join(tag_names))                
             except metadata.MetadataError as error:
                 print(error)
             except KeyboardInterrupt:
                 print()
-                print("Cancelled!")
+                print("Canceled!")
                 
     def do_history(self, line):
         """Displays the recently used directives."""
@@ -351,14 +344,12 @@ class Console(cmd.Cmd):
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
-        
         args = parser.parse_line(line)
         
         if args:
             try:
                 verbose = args[VERBOSE_ARGUMENT_NAME]
                 absolute = args[ABSOLUTE_ARGUMENT_NAME]
-            
                 self._print_directive_table(self._history.values(), verbose, absolute) 
             except ConsoleError as error:
                 print(error)
@@ -376,14 +367,12 @@ class Console(cmd.Cmd):
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
-        
         args = parser.parse_line(line)
         
         if args:
             try:
                 verbose = args[VERBOSE_ARGUMENT_NAME]
                 absolute = args[ABSOLUTE_ARGUMENT_NAME]
-            
                 self._print_directive_table((self._most_recent,), verbose, absolute)
             except ConsoleError as error:
                 print(error)
@@ -401,7 +390,6 @@ class Console(cmd.Cmd):
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
-        
         args = parser.parse_line(line)
         
         if args:
@@ -413,13 +401,12 @@ class Console(cmd.Cmd):
     def do_entities(self, line):
         """Lists all files that have been tagged."""
         
-        parser = ConsoleParser(prog='files',
-                               description="Displays a list of tagged files and the tags associated with each file as a comma-separated list.")
+        parser = ConsoleParser(prog='entities',
+                               description="Displays a list of tagged entities (files and folders) and the tags associated with each entity as a comma-separated list.")
         parser.add_argument(ARGUMENT_PREFIX + 'a',
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
                             help='Displays all paths as absolute paths')
-        
         args = parser.parse_line(line)
         
         if args:
@@ -438,6 +425,17 @@ class Console(cmd.Cmd):
                 entities_table.add_row([display_path, ', '.join(tag_names)])
                         
             print(entities_table)
+    
+    def do_tags(self, line):
+        """Lists all tags."""
+        
+        parser = ConsoleParser(prog='tags',
+                               description="Displays a list of all tags.")
+        args = parser.parse_line(line)
+        
+        if args:
+            for tag in metadata.tags():
+                print(tag.name)
             
     def do_exit(self, line):
         """Safely exits the console."""
