@@ -50,6 +50,7 @@ class Entity(Base):
     tags = relationship('Tag', secondary=ENTITY_TAGS_TABLE_NAME, backref=ENTITIES_TABLE_NAME)
 
     def __init__(self, path):
+        """Constructor for the :class:`.Entity` object."""
         
         self.path = os.path.abspath(path)
 
@@ -61,10 +62,16 @@ class Tag(Base):
     # TODO: Add value column
     
     def __init__(self, name):
+        """Constructor for the :class:`.Tag` object."""
         
         self.name = name
 
 def init(path):
+    """Initializes the metadata engine.
+    
+    :param path: A path. The path to the SQLite database file.
+    
+    """
     
     engine_path = 'sqlite:///' + path
     engine = create_engine(engine_path, echo=False, poolclass=NullPool)
@@ -72,31 +79,35 @@ def init(path):
     Session.configure(bind=engine)
 
 def entities():
+    """Returns a list of all entities in the database."""
     
     session = Session()
-    
     entities = session.query(Entity).order_by(Entity.id)
-    
     session.close()
     
     return entities
 
 def tags():
+    """Returns a list of all tags in the database."""
     
     session = Session()
-    
     tags = session.query(Tag).order_by(Tag.id)
-    
     session.close()
     
     return tags
 
-def tag(path, tag_names):
+def tag(path, tags):
+    """Tags a path.
+    
+    :param path: A path. A path to a file or folder.
+    :param ts: A list of strings. The tags to apply to the path.
+    
+    """
     
     if not path:
         raise MetadataError("Path is empty")
     
-    if not tag_names:
+    if not tags:
         raise MetadataError("No tags")
     
     session = Session()    
@@ -109,7 +120,7 @@ def tag(path, tag_names):
             db_entity = Entity(path)
             session.add(db_entity)
         
-        for tag_name in tag_names:
+        for tag_name in tags:
             db_tag = session.query(Tag).filter_by(name=tag_name).first()
         
             if not db_tag:
@@ -118,8 +129,8 @@ def tag(path, tag_names):
             db_entity.tags.append(db_tag)
                 
         session.commit()
-        
         tag_names = []
+        
         for tag in db_entity.tags:
             tag_names.append(tag.name)
         
@@ -129,3 +140,43 @@ def tag(path, tag_names):
     else:
         session.close()
         raise MetadataError("Path does not exist")
+
+def detag(path, tags):
+    """Removes a tag from a path.
+    
+    :param path: A path. The path to a file or folder.
+    :param tags: A list of strings. A list of tags to remove from the file or folder.
+    
+    """
+    
+    session = Session()
+    entity = session.query(Entity).filter_by(path=path).first()
+    
+    if entity:
+        for tag_name in tags:
+            tag = session.query(Tag).filter_by(name=tag_name).first()
+            entity.tags.remove(tag)
+    else:
+        session.close()
+        raise MetadataError("There is no tagged entity with the given path")
+        
+    session.commit()
+    session.close()    
+
+def find(tags):
+    """Finds a path based on tags.
+    
+    :param tags: A list of strings. A list of tags.
+    
+    """
+    
+    session = Session()
+    query = session.query(Entity)
+    
+    for tag in tags:
+        query = query.filter(Entity.tags.any(Tag.name == tag))
+    
+    entities = query.all()
+    session.close()
+    
+    return entities

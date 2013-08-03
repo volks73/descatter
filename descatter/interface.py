@@ -23,8 +23,6 @@ These interactions include a command line interface (CLI), an interactive consol
 
 """
 
-# TODO: Test paths with spaces
-
 import argparse
 import cmd
 import os
@@ -293,6 +291,7 @@ class Console(cmd.Cmd):
                 absolute = args[ABSOLUTE_ARGUMENT_NAME]
                 file(source, destination, directive, recursive, move, verbose, absolute)
                 self._add_to_history(directive)
+                print("Filing has successfully completed!")
             except organize.FilerError as error:
                 print(error)
             except ConsoleError as error:
@@ -305,26 +304,47 @@ class Console(cmd.Cmd):
         """Tags a path."""
         
         parser = ConsoleParser(prog='tag',
-                               description="Places a tag on a file")
+                               description="Tags a file or folder.")
         parser.add_argument(ARGUMENT_PREFIX + 'v',
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + VERBOSE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Displays additional information about each directive')
+                            help='Displays additional information.')
         parser.add_argument(ARGUMENT_PREFIX + 'a',
                             ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
                             action='store_true',
-                            help='Displays all paths as absolute paths')
+                            help='Displays all paths as absolute paths.')
         args = parser.parse_line(line)
         
         if args:
             try:
                 path_input = input("[path]: ")
-                tag_input = input("[tag(s)]: ").split(',')
+                tag_input = input("[tags]: ").split(',')
                 path, tag_names = metadata.tag(path_input, tag_input)
                 
                 if args[VERBOSE_ARGUMENT_NAME]:
                     path = self._format_path(path, args[ABSOLUTE_ARGUMENT_NAME])
-                    print(path + " tagged with " + ', '.join(tag_names))                
+                    print(path + " tagged with " + ', '.join(tag_names))
+                else:
+                    print("Path has been successfully tagged!")                
+            except metadata.MetadataError as error:
+                print(error)
+            except KeyboardInterrupt:
+                print()
+                print("Canceled!")
+    
+    def do_detag(self, line):
+        """Removes a tag from a path."""
+        
+        parser = ConsoleParser(prog='detag',
+                               description="Remove tags from a file or folder.")
+        args = parser.parse_line(line)
+        
+        if args:
+            try:
+                path_input = input("[path]: ")
+                tag_input = input("[tags]: ").split(',')
+                metadata.detag(path_input, tag_input)
+                print("Tags have been successfully removed from the path!")            
             except metadata.MetadataError as error:
                 print(error)
             except KeyboardInterrupt:
