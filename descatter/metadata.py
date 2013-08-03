@@ -81,6 +81,16 @@ def entities():
     
     return entities
 
+def tags():
+    
+    session = Session()
+    
+    tags = session.query(Tag).order_by(Tag.id)
+    
+    session.close()
+    
+    return tags
+
 def tag(path, tag_names):
     
     if not path:
