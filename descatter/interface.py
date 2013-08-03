@@ -216,7 +216,7 @@ class Console(cmd.Cmd):
         
         :param directives: A list of :class:`.Directive` objects.
         :param verbose: A boolean value. 'True' displays additional information about each directive in the table.
-        :param absolute: A boolean value. 'True' displays paths in a absolute path format.
+        :param absolute: A boolean value. 'True' displays paths in an absolute path format.
         
         """
 
@@ -240,7 +240,29 @@ class Console(cmd.Cmd):
             else:
                 directive_table.add_row([name, file_name])
                         
-        print(directive_table) 
+        print(directive_table)
+        
+    def _print_entities_table(self, entities, absolute):
+        """Prints an ASCII table of entities with their related tags.
+        
+        :param entities: A list of :class:`.Entity` objects.
+        :param absolute: A boolean value. 'True' display paths in an absolute path format.
+        
+        """
+        
+        entities_table = PrettyTable(['Entities', 'Tags'])
+        entities_table.align['Entities'] = 'l'
+        entities_table.align['Tags'] = 'l'
+        
+        for entity in entities:
+            tag_names = []
+            for tag in entity.tags:
+                tag_names.append(tag.name)
+                
+            display_path = self._format_path(entity.path, absolute)
+            entities_table.add_row([display_path, ', '.join(tag_names)])
+                        
+        print(entities_table)
     
     def _format_path(self, path, absolute=False):
         """Formats a path for display.
@@ -350,6 +372,32 @@ class Console(cmd.Cmd):
             except KeyboardInterrupt:
                 print()
                 print("Canceled!")
+    
+    def do_find(self, line):
+        """Finds files and folders with the specified tags."""        
+        
+        parser = ConsoleParser(prog='find',
+                               description="Find all files and folders with the specified tags.")
+        parser.add_argument(ARGUMENT_PREFIX + 'v',
+                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + VERBOSE_ARGUMENT_NAME,
+                            action='store_true',
+                            help='Displays additional information.')
+        parser.add_argument(ARGUMENT_PREFIX + 'a',
+                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
+                            action='store_true',
+                            help='Displays all paths as absolute paths.')
+        args = parser.parse_line(line)
+        
+        if args:
+            try:
+                tag_input = input("[tags]: ").split(',')
+                entities = metadata.find(tag_input)
+                self._print_entities_table(entities, args[ABSOLUTE_ARGUMENT_NAME])                
+            except metadata.MetadataError as error:
+                print(error)
+            except KeyboardInterrupt:
+                print()
+                print("Canceled!")
                 
     def do_history(self, line):
         """Displays the recently used directives."""
@@ -367,12 +415,7 @@ class Console(cmd.Cmd):
         args = parser.parse_line(line)
         
         if args:
-            try:
-                verbose = args[VERBOSE_ARGUMENT_NAME]
-                absolute = args[ABSOLUTE_ARGUMENT_NAME]
-                self._print_directive_table(self._history.values(), verbose, absolute) 
-            except ConsoleError as error:
-                print(error)
+            self._print_directive_table(self._history.values(), args[VERBOSE_ARGUMENT_NAME], args[ABSOLUTE_ARGUMENT_NAME]) 
     
     def do_recent(self, line):
         """Displays the most recently used directive."""
@@ -390,12 +433,7 @@ class Console(cmd.Cmd):
         args = parser.parse_line(line)
         
         if args:
-            try:
-                verbose = args[VERBOSE_ARGUMENT_NAME]
-                absolute = args[ABSOLUTE_ARGUMENT_NAME]
-                self._print_directive_table((self._most_recent,), verbose, absolute)
-            except ConsoleError as error:
-                print(error)
+            self._print_directive_table((self._most_recent,), args[VERBOSE_ARGUMENT_NAME], args[ABSOLUTE_ARGUMENT_NAME])
 
     def do_loaded(self, line):
         """Displays the directives loaded at the start of the application."""
@@ -413,10 +451,7 @@ class Console(cmd.Cmd):
         args = parser.parse_line(line)
         
         if args:
-            verbose = args[VERBOSE_ARGUMENT_NAME]
-            absolute = args[ABSOLUTE_ARGUMENT_NAME]
-            
-            self._print_directive_table(self._loaded.values(), verbose, absolute) 
+            self._print_directive_table(self._loaded.values(), args[VERBOSE_ARGUMENT_NAME], args[ABSOLUTE_ARGUMENT_NAME]) 
 
     def do_entities(self, line):
         """Lists all files that have been tagged."""
@@ -430,21 +465,7 @@ class Console(cmd.Cmd):
         args = parser.parse_line(line)
         
         if args:
-            absolute = args[ABSOLUTE_ARGUMENT_NAME]
-                        
-            entities_table = PrettyTable(['Entities', 'Tags'])
-            entities_table.align['Entities'] = 'l'
-            entities_table.align['Tags'] = 'l'
-        
-            for entity in metadata.entities():
-                tag_names = []
-                for tag in entity.tags:
-                    tag_names.append(tag.name)
-                
-                display_path = self._format_path(entity.path, absolute)
-                entities_table.add_row([display_path, ', '.join(tag_names)])
-                        
-            print(entities_table)
+            self._print_entities_table(metadata.entities(), args[ABSOLUTE_ARGUMENT_NAME])
     
     def do_tags(self, line):
         """Lists all tags."""

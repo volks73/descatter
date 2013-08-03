@@ -19,7 +19,7 @@
 import os
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, joinedload
 from sqlalchemy.pool import NullPool
 from sqlalchemy import Table, Column, String, Integer, ForeignKey, create_engine
 
@@ -82,7 +82,7 @@ def entities():
     """Returns a list of all entities in the database."""
     
     session = Session()
-    entities = session.query(Entity).order_by(Entity.id)
+    entities = session.query(Entity).order_by(Entity.id).options(joinedload(Entity.tags))
     session.close()
     
     return entities
@@ -171,7 +171,10 @@ def find(tags):
     """
     
     session = Session()
-    query = session.query(Entity)
+    # Conduct an eager load so all of the tags for each entity are loaded on query
+    # and the session can be closed safely without needing to keep open to retrieve
+    # all of the tags.
+    query = session.query(Entity).order_by(Entity.id).options(joinedload(Entity.tags))
     
     for tag in tags:
         query = query.filter(Entity.tags.any(Tag.name == tag))
