@@ -167,7 +167,7 @@ class Filer(object):
                 
             return filed_paths
         else:
-            raise FilerError("The source: '%s' could not be filed because it is not a folder" % source)
+            raise FilerError("The source: '{}' could not be filed because it is not a folder".format(source))
 
     def _create_context(self, source, index=1, count=1):
         """Creates a filer context.
@@ -510,7 +510,7 @@ class Directive(object):
         macro_element = self.XPATH_MACRO_ELEMENT(self._root, name=name)
         
         if not macro_element:
-            raise DirectiveError("The '%s' macro could not be found")
+            raise DirectiveError("The '{}' macro could not be found".format(name))
         else:
             macro_element = macro_element[0]
         

@@ -593,7 +593,7 @@ class FilerListener(object):
             parent = os.path.basename(parent)
             display =  os.path.join(parent, os.path.basename(source_path))
         
-        print("Filed: %s to " % display, end="")
+        print("Filed: {} to ".format(display), end="")
     
     def file_completed(self, *args):
         """Called when a filing is completed.
@@ -613,7 +613,7 @@ class FilerListener(object):
             parent = os.path.basename(parent)
             display =  os.path.join(parent, os.path.basename(destination_path))
         
-        print("%s" % display)
+        print("{}".format(display))
     
     def file_failed(self, *args):
         """Called when a filing has failed.
