@@ -27,7 +27,7 @@ import argparse
 import cmd
 import os
 
-from descatter import organize, metadata
+from descatter import organize
 from prettytable import PrettyTable
 
 ARGUMENT_PREFIX = '-'
@@ -42,6 +42,8 @@ ABSOLUTE_ARGUMENT_NAME = 'absolute'
 FILE_ARGUMENT_NAME = 'file'
 CONSOLE_ARGUMENT_NAME = 'interactive'
 HELP_ARGUMENT_NAME = 'help'
+
+# TODO: Add 'import' command to console, such that a path to a directive is given and copied to a '.descatter' folder in the home directory of the user and loaded each time descatter is started.
 
 def file(source, destination, directive, recursive, move, verbose, absolute):
     """Files a file.
@@ -321,83 +323,6 @@ class Console(cmd.Cmd):
             except KeyboardInterrupt:
                 print()
                 print("Canceled!")
-    
-    def do_tag(self, line):
-        """Tags a path."""
-        
-        parser = ConsoleParser(prog='tag',
-                               description="Tags a file or folder.")
-        parser.add_argument(ARGUMENT_PREFIX + 'v',
-                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + VERBOSE_ARGUMENT_NAME,
-                            action='store_true',
-                            help='Displays additional information.')
-        parser.add_argument(ARGUMENT_PREFIX + 'a',
-                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
-                            action='store_true',
-                            help='Displays all paths as absolute paths.')
-        args = parser.parse_line(line)
-        
-        if args:
-            try:
-                path_input = input("[path]: ")
-                tag_input = input("[tags]: ").split(',')
-                path, tag_names = metadata.tag(path_input, tag_input)
-                
-                if args[VERBOSE_ARGUMENT_NAME]:
-                    path = self._format_path(path, args[ABSOLUTE_ARGUMENT_NAME])
-                    print(path + " tagged with " + ', '.join(tag_names))
-                else:
-                    print("Path has been successfully tagged!")                
-            except metadata.MetadataError as error:
-                print(error)
-            except KeyboardInterrupt:
-                print()
-                print("Canceled!")
-    
-    def do_detag(self, line):
-        """Removes a tag from a path."""
-        
-        parser = ConsoleParser(prog='detag',
-                               description="Remove tags from a file or folder.")
-        args = parser.parse_line(line)
-        
-        if args:
-            try:
-                path_input = input("[path]: ")
-                tag_input = input("[tags]: ").split(',')
-                metadata.detag(path_input, tag_input)
-                print("Tags have been successfully removed from the path!")            
-            except metadata.MetadataError as error:
-                print(error)
-            except KeyboardInterrupt:
-                print()
-                print("Canceled!")
-    
-    def do_find(self, line):
-        """Finds files and folders with the specified tags."""        
-        
-        parser = ConsoleParser(prog='find',
-                               description="Find all files and folders with the specified tags.")
-        parser.add_argument(ARGUMENT_PREFIX + 'v',
-                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + VERBOSE_ARGUMENT_NAME,
-                            action='store_true',
-                            help='Displays additional information.')
-        parser.add_argument(ARGUMENT_PREFIX + 'a',
-                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
-                            action='store_true',
-                            help='Displays all paths as absolute paths.')
-        args = parser.parse_line(line)
-        
-        if args:
-            try:
-                tag_input = input("[tags]: ").split(',')
-                entities = metadata.find(tag_input)
-                self._print_entities_table(entities, args[ABSOLUTE_ARGUMENT_NAME])                
-            except metadata.MetadataError as error:
-                print(error)
-            except KeyboardInterrupt:
-                print()
-                print("Canceled!")
                 
     def do_history(self, line):
         """Displays the recently used directives."""
@@ -452,31 +377,6 @@ class Console(cmd.Cmd):
         
         if args:
             self._print_directive_table(self._loaded.values(), args[VERBOSE_ARGUMENT_NAME], args[ABSOLUTE_ARGUMENT_NAME]) 
-
-    def do_entities(self, line):
-        """Lists all files that have been tagged."""
-        
-        parser = ConsoleParser(prog='entities',
-                               description="Displays a list of tagged entities (files and folders) and the tags associated with each entity as a comma-separated list.")
-        parser.add_argument(ARGUMENT_PREFIX + 'a',
-                            ARGUMENT_PREFIX + ARGUMENT_PREFIX + ABSOLUTE_ARGUMENT_NAME,
-                            action='store_true',
-                            help='Displays all paths as absolute paths')
-        args = parser.parse_line(line)
-        
-        if args:
-            self._print_entities_table(metadata.entities(), args[ABSOLUTE_ARGUMENT_NAME])
-    
-    def do_tags(self, line):
-        """Lists all tags."""
-        
-        parser = ConsoleParser(prog='tags',
-                               description="Displays a list of all tags.")
-        args = parser.parse_line(line)
-        
-        if args:
-            for tag in metadata.tags():
-                print(tag.name)
             
     def do_exit(self, line):
         """Safely exits the console."""

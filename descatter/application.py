@@ -20,11 +20,9 @@ import configparser
 import os
 import sys
 
-from descatter import organize, interface, metadata
+from descatter import organize, interface
 
-APPLICATION_FOLDER_NAME = '.descatter'
 CONFIG_FILE_NAME = 'descatter.ini'
-TAGS_DATABASE_NAME = 'tags.sqlite'
 
 config = configparser.ConfigParser()
 config.read(CONFIG_FILE_NAME)
@@ -45,18 +43,7 @@ def get_root_folder():
 def get_file_path(*args):
     """Finds a file relative to the root folder for the application."""
     
-    return os.path.join(get_root_folder(), *args)
-
-def get_app_folder():
-    """Gets the user application folder."""
-    
-    home_folder_path = os.path.expanduser('~')
-    app_folder_path = os.path.join(home_folder_path, APPLICATION_FOLDER_NAME)
-    
-    if not os.path.exists(app_folder_path):
-        os.mkdir(app_folder_path)
-
-    return app_folder_path 
+    return os.path.join(get_root_folder(), *args) 
 
 def load_directives():
     """Loads all directives in a folder defined in the configuration file (descatter.ini) for the application."""
@@ -85,8 +72,6 @@ def main():
     
     """
     
-    database = os.path.join(get_app_folder(), TAGS_DATABASE_NAME)
-    metadata.init(database)
     loaded = load_directives()
     default = loaded[config['Application']['DefaultDirectiveName']]    
     cli = interface.CommandLine(loaded, default)
