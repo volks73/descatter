@@ -55,8 +55,6 @@ def get_app_folder():
     
     if not os.path.exists(app_folder_path):
         os.mkdir(app_folder_path)
-        history_path = os.path.join(app_folder_path, 'history')
-        os.mkdir(history_path)
 
     return app_folder_path 
 
