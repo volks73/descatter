@@ -186,15 +186,15 @@ class Filer(object):
             context[self.CURRENT_DATETIME] = datetime.now()
             
             # Need to change count, index, and size to string; otherwise, the condition tests will try to equate a string with an integer.
-            context[self.FILE_COUNT] = str(count)
+            context[self.FILE_COUNT] = count
             context[self.FILE_EXTENSION] = file_extension
             context[self.FILE_DATE_ACCESSED] = datetime.fromtimestamp(os.path.getatime(source))
             context[self.FILE_DATE_CREATED] = datetime.fromtimestamp(os.path.getctime(source))
             context[self.FILE_DATE_MODIFIED] = datetime.fromtimestamp(os.path.getmtime(source))
-            context[self.FILE_INDEX] = str(index)
+            context[self.FILE_INDEX] = index
             context[self.FILE_NAME] = file_name
             context[self.FILE_PATH] = os.path.dirname(source)
-            context[self.FILE_SIZE] = str(os.path.getsize(source))
+            context[self.FILE_SIZE] = os.path.getsize(source)
             context[self.FILE_SOURCE_PATH] = os.path.abspath(source)    
             
             return context
@@ -459,13 +459,13 @@ class Directive(object):
         if match:
             match = match[0].lower()
         else:
-            raise DirectiveError("The '%s' attribute is missing for the '%s' element" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
+            raise DirectiveError("The '{}' attribute is missing for the '{}' element".format(self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
         
         if self._is_match(match, condition_results):
             path_name = rule_element.get(self.PATH_ATTRIBUTE)
             
             if path_name is None:
-                raise DirectiveError("The '%s' attribute is missing for the '%s' element" % (self.PATH_ATTRIBUTE, self.RULE_TAG))
+                raise DirectiveError("The '{}' attribute is missing for the '{}' element".format(self.PATH_ATTRIBUTE, self.RULE_TAG))
         
         return path_name
 
@@ -481,7 +481,7 @@ class Directive(object):
         path_element = self.XPATH_PATH_ELEMENT(self._root, name=name)
         
         if not path_element:
-            raise DirectiveError("The '%s' path could not be found" % name)
+            raise DirectiveError("The '{}' path could not be found".format(name))
         else:
             path_element = path_element[0]
         
@@ -494,7 +494,7 @@ class Directive(object):
         file_element = self.XPATH_FILE_ELEMENT(path_element, name=path_element.get(self.NAME_ATTRIBUTE))
         
         if not file_element:
-            raise DirectiveError("The '%s' element is missing the child '%s' element" % (self.PATH_TAG, self.FILE_TAG))
+            raise DirectiveError("The '{}' element is missing the child '{}' element".format(self.PATH_TAG, self.FILE_TAG))
         else:
             return folder_names, self._get_value(file_element[0])
 
@@ -523,11 +523,11 @@ class Directive(object):
                 elif child.tag == self.DATE_TAG_FULL_NAME:
                     text = text + self._get_date_text(child)
                 else:
-                    raise DirectiveError("The '%s' element is unknown as a '%s' element child" % (child.tag, self.MACRO_TAG))
+                    raise DirectiveError("The '{}' element is unknown as a '{}' element child".format(child.tag, self.MACRO_TAG))
             
             return text
         else:
-            raise DirectiveError("The '%s' macro is missing one or more '%s' child elements" % (name, self.TEXT_TAG))
+            raise DirectiveError("The '{}' macro is missing one or more '{}' child elements".format(name, self.TEXT_TAG))
 
     def _is_match(self, match, results):
         """Determines if the rule is match and should be used to determine the path.
@@ -542,7 +542,7 @@ class Directive(object):
         elif match == self.CONDITIONS_MATCH_ANY:
             return any(results)
         else:
-            raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
+            raise DirectiveError("The '{}' attribute value for the '{}' tag is unknown".format(self.MATCH_ATTRIBUTE, self.CONDITIONS_TAG))
     
     def _get_condition_result(self, condition_element):
         """Gets the boolean result from a condition element.
@@ -555,24 +555,28 @@ class Directive(object):
         variable = condition_element.get(self.VARIABLE_ATTRIBUTE)
         value = condition_element.get(self.VALUE_ATTRIBUTE)
         case_sensitive = condition_element.get(self.CASE_SENSITIVE_ATTRIBUTE)
+        variable_format = condition_element.get(self.FORMAT_ATTRIBUTE)
         
         if type_value is None:
-            raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
+            raise DirectiveError("The '{}' attribute is missing from the '{}' tag".format(self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
         else:
             type_value = type_value.lower()
         
-        # TODO: Add support for wildcard variable, which states any variable can be used.
-        
         if variable is None:
-            raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))
+            raise DirectiveError("The '{}' attribute is missing from the '{}' tag".format(self.VARIABLE_ATTRIBUTE, self.CONDITION_TAG))
         elif variable in self._filer_context:
             variable = self._filer_context[variable]
         else:
-            raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable, self.VARIABLE_ATTRIBUTE))
+            raise DirectiveError("The '{}' value for the '{}' attribute is not a context variable".format(variable, self.VARIABLE_ATTRIBUTE))
             
         if value is None:
-            raise DirectiveError("The '%s' attribute is missing from the '%s' tag" % (self.VALUE_ATTRIBUTE, self.CONDITION_TAG))
+            raise DirectiveError("The '{}' attribute is missing from the '{}' tag".format(self.VALUE_ATTRIBUTE, self.CONDITION_TAG))
         
+        if variable_format is None:
+            variable = str(variable)
+        else:
+            variable = variable_format.format(variable)
+            
         if case_sensitive is None:
             variable = variable.lower()
             value = value.lower()
@@ -582,8 +586,8 @@ class Directive(object):
         elif case_sensitive.lower() == self.TRUE_ATTRIBUTE_VALUE:
             pass
         else:
-            raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.CASE_SENSITIVE_ATTRIBUTE, self.CONDITION_TAG))
-            
+            raise DirectiveError("The '{}' attribute value for the '{}' tag is unknown".format(self.CASE_SENSITIVE_ATTRIBUTE, self.CONDITION_TAG))
+
         if type_value == self.CONDITION_TYPE_EQUALS:
             if value == self.ANY_VALUE_WILDCARD:
                 return True
@@ -598,7 +602,7 @@ class Directive(object):
         elif type_value == self.CONDITION_TYPE_HAS:
             return value in variable
         else:
-            raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
+            raise DirectiveError("The '{}' attribute value for the '{}' tag is unknown".format(self.TYPE_ATTRIBUTE, self.CONDITION_TAG))
     
     def _get_text(self, text_element):
         """Gets the formatted text from a text element.
@@ -626,21 +630,23 @@ class Directive(object):
         format_value = date_element.get(self.FORMAT_ATTRIBUTE)
         
         if variable_name is None:
-            raise DirectiveError("The '%s' element is missing the '%s' attribute" % (self.DATE_TAG, self.VARIABLE_ATTRIBUTE))
+            raise DirectiveError("The '{}' element is missing the '{}' attribute".format(self.DATE_TAG, self.VARIABLE_ATTRIBUTE))
         elif format_value is None:
-            raise DirectiveError("The '%s' element is missing the '%s' attribute" % (self.DATE_TAG, self.FORMAT_ATTRIBUTE))
+            raise DirectiveError("The '{}' element is missing the '{}' attribute".format(self.DATE_TAG, self.FORMAT_ATTRIBUTE))
         else:
             value = self._get_variable_value(variable_name)
             
             try:
-                formatted_value = value.strftime(format_value)
+                formatted_value = format_value.format(value)
                 
                 if formatted_value == format_value:
-                    raise DirectiveError("The '%s' attribute value for the '%s' element is not a valid format string" % (self.FORMAT_ATTRIBUTE, self.DATE_TAG))
+                    raise DirectiveError("The '{}' attribute value for the '{}' element is not a valid format string".format(self.FORMAT_ATTRIBUTE, self.DATE_TAG))
                 else:
                     return formatted_value 
             except AttributeError:
-                raise DirectiveError("The '%s' attribute value for the '%s' element is not a date or time" % (self.VARIABLE_ATTRIBUTE, self.DATE_TAG)) 
+                raise DirectiveError("The '{}' attribute value for the '{}' element is not a date or time".format(self.VARIABLE_ATTRIBUTE, self.DATE_TAG))
+            except ValueError:
+                raise DirectiveError("The '{}' attribute value for the '{}' element is not a valid format string".format(self.FORMAT_ATTRIBUTE, self.DATE_TAG)) 
     
     def _get_value(self, element):
         """Gets the value for an element.
@@ -663,7 +669,7 @@ class Directive(object):
         elif macro_name is not None:
             return self._process_macro(macro_name)
         else:
-            raise DirectiveError("The '%s' element is missing either the '%s', '%s', or '%s' attribute" % (element.tag, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
+            raise DirectiveError("The '{}' element is missing either the '{}', '{}', or '{}' attribute".format(element.tag, self.VALUE_ATTRIBUTE, self.VARIABLE_ATTRIBUTE, self.MACRO_ATTRIBUTE))
     
     def _get_variable_value(self, variable_name):
         """Gets the text from a filer context variable.
@@ -675,7 +681,7 @@ class Directive(object):
         if variable_name in self._filer_context:
             return self._filer_context[variable_name]
         else:
-            raise DirectiveError("The '%s' value for the '%s' attribute is not a context variable" % (variable_name, self.VARIABLE_ATTRIBUTE))
+            raise DirectiveError("The '{}' value for the '{}' attribute is not a context variable".format(variable_name, self.VARIABLE_ATTRIBUTE))
     
     def _format_text(self, text, text_element): 
         """Formats the text based on the attributes of the text element.
@@ -719,7 +725,7 @@ class Directive(object):
         elif case == self.TEXT_CASE_TITLE:
             return text.title()
         else:
-            raise DirectiveError("The '%s' attribute value for the '%s' tag is unknown" % (self.CASE_ATTRIBUTE, self.TEXT_TAG))
+            raise DirectiveError("The '{}' attribute value for the '{}' tag is unknown".format(self.CASE_ATTRIBUTE, self.TEXT_TAG))
         
     def _format_replace_spaces_with(self, text, text_element):
         """Replaces spaces in a text based on the 'replace-spaces-with' attribute of a 'text' element.
@@ -771,12 +777,3 @@ class Directive(object):
             return text
         else:
             return text + suffix
-
-class Validator(object):
-    """Checks a directive to see if it is usable for directing a filer."""
-    
-    def __init__(self):
-        """Constructor for the :class:`.Validator`."""
-        
-        # TODO: Implement the validator.
-        pass

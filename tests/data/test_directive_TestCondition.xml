@@ -154,6 +154,31 @@
 				<condition type="equals" variable="file-index" value="0" case-sensitive="false"/>
 				<condition type="equals" variable="file-name" value="test_not_file" case-sensitive="false"/>  
 			</conditions>
-		</rule>		
+		</rule>
+		<rule name="format-string-rule" path="format-string-path">
+		    <conditions match="all">
+		        <condition type="equals" variable="file-name" value="test_file" format="{!s}"/>	        
+		    </conditions>
+		</rule>
+		<rule name="format-decimal-rule" path="format-decimal-path">
+		    <conditions match="all">
+		        <condition type="equals" variable="file-index" value="5" format="{!s}"/>     
+		    </conditions>
+		</rule>	
+		<rule name="format-datetime-rule" path="format-datetime-path">
+		    <conditions match="all">
+		        <condition type="equals" variable="file-date-created" value="2013" format="{:%Y}"/>     
+		    </conditions>
+		</rule>
+		<rule name="format-not-datetime-rule" path="format-not-datetime-path">
+		    <conditions match="all">
+		        <condition type="equals" variable="file-date-created" value="2012" format="{:%Y}"/>     
+		    </conditions>
+		</rule>
+		<rule name="format-year-month-day-rule" path="format-year-month-day-path">
+		    <conditions match="all">
+		        <condition type="equals" variable="file-date-created" value="2013-08-09" format="{:%Y-%m-%d}"/>     
+		    </conditions>
+		</rule>
 	</rules>
 </directive>

@@ -25,8 +25,6 @@ import tests_constants
 from lxml import etree
 from datetime import datetime
 
-# TODO: Add tests for equality to all filer context variables.
-
 class TestCondition(unittest.TestCase):
     """Test 'condition' element in the XML directive file and its related children elements and attributes."""
     
@@ -56,15 +54,15 @@ class TestCondition(unittest.TestCase):
         
         context = {}
         context[organize.Filer.CURRENT_DATETIME] = datetime.now()
-        context[organize.Filer.FILE_COUNT] = str(10)
+        context[organize.Filer.FILE_COUNT] = 10
         context[organize.Filer.FILE_EXTENSION] = 'txt'
-        context[organize.Filer.FILE_DATE_ACCESSED] = datetime.now()
-        context[organize.Filer.FILE_DATE_CREATED] = datetime.now()
-        context[organize.Filer.FILE_DATE_MODIFIED] = datetime.now()
-        context[organize.Filer.FILE_INDEX] = str(5)
+        context[organize.Filer.FILE_DATE_ACCESSED] = datetime(2013, 8, 9)
+        context[organize.Filer.FILE_DATE_CREATED] = datetime(2013, 8, 9)
+        context[organize.Filer.FILE_DATE_MODIFIED] = datetime(2013, 8, 9)
+        context[organize.Filer.FILE_INDEX] = 5
         context[organize.Filer.FILE_NAME] = 'test_file'
         context[organize.Filer.FILE_PATH] = os.getcwd()
-        context[organize.Filer.FILE_SIZE] = str(0)
+        context[organize.Filer.FILE_SIZE] = 0
         context[organize.Filer.FILE_SOURCE_PATH] = os.getcwd()
         
         self.directive._filer_context = context
@@ -185,6 +183,36 @@ class TestCondition(unittest.TestCase):
         
         condition_element = self.xpath_condition_element(self.directive._root, name='value-missing-rule')[0] 
         self.assertRaises(organize.DirectiveError, self.directive._get_condition_result, condition_element)
+    
+    def test_format_string(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='format-string-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertTrue(output_value)
+
+    def test_format_decimal(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='format-decimal-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertTrue(output_value)
+        
+    def test_format_datetime(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='format-datetime-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertTrue(output_value)
+        
+    def test_format_not_datetime(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='format-not-datetime-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertFalse(output_value)
+
+    def test_format_year_month_day(self):
+        
+        condition_element = self.xpath_condition_element(self.directive._root, name='format-year-month-day-rule')[0]
+        output_value = self.directive._get_condition_result(condition_element)
+        self.assertTrue(output_value)
 
 class TestRule(unittest.TestCase):
     """Test 'rule' element in the XML directive file and its related children elements and attributes.""" 
