@@ -64,15 +64,20 @@ def load_directives():
 # TODO: Load directives in the history folder
 # TODO: Add user directives folder and load directives there as well
 
-def main():
+loaded = load_directives()
+default = loaded[config['Application']['DefaultDirectiveName']]
+    
+def cmd():
     """Starts the descatter application.
     
     A 'descatter.ini' file must be located in the same folder as the application start file. The application 
     start file is either the executable: 'descatter.exe' or the python script: 'descatter.py'.
     
     """
-    
-    loaded = load_directives()
-    default = loaded[config['Application']['DefaultDirectiveName']]    
+     
     cli = interface.CommandLine(loaded, default)
     cli.parse()
+    
+def console():
+
+    interface.Console(loaded, default).cmdloop()

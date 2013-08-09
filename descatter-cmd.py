@@ -1,4 +1,4 @@
-# descatter.py
+# descatter-cmd.py
 # Copyright (C) 2013 the Descatter authors and contributers <see AUTHORS file>
 #
 # This module is part of Descatter.
@@ -18,4 +18,4 @@
 
 from descatter import application
 
-application.main()
+application.cmd()

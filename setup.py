@@ -2,11 +2,14 @@ import sys
 
 from cx_Freeze import setup, Executable
 
-executables = [Executable('descatter.py')]
+console_exe = Executable('descatter-console.py', base='Console')
+cmd_exe = Executable('descatter-cmd.py', base='Win32GUI')
+
+executables = [console_exe, cmd_exe]
 
 # Explicitly load these packages; otherwise, runtime errors occur because of missing modules during import.
 # cx_Freeze should detect this, so I am not sure why I must explicitly state these packages.
-packages = ['lxml','sqlalchemy']
+packages = ['lxml']
 includes = []
 excludes = []
 
