@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<directive xmlns="descatter/filer/schema/1.0" name="year-month-day">
+	<info>
+		<title>Date Created Organization</title>
+		<author>
+			<name>Christopher R. Field</name>
+			<email>cfield2 at gmail dot com</email>
+		</author>
+		<description>
+			Places files in a .\YYYY\MM\DD folder hiearchy based on a files creation date.  
+			The original, or source, file name is used for the filed name but spaces are replaced with underscores and title case is used for the text. 
+		</description>
+	</info>
+	<macros>
+	    <macro name="year-folder">
+	        <date variable="file-date-created" format="{:%Y}"/>
+	    </macro>
+	    <macro name="month-folder">
+	        <date variable="file-date-created" format="{:%m}"/>
+	    </macro>
+	    <macro name="day-folder">
+	        <date variable="file-date-created" format="{:%d}"/>
+	    </macro>
+	    <macro name="original-name">
+	        <text variable="file-name" replace-spaces-with="_" case="title"/>
+	       	<text variable="file-extension" prefix="." case="lower"/>    
+	    </macro>
+	</macros>
+	<paths>
+		<path name="default-path">
+			<folder macro="year-folder">
+				<folder macro="month-folder">
+				    <folder macro="day-folder">
+					    <file macro="original-name"/>
+				    </folder>
+				</folder>
+			</folder>	
+		</path>
+	</paths>
+	<rules>
+		<rule name="default" path="default-path">
+			<conditions match="all">
+				<condition type="equals" variable="file-extension" value="*"/>  
+			</conditions>
+		</rule>
+	</rules>
+</directive>
