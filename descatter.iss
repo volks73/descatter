@@ -28,6 +28,7 @@ SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x86 x64
 UninstallDisplayName={#MyAppName} {#MyAppVersion}
+UninstallDisplayIcon={app}\descatter_icon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -55,6 +56,8 @@ Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\python33
 Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\README.rst"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\select.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\unicodedata.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter_icon.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\directives\*"; DestDir: "{app}\directives"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
