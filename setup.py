@@ -1,9 +1,10 @@
 import sys
+import os
 
 from cx_Freeze import setup, Executable
 
-console_exe = Executable('descatter-console.py', base='Console', icon='descatter_icon.ico')
-cmd_exe = Executable('descatter-cmd.py', base='Win32GUI', icon='descatter_icon.ico')
+console_exe = Executable('descatter-console.py', base='Console', icon=os.path.join('images', 'descatter_icon.ico'))
+cmd_exe = Executable('descatter-cmd.py', base='Win32GUI', icon=os.path.join('images', 'descatter_icon.ico'))
 
 executables = [console_exe, cmd_exe]
 
@@ -15,12 +16,11 @@ excludes = []
 
 include_files = ['descatter.ini',
                  'directives/',
+                 'images/',
                  'AUTHORS',
                  'CHANGES',
                  'LICENSE',
-                 'README.rst',
-                 'descatter_icon.ico',
-                 'descatter_icon.png']
+                 'README.rst']
 
 path = sys.path + ['descatter']
 
