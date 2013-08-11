@@ -20,8 +20,8 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
-LicenseFile=C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\LICENSE
-OutputDir=C:\Users\cfield\Code\Eclipse\descatter\build\installer
+LicenseFile=build\exe.win-amd64-3.3\LICENSE
+OutputDir=build\installer
 OutputBaseFilename=descatter_install
 Compression=lzma
 SolidCompression=yes
@@ -38,27 +38,26 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter-console.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\_bz2.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\_hashlib.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\_lzma.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\_socket.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\_ssl.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\AUTHORS"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\CHANGES"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter.ini"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter-cmd.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\lxml.etree.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\lxml.objectify.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\pyexpat.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\python33.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\README.rst"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\select.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\unicodedata.pyd"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\descatter_icon.png"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\cfield\Code\Eclipse\descatter\build\exe.win-amd64-3.3\directives\*"; DestDir: "{app}\directives"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "build\exe.win-amd64-3.3\descatter-console.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\_bz2.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\_hashlib.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\_lzma.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\_socket.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\_ssl.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\AUTHORS"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\CHANGES"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\descatter.ini"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\descatter-cmd.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\lxml.etree.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\lxml.objectify.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\pyexpat.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\python33.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\README.rst"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\select.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\unicodedata.pyd"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\exe.win-amd64-3.3\images\*"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "build\exe.win-amd64-3.3\directives\*"; DestDir: "{app}\directives"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
