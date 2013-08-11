@@ -12,7 +12,7 @@ executables = [console_exe, cmd_exe]
 # cx_Freeze should detect this, so I am not sure why I must explicitly state these packages.
 packages = ['lxml']
 includes = []
-excludes = []
+excludes = ['unittest']
 
 include_files = ['descatter.ini',
                  'directives' + os.path.sep,
