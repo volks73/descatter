@@ -15,8 +15,8 @@ includes = []
 excludes = []
 
 include_files = ['descatter.ini',
-                 'directives/',
-                 'images/',
+                 'directives' + os.path.sep,
+                 'images' + os.path.sep,
                  'AUTHORS',
                  'CHANGES',
                  'LICENSE',
